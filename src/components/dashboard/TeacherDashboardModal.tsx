@@ -130,9 +130,21 @@ export const TeacherDashboardModal: React.FC<TeacherDashboardModalProps> = ({
             <div className="space-y-5">
               {/* Row 1: Pilih Kelompok */}
               <div>
-                <label className="text-xs font-bold text-stone-500 uppercase tracking-wider block mb-2">
-                  Pilih Kelompok Siswa:
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs font-bold text-stone-500 uppercase tracking-wider block">
+                    Pilih Kelompok Siswa:
+                  </label>
+                  {onAddTeam && (
+                    <button
+                      onClick={onAddTeam}
+                      className="text-xs font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2.5 py-1 rounded-xl flex items-center gap-1 transition shadow-sm active:scale-95"
+                      title="Tambah Kelompok Baru"
+                    >
+                      <UserPlus className="w-3.5 h-3.5" />
+                      <span>+ Tambah Kelompok</span>
+                    </button>
+                  )}
+                </div>
                 <div className="grid grid-cols-2 sm:grid-cols-6 gap-2">
                   {teams.map((t) => (
                     <button

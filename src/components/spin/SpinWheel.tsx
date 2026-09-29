@@ -8,9 +8,16 @@ interface SpinWheelProps {
   onComplete: (turnOrder: Team[]) => void;
   onAddTeam?: () => void;
   onRemoveTeam?: (id: number) => void;
+  onResetDefaultTeams?: () => void;
 }
 
-export const SpinWheel: React.FC<SpinWheelProps> = ({ teams, onComplete, onAddTeam, onRemoveTeam }) => {
+export const SpinWheel: React.FC<SpinWheelProps> = ({
+  teams,
+  onComplete,
+  onAddTeam,
+  onRemoveTeam,
+  onResetDefaultTeams,
+}) => {
   const [remainingTeams, setRemainingTeams] = useState<Team[]>([...teams]);
   const [turnOrder, setTurnOrder] = useState<Team[]>([]);
   const [isSpinning, setIsSpinning] = useState<boolean>(false);
@@ -266,7 +273,7 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({ teams, onComplete, onAddTe
 
         {/* RIGHT: TURN ORDER LIST */}
         <div className="flex flex-col space-y-4">
-          <div className="flex items-center justify-between border-b border-stone-100 pb-3">
+          <div className="flex items-center justify-between border-b border-stone-100 pb-3 flex-wrap gap-2">
             <div className="flex items-center gap-2">
               <Trophy className="w-4 h-4 text-amber-600" />
               <h3 className="text-sm font-bold text-slate-800">Urutan Melangkah</h3>
@@ -275,6 +282,16 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({ teams, onComplete, onAddTe
               <span className="text-xs font-semibold text-stone-500">
                 {turnOrder.length} dari {teams.length} Kelompok
               </span>
+              {teams.length !== 3 && onResetDefaultTeams && turnOrder.length === 0 && (
+                <button
+                  onClick={onResetDefaultTeams}
+                  className="px-2.5 py-1 rounded-xl bg-stone-100 hover:bg-rose-50 text-stone-600 hover:text-rose-700 border border-stone-200 hover:border-rose-200 text-xs font-semibold flex items-center gap-1 transition shadow-sm"
+                  title="Kembalikan ke 3 Kelompok Default"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Reset 3 Kelompok</span>
+                </button>
+              )}
               {onAddTeam && turnOrder.length === 0 && (
                 <button
                   onClick={onAddTeam}
@@ -282,7 +299,7 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({ teams, onComplete, onAddTe
                   title="Tambah Kelompok Baru"
                 >
                   <UserPlus className="w-3.5 h-3.5" />
-                  <span>+ Tambah Kelompok</span>
+                  <span>+ Tambah</span>
                 </button>
               )}
             </div>
@@ -290,13 +307,13 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({ teams, onComplete, onAddTe
 
           {/* Turn Slots Dinamis berdasarkan teams.length */}
           <div className="space-y-2">
-            {teams.map((_, idx) => {
+            {teams.map((t, idx) => {
               const team = turnOrder[idx];
               const isCurrentNew = selectedWinner?.id === team?.id;
 
               return (
                 <div
-                  key={idx}
+                  key={t.id || idx}
                   className={`p-3 rounded-2xl border flex items-center justify-between transition-all ${
                     team
                       ? isCurrentNew
@@ -331,20 +348,23 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({ teams, onComplete, onAddTe
                         </div>
                       </div>
                     ) : (
-                      <span className="text-xs font-medium italic text-stone-400">
-                        Menunggu giliran ke-{idx + 1}...
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-base opacity-50">{t.avatarIcon}</span>
+                        <span className="text-xs font-medium italic text-stone-400">
+                          {t.name} (Menunggu giliran ke-{idx + 1}...)
+                        </span>
+                      </div>
                     )}
                   </div>
 
                   {team ? (
                     <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                   ) : (
-                    onRemoveTeam && turnOrder.length === 0 && idx === teams.length - 1 && teams.length > 2 && (
+                    onRemoveTeam && turnOrder.length === 0 && teams.length > 2 && idx >= 3 && (
                       <button
-                        onClick={() => onRemoveTeam(teams[idx].id)}
-                        className="text-stone-400 hover:text-rose-600 p-1 rounded-lg transition"
-                        title="Hapus Kelompok Ini"
+                        onClick={() => onRemoveTeam(t.id)}
+                        className="text-stone-400 hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition"
+                        title={`Hapus ${t.name}`}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>

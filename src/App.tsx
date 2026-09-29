@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { GameBoard } from './components/board/GameBoard';
 import { SpinWheel } from './components/spin/SpinWheel';
 import { TeamSelectionScreen } from './components/student/TeamSelectionScreen';
@@ -23,7 +23,6 @@ import {
   Dices,
   Sliders,
   Users,
-  LogOut,
   RefreshCw,
   UserPlus,
 } from 'lucide-react';
@@ -31,7 +30,6 @@ import confetti from 'canvas-confetti';
 
 export const App: React.FC = () => {
   const location = useLocation();
-  const navigate = useNavigate();
 
   // Deteksi role berdasarkan route URL: /teachers -> Guru, selain itu -> Murid
   const isTeacherRoute = location.pathname.startsWith('/teachers') || location.hash.startsWith('#/teachers');
@@ -244,6 +242,12 @@ export const App: React.FC = () => {
     });
   };
 
+  // Guru mereset kelompok ke 3 kelompok default
+  const handleResetToDefaultTeams = () => {
+    setTeams(INITIAL_TEAMS);
+    setSelectedTeamId(INITIAL_TEAMS[0].id);
+  };
+
   return (
     <div className="h-screen w-screen bg-[#f8faf9] text-slate-800 flex flex-col font-sans select-none antialiased overflow-hidden">
       {/* 1. TOP NAVBAR (CALMING, MINIMALIST & CLEAN) */}
@@ -281,16 +285,6 @@ export const App: React.FC = () => {
               >
                 <Dices className="w-3.5 h-3.5 text-emerald-700" />
                 <span className="hidden lg:inline">{teacherGamePhase === 'spin' ? 'Ke Papan' : 'Spin Giliran'}</span>
-              </button>
-
-              {/* Tombol Ke Tampilan Murid */}
-              <button
-                onClick={() => navigate('/')}
-                className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-600 hover:text-slate-900 text-xs font-semibold flex items-center gap-1 transition shadow-sm"
-                title="Buka Tampilan Murid (/)"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-                <span className="hidden xl:inline">Tampilan Murid</span>
               </button>
             </>
           ) : (
@@ -361,6 +355,7 @@ export const App: React.FC = () => {
               onComplete={handleSpinComplete}
               onAddTeam={handleAddTeam}
               onRemoveTeam={handleRemoveTeam}
+              onResetDefaultTeams={handleResetToDefaultTeams}
             />
           </main>
         ) : (

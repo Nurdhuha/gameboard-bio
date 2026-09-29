@@ -110,13 +110,13 @@ export const ACTIVITIES: Record<string, ActivityData> = {
     level: 'C5',
     cardType: 'Riddle',
     title: 'KE-03: Evaluasi (C5)',
-    instruction: "Scan QR untuk membaca dua pernyataan murid:\nMurid A: “Keberadaan organisme di suatu area tidak dipengaruhi faktor abiotik.”\nMurid B: “Faktor abiotik seperti cahaya dan kelembapan memengaruhi jenis organisme yang hidup di suatu area.”\nNilailah pernyataan mana yang lebih didukung! Gunakan bukti dari tabel pengamatan kelompokm!",
+    instruction: "Perhatikan dua pernyataan murid pada kotak stimulus di bawah ini:\n• Murid A: “Keberadaan organisme di suatu area tidak dipengaruhi faktor abiotik.”\n• Murid B: “Faktor abiotik seperti cahaya dan kelembapan memengaruhi jenis organisme yang hidup di suatu area.”\nNilailah pernyataan mana yang lebih didukung! Gunakan bukti data dari tabel pengamatan kelompokmu!",
     expectedResult: "Contoh hasil:\nPernyataan Murid B lebih didukung. Kelompok menunjukkan bukti dari areanya sendiri, misalnya organisme tertentu hanya ditemukan pada bagian yang lembap atau teduh.\nPernyataan Murid A terlalu menggeneralisasi karena mengabaikan hubungan komponen abiotik dengan biotik.",
-    qrCode: "Pernyataan dua murid dan foto dua area pembanding (teduh dan terbuka)",
+    qrCode: "Pernyataan dua murid dan perbandingan area teduh vs terbuka",
     selfRegulationReference: "Contoh hasil:\nPernyataan Murid B lebih didukung. Kelompok menunjukkan bukti dari areanya sendiri, misalnya organisme tertentu hanya ditemukan pada bagian yang lembap atau teduh.\nPernyataan Murid A terlalu menggeneralisasi karena mengabaikan hubungan komponen abiotik dengan biotik.",
     stimulus: {
       type: 'data',
-      content: "Pernyataan dua murid dan foto dua area pembanding (teduh dan terbuka)"
+      content: "Stimulus Komparasi Pernyataan:\n• Murid A: “Keberadaan organisme di suatu area tidak dipengaruhi faktor abiotik.”\n• Murid B: “Faktor abiotik seperti cahaya dan kelembapan memengaruhi jenis organisme yang hidup di suatu area.”\n(Bandingkan temuan kelompokmu antara area teduh/lembap vs area terbuka/terik)."
     },
     maxScore: 3
   },
@@ -144,7 +144,7 @@ export const ACTIVITIES: Record<string, ActivityData> = {
     level: 'C4',
     cardType: 'Challenge',
     title: 'KE-05: Eksplanasi (C4)',
-    instruction: "Dengan bantuan sketsa area pengamatan, presentasikan minimal 1 menit menggunakan handphone bagaimana komponen biotik dan abiotik di area kalian saling berhubungan.\nSertakan bukti dari hasil pengamatan!",
+    instruction: "Dengan bantuan sketsa atau foto area pengamatan, presentasikan minimal 1 menit (gunakan fitur Stopwatch di bawah) bagaimana komponen biotik dan abiotik di area kalian saling berhubungan.\nSertakan bukti konkret dari hasil pengamatan!",
     expectedResult: "Hasil menyesuaikan jawaban dari murid. Contoh: penjelasan runtut, yaitu bukti pengamatan → hubungan sebab-akibat → kesimpulan, dengan istilah biotik dan abiotik yang tepat.",
     qrCode: "Tidak",
     selfRegulationReference: "Hasil menyesuaikan jawaban dari murid. Contoh: penjelasan runtut, yaitu bukti pengamatan → hubungan sebab-akibat → kesimpulan, dengan istilah biotik dan abiotik yang tepat.",
@@ -159,13 +159,13 @@ export const ACTIVITIES: Record<string, ActivityData> = {
     level: 'C5',
     cardType: 'Riddle',
     title: 'KE-06: Regulasi Diri (C5)',
-    instruction: "Scan QR untuk melihat contoh pengelompokan komponen biotik–abiotik dan hubungannya.\nPeriksa kembali tabel pada KE-01 dan jawaban kalian pada KE-02 sampai KE-04. Tandai bagian yang keliru atau kurang tepat, perbaiki, lalu jelaskan alasan perbaikan atau alasan mempertahankan jawaban!",
+    instruction: "Buka tab '3. Regulasi Diri' untuk melihat tabel rujukan pengelompokan komponen biotik–abiotik dan hubungan keterkaitannya.\nPeriksa kembali tabel pada KE-01 dan jawaban kelompokmu pada KE-02 sampai KE-04. Tandai bagian yang keliru atau kurang tepat, perbaiki pada lembar LKPD, lalu jelaskan alasan perbaikan atau alasan mempertahankan jawaban pada kolom refleksi!",
     expectedResult: "Hasil menyesuaikan dari hasil data murid. Contoh: kelompok menyebutkan minimal satu bagian yang diperiksa disertai bukti dari rujukan, misalnya semula memasukkan “matahari” sebagai komponen biotik, lalu memperbaikinya menjadi abiotik.",
-    qrCode: "Contoh pengelompokan biotik–abiotik dan contoh hubungannya (rujukan pengecekan)",
-    selfRegulationReference: "Hasil menyesuaikan dari hasil data murid. Contoh: kelompok menyebutkan minimal satu bagian yang diperiksa disertai bukti dari rujukan, misalnya semula memasukkan “matahari” sebagai komponen biotik, lalu memperbaikinya menjadi abiotik.",
+    qrCode: "Rujukan mandiri pengelompokan biotik–abiotik",
+    selfRegulationReference: "Kunci Rujukan Mandiri (Komponen Ekosistem):\n1. Komponen Biotik (Makhluk Hidup): Produsen (rumput, pohon, lumut), Konsumen (semut, belalang, cacing tanah, burung), Pengurai (jamur, bakteri serasah).\n2. Komponen Abiotik (Benda Tak Hidup): Cahaya matahari, suhu lingkungan, air/kelembapan, udara/angin, tanah, batu, derajat keasaman (pH).\n3. Hubungan Sebab-Akibat: Faktor abiotik membatasi jenis dan kelimpahan organisme yang hidup di area tersebut.",
     stimulus: {
       type: 'data',
-      content: "Contoh pengelompokan biotik–abiotik dan contoh hubungannya (rujukan pengecekan)"
+      content: "Petunjuk: Buka tab '3. Regulasi Diri' di atas untuk melihat Kunci Rujukan Mandiri dan memvalidasi jawaban kelompokmu."
     },
     maxScore: 3
   },
@@ -178,13 +178,13 @@ export const ACTIVITIES: Record<string, ActivityData> = {
     level: 'C2',
     cardType: 'Challenge',
     title: 'IA-01: Interpretasi (C2)',
-    instruction: "Amati area di sekitar sekolah selama 10 menit, cari minimal 2 pasangan organisme yang tampak saling berhubungan.\nCatat pada LKPD: nama organisme, apa yang dilakukan, dan dampaknya bagi masing-masing organisme (untung, rugi, atau tidak terpengaruh).\nJika kelompokmu tidak menemukan interaksi, scan QR code berikut dan gunakan foto yang tersedia!",
+    instruction: "Amati area di sekitar sekolah selama 10 menit, cari minimal 2 pasangan organisme yang tampak saling berhubungan.\nCatat pada tab LKPD: nama organisme, apa yang dilakukan, dan dampaknya bagi masing-masing organisme (untung, rugi, atau tidak terpengaruh).\n💡 Jika kelompokmu tidak menemukan interaksi langsung di lapangan, gunakan data interaksi alternatif yang tersedia pada kotak stimulus di bawah!",
     expectedResult: "Hasil menyesuaikan pengamatan murid. Contoh: lebah dan bunga: lebah memperoleh nektar, bunga terbantu penyerbukan (untung dan untung). Ulat dan daun: ulat memperoleh makanan, tanaman dirugikan (untung dan rugi). Lumut dan batang pohon: lumut memperoleh tempat tumbuh, pohon tidak terpengaruh (untung  dan tidak terpengaruh). Gulma dan tanaman: keduanya bersaing memperoleh cahaya, air, dan unsur hara (rugi dan rugi).",
-    qrCode: "kumpulan foto interaksi organism. Digunakan apabila kelompok tidak menemukan interaksi antar komponen biotik dan abiotic.",
+    qrCode: "Kumpulan data dan fenomena interaksi organisme alternatif",
     selfRegulationReference: "Hasil menyesuaikan pengamatan murid. Contoh: lebah dan bunga: lebah memperoleh nektar, bunga terbantu penyerbukan (untung dan untung). Ulat dan daun: ulat memperoleh makanan, tanaman dirugikan (untung dan rugi). Lumut dan batang pohon: lumut memperoleh tempat tumbuh, pohon tidak terpengaruh (untung  dan tidak terpengaruh). Gulma dan tanaman: keduanya bersaing memperoleh cahaya, air, dan unsur hara (rugi dan rugi).",
     stimulus: {
       type: 'data',
-      content: "kumpulan foto interaksi organism. Digunakan apabila kelompok tidak menemukan interaksi antar komponen biotik dan abiotic."
+      content: "Stimulus Interaksi Alternatif:\n1. Lebah madu menghisap nektar bunga tanaman hias (lebah memperoleh makanan, bunga terbantu penyerbukan).\n2. Ulat memakan helai daun sirih/tanaman pagar (ulat kenyang, daun tanaman berlubang/rusak).\n3. Lumut kerak atau paku sarang burung yang melekat di dahan pohon rindang (menumpang tempat tumbuh tanpa menyerap nutrisi inang).\n4. Gulma/rumput liar yang tumbuh rapat mengelilingi tanaman hias (saling berebut unsur hara dan air tanah)."
     },
     maxScore: 3
   },
@@ -242,7 +242,7 @@ export const ACTIVITIES: Record<string, ActivityData> = {
     level: 'C4',
     cardType: 'Challenge',
     title: 'IA-05: Eksplanasi (C4)',
-    instruction: "Peragakan secara singkat (maksimal 1 menit) salah satu interaksi yang kalian temukan menggunakan handphone.\nSetelah itu, jelaskan mengapa interaksi tersebut terjadi dan apa dampaknya bagi masing-masing organisme!",
+    instruction: "Peragakan secara singkat (maksimal 1 menit, gunakan fitur Stopwatch di bawah) salah satu bentuk interaksi yang kalian temukan di lapangan.\nSetelah itu, jelaskan mengapa interaksi tersebut terjadi dan apa dampaknya bagi masing-masing organisme!",
     expectedResult: "Hasil menyesuaikan jawaban dari murid. Contoh: peragaan sesuai interaksi yang dipilih, disertai penjelasan runtut: kebutuhan organisme (makanan, tempat, perlindungan) → bentuk interaksi → dampak bagi masing-masing pihak.",
     qrCode: "Tidak",
     selfRegulationReference: "Hasil menyesuaikan jawaban dari murid. Contoh: peragaan sesuai interaksi yang dipilih, disertai penjelasan runtut: kebutuhan organisme (makanan, tempat, perlindungan) → bentuk interaksi → dampak bagi masing-masing pihak.",
@@ -257,13 +257,13 @@ export const ACTIVITIES: Record<string, ActivityData> = {
     level: 'C5',
     cardType: 'Riddle',
     title: 'IA-06: Regulasi Diri (C5)',
-    instruction: "Scan QR untuk melihat tabel rujukan jenis interaksi.\nPeriksa kembali jenis interaksi yang kalian tetapkan pada IA-02. Tandai bagian yang keliru, perbaiki, lalu jelaskan alasan perbaikan atau alasan mempertahankan jawaban!",
+    instruction: "Buka tab '3. Regulasi Diri' untuk melihat tabel rujukan jenis interaksi antarmakhluk hidup.\nPeriksa kembali jenis interaksi yang kalian tetapkan pada IA-02. Tandai bagian yang keliru, perbaiki pada lembar LKPD, lalu jelaskan alasan perbaikan atau alasan mempertahankan jawaban pada kolom refleksi!",
     expectedResult: "Hasil menyesuaikan dari jawaban murid. Contoh: kelompok semula menyebut lumut di batang pohon sebagai parasit, lalu memperbaikinya menjadi komensalisme karena lumut memperoleh tempat tumbuh, sedangkan pohon tidak dirugikan maupun diuntungkan.",
-    qrCode: "Tabel rujukan jenis interaksi beserta dampak dan contohnya (rujukan pengecekan)",
-    selfRegulationReference: "Hasil menyesuaikan dari jawaban murid. Contoh: kelompok semula menyebut lumut di batang pohon sebagai parasit, lalu memperbaikinya menjadi komensalisme karena lumut memperoleh tempat tumbuh, sedangkan pohon tidak dirugikan maupun diuntungkan.",
+    qrCode: "Tabel rujukan jenis interaksi beserta dampak dan contohnya",
+    selfRegulationReference: "Kunci Rujukan Mandiri (Jenis Interaksi Antarmakhluk Hidup):\n• Mutualisme (+ / +): Kedua organisme saling diuntungkan (contoh: lebah & bunga mekar).\n• Komensalisme (+ / 0): Satu pihak diuntungkan, pihak lain tidak dirugikan maupun diuntungkan (contoh: anggrek/lumut pada dahan pohon inang).\n• Parasitisme (+ / -): Satu pihak mengambil keuntungan dengan merugikan inangnya (contoh: benalu/kutu pada inang).\n• Predasi & Herbivori (+ / -): Satu organisme memakan organisme lain sebagai sumber makanan (contoh: ulat memakan daun, burung memangsa ulat).\n• Kompetisi (- / -): Persaingan antarorganisme memperebutkan sumber daya hidup yang terbatas (contoh: gulma dan tanaman hias memperebutkan unsur hara tanah).",
     stimulus: {
       type: 'data',
-      content: "Tabel rujukan jenis interaksi beserta dampak dan contohnya (rujukan pengecekan)"
+      content: "Petunjuk: Buka tab '3. Regulasi Diri' di atas untuk memvalidasi analisis pola interaksi kelompokmu dengan tabel acuan ilmiah."
     },
     maxScore: 3
   },
@@ -276,13 +276,13 @@ export const ACTIVITIES: Record<string, ActivityData> = {
     level: 'C2',
     cardType: 'Challenge',
     title: 'AE-01: Interpretasi (C2)',
-    instruction: "Amati lingkungan di sekitar sekolah selama 10 menit, cari bukti hubungan makan-memakan antarorganisme. Catat pada LKPD minimal 3 organisme: apa yang dimakan, siapa yang memakan, dan bukti yang ditemukan. Tentukan pula perannya (produsen atau konsumen).\nJika kelompokmu tidak menemukan hubungan antar organisme, scan QR cadangan dan gunakan foto yang tersedia!",
+    instruction: "Amati lingkungan di sekitar sekolah selama 10 menit, cari bukti hubungan makan-memakan antarorganisme. Catat pada tab LKPD minimal 3 organisme: apa yang dimakan, siapa yang memakan, dan bukti yang ditemukan. Tentukan pula perannya (produsen atau konsumen).\n💡 Jika kelompokmu tidak menemukan hubungan makan-memakan secara langsung, gunakan bukti lapangan alternatif yang tersedia pada kotak stimulus di bawah!",
     expectedResult: "Hasil menyesuaikan pengamatan murid. Contoh: rumput (produsen) dimakan belalang (bukti: daun rumput berlubang); belalang (konsumen tingkat I) dimakan burung (bukti: burung mematuk belalang); semut (konsumen) membawa remah makanan.",
-    qrCode: "Foto bukti makan-memakan (daun berlubang, serangga di daun, burung memakan serangga, semut membawa remah) dan daftar organisme, digunakan jika kelompok tidak menemukannya di lingkungan sekolah",
+    qrCode: "Kumpulan bukti lapangan hubungan makan-memakan alternatif",
     selfRegulationReference: "Hasil menyesuaikan pengamatan murid. Contoh: rumput (produsen) dimakan belalang (bukti: daun rumput berlubang); belalang (konsumen tingkat I) dimakan burung (bukti: burung mematuk belalang); semut (konsumen) membawa remah makanan.",
     stimulus: {
       type: 'data',
-      content: "Foto bukti makan-memakan (daun berlubang, serangga di daun, burung memakan serangga, semut membawa remah) dan daftar organisme, digunakan jika kelompok tidak menemukannya di lingkungan sekolah"
+      content: "Stimulus Bukti Hubungan Makan-Memakan Lapangan:\n1. Bukti 1: Daun tanaman hias berlubang bekas gigitan belalang/ulat (Produsen → Konsumen I).\n2. Bukti 2: Burung gereja/pipit terlihat mematuk ulat kecil di dahan pohon (Konsumen I → Konsumen II).\n3. Bukti 3: Rombongan semut membawa serpihan sisa makanan atau bangkai serangga ke sarangnya (Konsumen/Dekomposer)."
     },
     maxScore: 3
   },
@@ -325,7 +325,7 @@ export const ACTIVITIES: Record<string, ActivityData> = {
     level: 'C4',
     cardType: 'Riddle',
     title: 'AE-04: Inferensi (C4)',
-    instruction: "Bayangkan populasi konsumen tingkat I pada rantai makananmu berkurang drastis!\nKemudian buatlah 2 dugaan dampak yang terjadi pada produsen dan konsumen tingkat II,! Jelaskan alasannya!",
+    instruction: "Bayangkan populasi konsumen tingkat I pada rantai makananmu berkurang drastis!\nKemudian buatlah 2 dugaan dampak yang terjadi pada produsen dan konsumen tingkat II! Jelaskan alasannya!",
     expectedResult: "Hasil menyesuaikan jawaban murid. Contoh: jika belalang berkurang drastis, rumput lebih sedikit dimakan sehingga populasinya cenderung meningkat; burung kehilangan sumber makanan sehingga populasinya menurun atau berpindah.",
     qrCode: "Tidak",
     selfRegulationReference: "Hasil menyesuaikan jawaban murid. Contoh: jika belalang berkurang drastis, rumput lebih sedikit dimakan sehingga populasinya cenderung meningkat; burung kehilangan sumber makanan sehingga populasinya menurun atau berpindah.",
@@ -340,7 +340,7 @@ export const ACTIVITIES: Record<string, ActivityData> = {
     level: 'C4',
     cardType: 'Challenge',
     title: 'AE-05: Eksplanasi (C4)',
-    instruction: "Peragakan aliran energi pada rantai makananmu memakai sketsa dan tanda panah.\nPresentasikan minimal 1 menit: bagaimana energi berpindah dari matahari sampai konsumen puncak, dan mengapa jumlah organisme di tingkat atas lebih sedikit!",
+    instruction: "Peragakan aliran energi pada rantai makananmu memakai sketsa dan tanda panah.\nPresentasikan minimal 1 menit (gunakan fitur Stopwatch di bawah): bagaimana energi berpindah dari matahari sampai konsumen puncak, dan mengapa jumlah organisme di tingkat atas lebih sedikit!",
     expectedResult: "Hasil menyesuaikan jawaban murid. Contoh: matahari → produsen (fotosintesis) → konsumen tingkat I → konsumen tingkat II. Energi berkurang di tiap perpindahan karena sebagian dipakai untuk aktivitas hidup atau dilepas sebagai panas, sehingga organisme di tingkat atas jumlahnya lebih sedikit.",
     qrCode: "Tidak",
     selfRegulationReference: "Hasil menyesuaikan jawaban murid. Contoh: matahari → produsen (fotosintesis) → konsumen tingkat I → konsumen tingkat II. Energi berkurang di tiap perpindahan karena sebagian dipakai untuk aktivitas hidup atau dilepas sebagai panas, sehingga organisme di tingkat atas jumlahnya lebih sedikit.",
@@ -355,13 +355,13 @@ export const ACTIVITIES: Record<string, ActivityData> = {
     level: 'C5',
     cardType: 'Riddle',
     title: 'AE-06: Regulasi Diri (C5)',
-    instruction: "Scan QR untuk melihat contoh rantai makanan dan arah aliran energi!\nPeriksa kembali rantai makanan yang telah kalian buat dan jawaban kalian. Tandai bagian yang kurang tepat dan perbaiki. Kemudian jelaskan alasan perbaikan atau alasan mempertahankan jawaban!",
+    instruction: "Buka tab '3. Regulasi Diri' untuk melihat bagan rujukan rantai makanan dan kaidah arah aliran energi!\nPeriksa kembali rantai makanan yang telah kelompokmu susun dan jawaban yang telah dibuat. Tandai bagian yang kurang tepat, perbaiki pada lembar LKPD, lalu jelaskan alasan perbaikan atau alasan mempertahankan jawaban pada kolom refleksi!",
     expectedResult: "Hasil menyesuaikan data dan jawaban murid. Contoh: kelompok semula menggambar burung → belalang, kemudian memperbaikinya menjadi belalang → burung karena panah menunjukkan arah aliran energi dari yang dimakan ke yang memakan.",
-    qrCode: "Contoh rantai makanan dan aliran energi (rujukan pengecekan)",
-    selfRegulationReference: "Hasil menyesuaikan data dan jawaban murid. Contoh: kelompok semula menggambar burung → belalang, kemudian memperbaikinya menjadi belalang → burung karena panah menunjukkan arah aliran energi dari yang dimakan ke yang memakan.",
+    qrCode: "Rujukan kaidah rantai makanan dan aliran energi",
+    selfRegulationReference: "Kunci Rujukan Mandiri (Rantai Makanan & Aliran Energi):\n1. Arah Tanda Panah (→): Menunjukkan arah aliran energi dari organisme yang dimakan menuju pemakan (contoh: Rumput → Belalang → Burung).\n2. Tingkat Trofik:\n   • Trofik 1: Produsen (tumbuhan berklorofil penghasil energi melalui fotosintesis).\n   • Trofik 2: Konsumen Tingkat I / Herbivor (pemakan produsen).\n   • Trofik 3: Konsumen Tingkat II / Karnivor (pemakan herbivor).\n3. Hukum Aliran Energi: Hanya ~10% energi yang berpindah efisien ke trofik berikutnya (hukum 10%), sisanya hilang sebagai panas dan metabolisme respirasi.",
     stimulus: {
       type: 'data',
-      content: "Contoh rantai makanan dan aliran energi (rujukan pengecekan)"
+      content: "Petunjuk: Buka tab '3. Regulasi Diri' di atas untuk memvalidasi susunan rantai makanan serta arah tanda panah aliran energi kelompokmu."
     },
     maxScore: 3
   },
@@ -374,13 +374,13 @@ export const ACTIVITIES: Record<string, ActivityData> = {
     level: 'C2',
     cardType: 'Challenge',
     title: 'JE-01: Interpretasi (C2)',
-    instruction: "Scan QR paket kelompokmu untuk mengamati dua ekosistem.\nCatat pada tabel di LKPD untuk masing-masing ekosistem: nama ekosistem, ciri fisik (suhu, ketersediaan air atau curah hujan, cahaya, serta contoh tumbuhan dan hewan yang tampak).\nKelompokkan tiap ekosistem ke dalam jenisnya (alami atau buatan)!",
-    expectedResult: "Hasil menyesuaikan tiap kelompok. Contoh: hutan hujan tropis (ekosistem darat alami): curah hujan tinggi, suhu hangat dan relatif stabil, tumbuhan lebat berlapis, banyak spesies. Gurun (ekosistem darat alami): curah hujan sangat rendah, siang sangat panas dan malam dingin, tumbuhan jarang seperti kaktus, hewan banyak aktif di malam hari..",
-    qrCode: "Foto/video singkat dan data ciri dua ekosistem sesuai kelompok",
-    selfRegulationReference: "Hasil menyesuaikan tiap kelompok. Contoh: hutan hujan tropis (ekosistem darat alami): curah hujan tinggi, suhu hangat dan relatif stabil, tumbuhan lebat berlapis, banyak spesies. Gurun (ekosistem darat alami): curah hujan sangat rendah, siang sangat panas dan malam dingin, tumbuhan jarang seperti kaktus, hewan banyak aktif di malam hari..",
+    instruction: "Cermati informasi profil dua ekosistem pada kotak stimulus di bawah ini!\nCatat pada form LKPD untuk masing-masing ekosistem: nama ekosistem, ciri abiotik fisik (suhu, ketersediaan air / curah hujan, intensitas cahaya), serta contoh flora dan fauna yang khas.\nKelompokkan tiap ekosistem ke dalam jenisnya (alami atau buatan)!",
+    expectedResult: "Hasil menyesuaikan tiap kelompok. Contoh: hutan hujan tropis (ekosistem darat alami): curah hujan tinggi, suhu hangat dan relatif stabil, tumbuhan lebat berlapis, banyak spesies. Gurun (ekosistem darat alami): curah hujan sangat rendah, siang sangat panas dan malam dingin, tumbuhan jarang seperti kaktus, hewan banyak aktif di malam hari.",
+    qrCode: "Data profil dan komparasi dua ekosistem darat",
+    selfRegulationReference: "Hasil menyesuaikan tiap kelompok. Contoh: hutan hujan tropis (ekosistem darat alami): curah hujan tinggi, suhu hangat dan relatif stabil, tumbuhan lebat berlapis, banyak spesies. Gurun (ekosistem darat alami): curah hujan sangat rendah, siang sangat panas dan malam dingin, tumbuhan jarang seperti kaktus, hewan banyak aktif di malam hari.",
     stimulus: {
       type: 'data',
-      content: "Foto/video singkat dan data ciri dua ekosistem sesuai kelompok"
+      content: "Profil Ekosistem untuk Pengamatan:\n• Ekosistem A (Hutan Hujan Tropis): Curah hujan sangat tinggi (>2.000 mm/tahun), suhu hangat konstan (22-28°C), kanopi pohon bertingkat lebat. Flora: meranti, rotan, epifit anggrek. Fauna: kera, burung rangkong, harimau, serangga. (Jenis: Ekosistem Darat Alami).\n• Ekosistem B (Gurun / Padang Pasir): Curah hujan sangat minim (<250 mm/tahun), fluktuasi suhu ekstrem (siang terik >40°C, malam dingin <10°C). Flora: kaktus berduri penyimpan air. Fauna: kadal gurun, ular derik, unta, hewan aktif nokturnal. (Jenis: Ekosistem Darat Alami)."
     },
     maxScore: 3
   },
@@ -393,7 +393,7 @@ export const ACTIVITIES: Record<string, ActivityData> = {
     level: 'C4',
     cardType: 'Riddle',
     title: 'JE-02: Analisis (C4)',
-    instruction: "Bandingkan kedua ekosistem  yang telah kalian kelompokkan: Tuliskan minimal 3 perbedaan dan 1 persamaan, kemudian jelaskan hubungan antara ciri abiotik dan biotik di sana!",
+    instruction: "Bandingkan kedua ekosistem yang telah kalian pelajari: Tuliskan minimal 3 perbedaan dan 1 persamaan, kemudian jelaskan hubungan antara ciri abiotik dan adaptasi biotik di sana!",
     expectedResult: "Hasil menyesuaikan jawaban murid. Contoh: perbedaan: curah hujan, kerapatan vegetasi, dan adaptasi tumbuhan (kaktus menyimpan air, daun berduri). Persamaan: keduanya memiliki komponen biotik dan abiotik yang saling berhubungan. Ketersediaan air yang tinggi mendukung vegetasi lebat, sedangkan air yang sangat terbatas membuat hanya organisme beradaptasi khusus yang bertahan.",
     qrCode: "Tidak",
     selfRegulationReference: "Hasil menyesuaikan jawaban murid. Contoh: perbedaan: curah hujan, kerapatan vegetasi, dan adaptasi tumbuhan (kaktus menyimpan air, daun berduri). Persamaan: keduanya memiliki komponen biotik dan abiotik yang saling berhubungan. Ketersediaan air yang tinggi mendukung vegetasi lebat, sedangkan air yang sangat terbatas membuat hanya organisme beradaptasi khusus yang bertahan.",
@@ -408,13 +408,13 @@ export const ACTIVITIES: Record<string, ActivityData> = {
     level: 'C5',
     cardType: 'Riddle',
     title: 'JE-03: Evaluasi (C5)',
-    instruction: "Scan QR berikut sesuai kelompok!\nNilailah pernyataan tersebut menggunakan bukti dari dua ekosistem kelompokmu!",
+    instruction: "Perhatikan pernyataan evaluasi pada kotak stimulus berikut:\n“Semua ekosistem darat memiliki kondisi lingkungan dan jenis organisme yang sama karena sama-sama berada di permukaan daratan.”\nNilailah apakah pernyataan tersebut tepat atau keliru! Buktikan evaluasimu menggunakan fakta perbandingan dari dua ekosistem yang telah kelompokmu pelajari!",
     expectedResult: "Hasil menyesuaikan jawaban murid. Contoh: pernyataan tersebut tidak tepat. Hutan hujan tropis dan gurun sama-sama ekosistem darat, tetapi curah hujan, suhu, vegetasi, dan organismenya sangat berbeda. Ekosistem sejenis pun dapat berbeda karena faktor abiotiknya berbeda.",
-    qrCode: "Hasil pernyataan yang harus di evaluasi.",
-    selfRegulationReference: "Hasil menyesuaikan jawaban murid. Contoh: pernyataan tersebut tidak tepat. Hutan hujan tropis dan gurun sama-sama ekosistem darat, tetapi curah hujan, suhu, vegetasi, dan organismenya sangat berbeda. Ekosistem sejenis pun dapat berbeda karena faktor abiotiknya berbeda.",
+    qrCode: "Pernyataan evaluasi keberagaman ekosistem darat",
+    selfRegulationReference: "Kunci Evaluasi: Pernyataan tersebut TIDAK TEPAT / KELIRU. Walaupun sama-sama merupakan ekosistem darat, faktor abiotik seperti curah hujan, suhu, dan kelembapan sangat berbeda secara ekstrem antara satu ekosistem dengan lainnya (misal: Hutan Hujan Tropis vs Gurun), sehingga menyebabkan keanekaragaman flora-fauna dan adaptasinya berbeda secara drastis.",
     stimulus: {
       type: 'data',
-      content: "Hasil pernyataan yang harus di evaluasi."
+      content: "Pernyataan Evaluasi Kritis:\n“Semua ekosistem darat memiliki kondisi lingkungan dan jenis organisme yang sama karena sama-sama berada di permukaan daratan.”"
     },
     maxScore: 3
   },
@@ -427,7 +427,7 @@ export const ACTIVITIES: Record<string, ActivityData> = {
     level: 'C4',
     cardType: 'Riddle',
     title: 'JE-04: Inferensi (C4)',
-    instruction: "Bayangkan salah satu ekosistem kelompokmu terdapat gangguan pada komponen abiotiknya!\nBuat 2 dugaan perubahan pada organisme yang hidup di sana, dan jelaskan alasannya berdasarkan cirinya!",
+    instruction: "Bayangkan salah satu ekosistem kelompokmu mengalami perubahan drastis pada komponen abiotiknya (misal: curah hujan turun drastis di hutan tropis atau meningkat di gurun)!\nBuat 2 dugaan perubahan yang akan terjadi pada organisme di sana, dan jelaskan alasannya!",
     expectedResult: "Hasil menyesuaikanjawaban tiap murid. Contoh: jika hujan di hutan hujan tropis berkurang drastis, tumbuhan berdaun lebar mengalami kekurangan air sehingga vegetasi menjadi kurang rapat dan hewan yang bergantung padanya berpindah. Jika hujan di gurun meningkat, biji tumbuhan dapat berkecambah sehingga vegetasi bertambah sementara.",
     qrCode: "Tidak",
     selfRegulationReference: "Hasil menyesuaikanjawaban tiap murid. Contoh: jika hujan di hutan hujan tropis berkurang drastis, tumbuhan berdaun lebar mengalami kekurangan air sehingga vegetasi menjadi kurang rapat dan hewan yang bergantung padanya berpindah. Jika hujan di gurun meningkat, biji tumbuhan dapat berkecambah sehingga vegetasi bertambah sementara.",
@@ -442,7 +442,7 @@ export const ACTIVITIES: Record<string, ActivityData> = {
     level: 'C4',
     cardType: 'Challenge',
     title: 'JE-05: Eksplanasi (C4)',
-    instruction: "Presentasikan minimal 1 menit: ciri ekosistem tersebut, contoh organisme beserta adaptasinya, dan hubungannya dengan kondisi lingkungan!",
+    instruction: "Presentasikan minimal 1 menit (gunakan fitur Stopwatch di bawah): ciri ekosistem yang kalian amati, contoh organisme beserta adaptasinya, dan hubungan keterkaitannya dengan kondisi abiotik setempat!",
     expectedResult: "Hasil menyesuaikan data dan jawaban dari murid. Contoh: sketsa berlabel komponen abiotik dan biotik, disertai penjelasan runtut: ciri lingkungan → organisme dan adaptasinya → kesimpulan mengapa organisme tersebut dapat hidup di ekosistem itu.",
     qrCode: "Tidak",
     selfRegulationReference: "Hasil menyesuaikan data dan jawaban dari murid. Contoh: sketsa berlabel komponen abiotik dan biotik, disertai penjelasan runtut: ciri lingkungan → organisme dan adaptasinya → kesimpulan mengapa organisme tersebut dapat hidup di ekosistem itu.",
@@ -457,13 +457,13 @@ export const ACTIVITIES: Record<string, ActivityData> = {
     level: 'C5',
     cardType: 'Riddle',
     title: 'JE-06: Regulasi Diri (C5)',
-    instruction: "Scan QR untuk melihat tabel rujukan ciri kedua ekosistem pada paketmu!\nPeriksa kembali tabel dan seluruh jawaban kalian. Tandai bagian yang kurang tepat dan perbaiki, kemudian jelaskan alasan perbaikan atau alasan mempertahankan jawaban!",
+    instruction: "Buka tab '3. Regulasi Diri' untuk melihat tabel rujukan komparasi ciri kedua ekosistem!\nPeriksa kembali tabel LKPD dan seluruh analisis kelompokmu sebelumnya. Tandai bagian yang kurang tepat, perbaiki pada jawaban, lalu jelaskan alasan perbaikan atau alasan mempertahankan jawaban pada kolom refleksi!",
     expectedResult: "Hasil menyesuaikan data dan jawaban tiap murid. Contoh: kelompok semula menulis kaktus sebagai tumbuhan khas hutan hujan tropis, lalu memperbaikinya menjadi tumbuhan khas gurun sesuai rujukan.",
-    qrCode: "Tabel rujukan ciri kedua ekosistem sesuai paket (rujukan pengecekan)",
-    selfRegulationReference: "Hasil menyesuaikan data dan jawaban tiap murid. Contoh: kelompok semula menulis kaktus sebagai tumbuhan khas hutan hujan tropis, lalu memperbaikinya menjadi tumbuhan khas gurun sesuai rujukan.",
+    qrCode: "Tabel rujukan komparasi ciri kedua ekosistem",
+    selfRegulationReference: "Kunci Rujukan Mandiri (Komparasi Ciri Ekosistem):\n1. Hutan Hujan Tropis: Curah hujan tinggi (>2000 mm/th), suhu hangat relatif konstan, vegetasi kanopi bertingkat lebat, flora fauna beraneka ragam tinggi (misal: epifit, liana, orangutan, harimau).\n2. Gurun (Padang Pasir): Curah hujan sangat rendah (<250 mm/th), evaporasi tinggi, suhu siang sangat panas dan malam dingin, adaptasi xerofit (daun duri, batang sukulen menyimpan air), hewan nokturnal.\n3. Kesimpulan Regulasi: Perbedaan faktor abiotik menentukan tipe vegetasi dan bentuk adaptasi morfologi/fisiologi makhluk hidup yang ada di dalamnya.",
     stimulus: {
       type: 'data',
-      content: "Tabel rujukan ciri kedua ekosistem sesuai paket (rujukan pengecekan)"
+      content: "Petunjuk: Buka tab '3. Regulasi Diri' di atas untuk memvalidasi komparasi ciri dan adaptasi ekosistem kelompokmu."
     },
     maxScore: 3
   },

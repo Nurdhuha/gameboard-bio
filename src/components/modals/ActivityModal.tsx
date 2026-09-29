@@ -268,7 +268,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                       Ambil Foto / Unggah Bukti Pengamatan Lapangan
                     </span>
                     <span className="text-[11px] text-stone-400 mt-0.5">
-                      (Tersambung langsung dengan kamera HP)
+                      (Dapat menggunakan kamera perangkat atau unggah file foto)
                     </span>
                   </label>
                 )}
