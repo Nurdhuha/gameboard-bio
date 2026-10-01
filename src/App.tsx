@@ -361,7 +361,7 @@ export const App: React.FC = () => {
         ) : (
           /* Sesi Papan Overview Kelas di Layar Guru */
           <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
-            <div className="flex-1 flex flex-col items-center justify-center p-2 sm:p-5 overflow-hidden relative h-full">
+            <div className="flex-1 flex flex-col items-center justify-center p-0 lg:p-5 overflow-hidden relative h-full bg-[#1b9cb0] lg:bg-transparent">
               <GameBoard
                 teams={teams}
                 selectedTeamId={selectedTeamId}
@@ -507,7 +507,7 @@ export const App: React.FC = () => {
         ) : (
           /* Papan Permainan Murid (Fokus Kelompok) */
           <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
-            <div className="flex-1 flex flex-col items-center justify-center p-2 sm:p-5 overflow-hidden relative h-full">
+            <div className="flex-1 flex flex-col items-center justify-center p-0 lg:p-5 overflow-hidden relative h-full bg-[#1b9cb0] lg:bg-transparent">
               <GameBoard
                 teams={teams}
                 selectedTeamId={selectedTeamId}

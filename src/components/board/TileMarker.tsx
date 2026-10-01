@@ -16,127 +16,238 @@ export const TileMarker: React.FC<TileMarkerProps> = ({
   isCompleted,
   onClick,
 }) => {
-  // Palet warna yang menenangkan (Calming Nature Palette)
+  const isStart = tile.id === 0;
+  const isFinish = tile.id === 51;
+
+  // Theme styling based on tile type
   const getTheme = () => {
     switch (tile.type) {
       case 'challenge':
         return {
-          bg: '#ffffff',
-          border: '#059669', // Sage / Forest Emerald
-          text: '#065f46',
-          badgeText: '#047857',
-          shadow: 'rgba(5, 150, 105, 0.15)',
+          textColor: '#c2410c', // Orange-700
+          pillBg: '#ffedd5',    // Orange-100
+          pillBorder: '#fb923c', // Orange-400
+          badgeText: '#9a3412',  // Orange-800
+          icon: '⭐',
+          glow: 'rgba(234, 88, 12, 0.25)',
         };
       case 'riddle':
         return {
-          bg: '#ffffff',
-          border: '#0284c7', // Serene Sky Blue
-          text: '#0369a1',
-          badgeText: '#0284c7',
-          shadow: 'rgba(2, 132, 199, 0.15)',
+          textColor: '#0369a1', // Sky-700
+          pillBg: '#e0f2fe',    // Sky-100
+          pillBorder: '#38bdf8', // Sky-400
+          badgeText: '#075985',  // Sky-800
+          icon: '🌿',
+          glow: 'rgba(2, 132, 199, 0.25)',
         };
       case 'badge':
         return {
-          bg: '#ffffff',
-          border: '#d97706', // Warm Amber Honey
-          text: '#b45309',
-          badgeText: '#d97706',
-          shadow: 'rgba(217, 119, 6, 0.2)',
+          textColor: '#b45309', // Amber-700
+          pillBg: '#fef3c7',    // Amber-100
+          pillBorder: '#f59e0b', // Amber-500
+          badgeText: '#78350f',  // Amber-900
+          icon: '🏆',
+          glow: 'rgba(217, 119, 6, 0.35)',
         };
       case 'finish':
         return {
-          bg: '#ffffff',
-          border: '#7c3aed', // Calm Lavender Violet
-          text: '#6d28d9',
-          badgeText: '#7c3aed',
-          shadow: 'rgba(124, 58, 237, 0.2)',
+          textColor: '#0284c7',
+          pillBg: '#e0f2fe',
+          pillBorder: '#38bdf8',
+          badgeText: '#0369a1',
+          icon: '🏁',
+          glow: 'rgba(2, 132, 199, 0.3)',
         };
-      default:
+      default: // Normal step
         return {
-          bg: '#ffffff',
-          border: '#cbd5e1', // Soft Slate
-          text: '#64748b',
-          badgeText: '#94a3b8',
-          shadow: 'rgba(148, 163, 184, 0.1)',
+          textColor: '#1e293b', // Slate-800
+          pillBg: '#f1f5f9',
+          pillBorder: '#cbd5e1',
+          badgeText: '#475569',
+          icon: '',
+          glow: 'rgba(15, 23, 42, 0.1)',
         };
     }
   };
 
   const theme = getTheme();
-  const radius = tile.type === 'badge' ? 27 : tile.type === 'finish' ? 30 : tile.activityCode ? 24 : 17;
+
+  // Special rendering for START (tile 0) and FINISH (tile 51)
+  if (isStart || isFinish) {
+    return (
+      <g
+        id={`tile-${tile.id}`}
+        transform={`translate(${tile.x}, ${tile.y})`}
+        onClick={() => onClick(tile)}
+        className="cursor-pointer group select-none"
+      >
+        {/* Selection indicator */}
+        {isSelected && (
+          <ellipse
+            cx="0"
+            cy="0"
+            rx="56"
+            ry="24"
+            fill="none"
+            stroke="#2563eb"
+            strokeWidth="3.5"
+            strokeDasharray="6 4"
+            className="animate-pulse"
+          />
+        )}
+
+        {/* Active pawn glow */}
+        {isActive && (
+          <ellipse
+            cx="0"
+            cy="0"
+            rx="52"
+            ry="22"
+            fill="rgba(16, 185, 129, 0.2)"
+            stroke="#10b981"
+            strokeWidth="2.5"
+          />
+        )}
+
+        {/* Clickable transparent area over text */}
+        <ellipse
+          cx="0"
+          cy="0"
+          rx="52"
+          ry="20"
+          fill="transparent"
+          className="group-hover:fill-white/30 transition-colors"
+        />
+      </g>
+    );
+  }
+
+  // Standard step ellipses (1 to 50)
+  const rx = 58;
+  const ry = 38;
 
   return (
     <g
       id={`tile-${tile.id}`}
       transform={`translate(${tile.x}, ${tile.y})`}
       onClick={() => onClick(tile)}
-      className="cursor-pointer group select-none transition-transform duration-200"
+      className="cursor-pointer group select-none"
     >
-      {/* Selected Indicator Ring */}
+      {/* Selection Outer Ring */}
       {isSelected && (
-        <circle
+        <ellipse
           cx="0"
           cy="0"
-          r={radius + 8}
+          rx={rx + 6}
+          ry={ry + 5}
           fill="none"
-          stroke={theme.border}
-          strokeWidth="2"
-          strokeDasharray="4 3"
+          stroke="#2563eb"
+          strokeWidth="3.5"
+          strokeDasharray="6 4"
+          className="animate-pulse"
         />
       )}
 
-      {/* Soft Ceramic Drop Shadow */}
-      <circle
-        cx="0"
-        cy="2"
-        r={radius + 1}
-        fill={theme.shadow}
-      />
+      {/* Active Aura if Selected Team Pawn is on this Tile */}
+      {isActive && (
+        <ellipse
+          cx="0"
+          cy="0"
+          rx={rx + 2}
+          ry={ry + 2}
+          fill="rgba(16, 185, 129, 0.15)"
+          stroke="#10b981"
+          strokeWidth="2.5"
+        />
+      )}
 
-      {/* Main Ceramic Token Node */}
-      <circle
+      {/* Interactive Hover Hitbox over the background ellipse */}
+      <ellipse
         cx="0"
         cy="0"
-        r={radius}
-        fill={theme.bg}
-        stroke={isSelected ? '#0f172a' : theme.border}
-        strokeWidth={isSelected ? 3 : tile.activityCode ? 2.5 : 1.5}
-        className="transition-all duration-200 group-hover:filter group-hover:brightness-95"
+        rx={rx}
+        ry={ry}
+        fill="transparent"
+        className="group-hover:fill-white/30 transition-all duration-200"
       />
 
-      {/* Tile Number / Label */}
+      {/* Type Icon Indicator for Challenge / Riddle / Badge */}
+      {theme.icon && (
+        <text
+          x="0"
+          y="-20"
+          textAnchor="middle"
+          fontSize="13"
+          className="pointer-events-none select-none"
+        >
+          {theme.icon}
+        </text>
+      )}
+
+      {/* Big Crisp Step Number (1 to 50) */}
       <text
         x="0"
-        y={tile.activityCode ? -2 : 4}
+        y={tile.activityCode ? '2' : '10'}
         textAnchor="middle"
-        fill={theme.text}
-        fontSize={radius >= 24 ? '13' : '10.5'}
-        fontWeight="700"
-        fontFamily="Lexend, sans-serif"
-        className="pointer-events-none"
+        fill={theme.textColor}
+        fontSize={tile.activityCode ? '28' : '32'}
+        fontWeight="800"
+        fontFamily="Lexend, system-ui, sans-serif"
+        className="pointer-events-none tracking-tight"
+        style={{ filter: 'drop-shadow(0 1px 2px rgba(255,255,255,0.9))' }}
       >
         {tile.label || tile.id}
       </text>
 
-      {/* Clean Sub-Label for Activity Code (e.g. KE-01) */}
+      {/* Activity Code Sub-Pill (e.g. KE-01, IA-05, L1) */}
       {tile.activityCode && (
-        <text
-          x="0"
-          y="11"
-          textAnchor="middle"
-          fill={theme.badgeText}
-          fontSize="8.5"
-          fontWeight="600"
-          fontFamily="Lexend, sans-serif"
-          className="pointer-events-none tracking-tight"
-        >
-          {tile.activityCode}
-        </text>
+        <g transform="translate(0, 15)">
+          <rect
+            x="-26"
+            y="-3"
+            width="52"
+            height="18"
+            rx="9"
+            fill={theme.pillBg}
+            stroke={theme.pillBorder}
+            strokeWidth="1.2"
+          />
+          <text
+            x="0"
+            y="9.5"
+            textAnchor="middle"
+            fill={theme.badgeText}
+            fontSize="10"
+            fontWeight="700"
+            fontFamily="Lexend, system-ui, sans-serif"
+            className="pointer-events-none tracking-tight"
+          >
+            {tile.activityCode}
+          </text>
+        </g>
       )}
 
-      {/* Completed Minimalist Check Dot */}
+      {/* Completed Checkmark Badge */}
       {isCompleted && (
-        <circle cx={radius - 3} cy={-radius + 3} r="4.5" fill="#10b981" stroke="#ffffff" strokeWidth="1.5" />
+        <g transform={`translate(${rx - 15}, ${-ry + 10})`}>
+          <circle
+            cx="0"
+            cy="0"
+            r="11"
+            fill="#10b981"
+            stroke="#ffffff"
+            strokeWidth="2"
+            style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.15))' }}
+          />
+          <path
+            d="M -5 0 L -1 4 L 5 -3"
+            fill="none"
+            stroke="#ffffff"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </g>
       )}
     </g>
   );
