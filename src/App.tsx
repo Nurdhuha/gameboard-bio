@@ -31,8 +31,10 @@ import confetti from 'canvas-confetti';
 export const App: React.FC = () => {
   const location = useLocation();
 
-  // Deteksi role berdasarkan route URL: /teachers -> Guru, selain itu -> Murid
-  const isTeacherRoute = location.pathname.startsWith('/teachers') || location.hash.startsWith('#/teachers');
+  // Deteksi role berdasarkan route URL: /teachers atau /teacher -> Guru, selain itu -> Murid
+  const isTeacherRoute =
+    location.pathname.startsWith('/teacher') ||
+    location.hash.startsWith('#/teacher');
 
   // Status halaman murid: apakah sudah memilih kelompok atau belum
   const [hasStudentSelectedTeam, setHasStudentSelectedTeam] = useState<boolean>(false);
