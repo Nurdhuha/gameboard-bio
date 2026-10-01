@@ -9,7 +9,7 @@ interface TileMarkerProps {
   onClick: (tile: TileData) => void;
 }
 
-export const TileMarker: React.FC<TileMarkerProps> = ({
+export const TileMarker: React.FC<TileMarkerProps> = React.memo(({
   tile,
   isActive,
   isSelected,
@@ -194,7 +194,12 @@ export const TileMarker: React.FC<TileMarkerProps> = ({
         fontWeight="800"
         fontFamily="Lexend, system-ui, sans-serif"
         className="pointer-events-none tracking-tight"
-        style={{ filter: 'drop-shadow(0 1px 2px rgba(255,255,255,0.9))' }}
+        style={{
+          paintOrder: 'stroke fill',
+          stroke: '#ffffff',
+          strokeWidth: '3px',
+          strokeLinejoin: 'round',
+        }}
       >
         {tile.label || tile.id}
       </text>
@@ -237,7 +242,6 @@ export const TileMarker: React.FC<TileMarkerProps> = ({
             fill="#10b981"
             stroke="#ffffff"
             strokeWidth="2"
-            style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.15))' }}
           />
           <path
             d="M -5 0 L -1 4 L 5 -3"
@@ -251,4 +255,4 @@ export const TileMarker: React.FC<TileMarkerProps> = ({
       )}
     </g>
   );
-};
+});

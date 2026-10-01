@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { TileData, Team } from '../../types';
 import { BOARD_TILES } from '../../data/boardData';
 import { TileMarker } from './TileMarker';
@@ -168,6 +168,31 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     }
   };
 
+  // RequestAnimationFrame scheduler untuk animasi pan & drag yang mulus (60/120fps) tanpa jank
+  const rafIdRef = useRef<number | null>(null);
+  const pendingPanRef = useRef<{ x: number; y: number } | null>(null);
+
+  const schedulePanUpdate = useCallback((newPan: { x: number; y: number }) => {
+    pendingPanRef.current = newPan;
+    if (rafIdRef.current === null) {
+      rafIdRef.current = requestAnimationFrame(() => {
+        if (pendingPanRef.current) {
+          setPan(pendingPanRef.current);
+          pendingPanRef.current = null;
+        }
+        rafIdRef.current = null;
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (rafIdRef.current !== null) {
+        cancelAnimationFrame(rafIdRef.current);
+      }
+    };
+  }, []);
+
   // Mouse drag handlers
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0) return;
@@ -187,7 +212,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
       hasMovedRef.current = true;
       setIsAutoFollow(false); // Pengguna menggeser peta secara manual
     }
-    setPan({
+    schedulePanUpdate({
       x: e.clientX - dragStart.x,
       y: e.clientY - dragStart.y,
     });
@@ -195,6 +220,14 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
   const handleMouseUp = () => {
     setIsDragging(false);
+    if (rafIdRef.current !== null) {
+      cancelAnimationFrame(rafIdRef.current);
+      rafIdRef.current = null;
+    }
+    if (pendingPanRef.current) {
+      setPan(pendingPanRef.current);
+      pendingPanRef.current = null;
+    }
   };
 
   // Touch gestures (Pinch-to-zoom & Drag-to-pan di Smartphone)
@@ -231,7 +264,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         hasMovedRef.current = true;
         setIsAutoFollow(false);
       }
-      setPan({
+      schedulePanUpdate({
         x: e.touches[0].clientX - dragStart.x,
         y: e.touches[0].clientY - dragStart.y,
       });
@@ -250,19 +283,49 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   const handleTouchEnd = () => {
     setIsDragging(false);
     touchDistRef.current = 0;
+    if (rafIdRef.current !== null) {
+      cancelAnimationFrame(rafIdRef.current);
+      rafIdRef.current = null;
+    }
+    if (pendingPanRef.current) {
+      setPan(pendingPanRef.current);
+      pendingPanRef.current = null;
+    }
   };
 
-  const handleTileClickWrapper = (tile: TileData) => {
-    if (hasMovedRef.current) return; // Abaikan klik jika pengguna sedang menggeser peta
-    onTileClick(tile);
-  };
+  const handleTileClickWrapper = useCallback(
+    (tile: TileData) => {
+      if (hasMovedRef.current) return; // Abaikan klik jika pengguna sedang menggeser peta
+      onTileClick(tile);
+    },
+    [onTileClick]
+  );
 
-  // Hitung jumlah pion di setiap petak
-  const pawnsOnTileCount: Record<number, number> = {};
-  teams.forEach((t) => {
-    pawnsOnTileCount[t.currentTile] = (pawnsOnTileCount[t.currentTile] || 0) + 1;
-  });
-  const pawnsOnTileTracker: Record<number, number> = {};
+  // Hitung jumlah pion di setiap petak secara ter-memoize
+  const pawnsOnTileCount = useMemo(() => {
+    const counts: Record<number, number> = {};
+    teams.forEach((t) => {
+      counts[t.currentTile] = (counts[t.currentTile] || 0) + 1;
+    });
+    return counts;
+  }, [teams]);
+
+  // Posisi & offset pion ter-memoize untuk render hemat CPU
+  const teamPawnsToRender = useMemo(() => {
+    const tracker: Record<number, number> = {};
+    return teams.map((team) => {
+      const tile = BOARD_TILES.find((t) => t.id === team.currentTile) || BOARD_TILES[0];
+      const totalOnThisTile = pawnsOnTileCount[team.currentTile] || 1;
+      const currentOffset = tracker[team.currentTile] || 0;
+      tracker[team.currentTile] = currentOffset + 1;
+      return {
+        team,
+        tile,
+        totalOnThisTile,
+        currentOffset,
+      };
+    });
+  }, [teams, pawnsOnTileCount]);
 
   return (
     <div className="relative w-full h-full flex flex-col items-center justify-center select-none overflow-hidden touch-none bg-[#1b9cb0] lg:bg-transparent">
@@ -340,12 +403,13 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         <div
           ref={boardInnerRef}
           style={{
-            transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})`,
+            transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${scale})`,
             transformOrigin: 'center center',
+            willChange: isDragging || touchDistRef.current > 0 ? 'transform' : 'auto',
             transition:
               isDragging || touchDistRef.current > 0
                 ? 'none'
-                : 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)',
+                : 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)',
             width: 'min(100%, 85vh)',
             height: 'min(100%, 85vh)',
           }}
@@ -355,9 +419,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             viewBox="0 0 1600 1600"
             className="w-full h-full select-none rounded-none shadow-none lg:rounded-3xl lg:shadow-2xl overflow-hidden bg-[#1b9cb0]"
           >
-            {/* Background Map Artwork */}
+            {/* Background Map Artwork (Compressed WebP ~240KB) */}
             <image
-              href="/board-bg.png"
+              href="/board-bg.webp"
               x="0"
               y="0"
               width="1600"
@@ -386,25 +450,18 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             })}
 
             {/* TEAM PAWNS */}
-            {teams.map((team) => {
-              const tile = BOARD_TILES.find((t) => t.id === team.currentTile) || BOARD_TILES[0];
-              const totalOnThisTile = pawnsOnTileCount[team.currentTile] || 1;
-              const currentOffset = pawnsOnTileTracker[team.currentTile] || 0;
-              pawnsOnTileTracker[team.currentTile] = currentOffset + 1;
-
-              return (
-                <PawnMarker
-                  key={team.id}
-                  team={team}
-                  x={tile.x}
-                  y={tile.y}
-                  offsetIndex={currentOffset}
-                  totalOnTile={totalOnThisTile}
-                  isSelected={team.id === selectedTeamId}
-                  isStartTile={team.currentTile === 0}
-                />
-              );
-            })}
+            {teamPawnsToRender.map(({ team, tile, totalOnThisTile, currentOffset }) => (
+              <PawnMarker
+                key={team.id}
+                team={team}
+                x={tile.x}
+                y={tile.y}
+                offsetIndex={currentOffset}
+                totalOnTile={totalOnThisTile}
+                isSelected={team.id === selectedTeamId}
+                isStartTile={team.currentTile === 0}
+              />
+            ))}
           </svg>
         </div>
       </div>

@@ -1,14 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense, lazy } from 'react';
 import { useLocation } from 'react-router-dom';
 import { GameBoard } from './components/board/GameBoard';
-import { SpinWheel } from './components/spin/SpinWheel';
 import { TeamSelectionScreen } from './components/student/TeamSelectionScreen';
-import { ActivityModal } from './components/modals/ActivityModal';
-import { PrePostTestModal } from './components/modals/PrePostTestModal';
-import { LeaderboardModal } from './components/modals/LeaderboardModal';
-import { TeacherDashboardModal } from './components/dashboard/TeacherDashboardModal';
 import { INITIAL_TEAMS, TEAM_PRESETS, BOARD_TILES, ACTIVITIES } from './data/boardData';
 import { TileData, ActivityData, Team } from './types';
+
+// Code-splitting via lazy loading: memotong initial bundle size untuk smartphone berspesifikasi rendah
+const SpinWheel = lazy(() =>
+  import('./components/spin/SpinWheel').then((m) => ({ default: m.SpinWheel }))
+);
+const ActivityModal = lazy(() =>
+  import('./components/modals/ActivityModal').then((m) => ({ default: m.ActivityModal }))
+);
+const PrePostTestModal = lazy(() =>
+  import('./components/modals/PrePostTestModal').then((m) => ({ default: m.PrePostTestModal }))
+);
+const LeaderboardModal = lazy(() =>
+  import('./components/modals/LeaderboardModal').then((m) => ({ default: m.LeaderboardModal }))
+);
+const TeacherDashboardModal = lazy(() =>
+  import('./components/dashboard/TeacherDashboardModal').then((m) => ({ default: m.TeacherDashboardModal }))
+);
 import {
   Trophy,
   ChevronRight,
@@ -352,13 +364,15 @@ export const App: React.FC = () => {
         teacherGamePhase === 'spin' ? (
           /* Sesi Spin di Layar Guru */
           <main className="flex-1 overflow-y-auto flex items-center justify-center p-3 sm:p-6">
-            <SpinWheel
-              teams={teams}
-              onComplete={handleSpinComplete}
-              onAddTeam={handleAddTeam}
-              onRemoveTeam={handleRemoveTeam}
-              onResetDefaultTeams={handleResetToDefaultTeams}
-            />
+            <Suspense fallback={<div className="text-stone-400 text-xs py-8">Memuat Roda Putar...</div>}>
+              <SpinWheel
+                teams={teams}
+                onComplete={handleSpinComplete}
+                onAddTeam={handleAddTeam}
+                onRemoveTeam={handleRemoveTeam}
+                onResetDefaultTeams={handleResetToDefaultTeams}
+              />
+            </Suspense>
           </main>
         ) : (
           /* Sesi Papan Overview Kelas di Layar Guru */
@@ -761,61 +775,63 @@ export const App: React.FC = () => {
         </div>
       )}
 
-      {/* MODALS */}
-      {/* 1. Activity Modal (LKPD Siswa) */}
-      {activeActivity && (
-        <ActivityModal
-          activity={activeActivity}
-          team={selectedTeam}
-          onClose={() => setActiveActivity(null)}
-          onSubmit={handleActivitySubmit}
-          isBadgeTile={inspectedTile?.type === 'badge'}
-        />
-      )}
+      {/* MODALS (Lazy Loaded on Demand) */}
+      <Suspense fallback={null}>
+        {/* 1. Activity Modal (LKPD Siswa) */}
+        {activeActivity && (
+          <ActivityModal
+            activity={activeActivity}
+            team={selectedTeam}
+            onClose={() => setActiveActivity(null)}
+            onSubmit={handleActivitySubmit}
+            isBadgeTile={inspectedTile?.type === 'badge'}
+          />
+        )}
 
-      {/* 2. Pre-Test / Post-Test Modal */}
-      {showPrePostModal && (
-        <PrePostTestModal
-          type={showPrePostModal}
-          team={selectedTeam}
-          onClose={() => setShowPrePostModal(null)}
-          onComplete={(_score) => {
-            setTeams((prev) =>
-              prev.map((t) =>
-                t.id === selectedTeamId
-                  ? {
-                      ...t,
-                      hasFinishedPreTest: showPrePostModal === 'pre' ? true : t.hasFinishedPreTest,
-                      hasFinishedPostTest: showPrePostModal === 'post' ? true : t.hasFinishedPostTest,
-                    }
-                  : t
-              )
-            );
-          }}
-        />
-      )}
+        {/* 2. Pre-Test / Post-Test Modal */}
+        {showPrePostModal && (
+          <PrePostTestModal
+            type={showPrePostModal}
+            team={selectedTeam}
+            onClose={() => setShowPrePostModal(null)}
+            onComplete={(_score) => {
+              setTeams((prev) =>
+                prev.map((t) =>
+                  t.id === selectedTeamId
+                    ? {
+                        ...t,
+                        hasFinishedPreTest: showPrePostModal === 'pre' ? true : t.hasFinishedPreTest,
+                        hasFinishedPostTest: showPrePostModal === 'post' ? true : t.hasFinishedPostTest,
+                      }
+                    : t
+                )
+              );
+            }}
+          />
+        )}
 
-      {/* 3. Leaderboard Modal */}
-      {showLeaderboard && (
-        <LeaderboardModal
-          teams={teams}
-          onClose={() => setShowLeaderboard(false)}
-        />
-      )}
+        {/* 3. Leaderboard Modal */}
+        {showLeaderboard && (
+          <LeaderboardModal
+            teams={teams}
+            onClose={() => setShowLeaderboard(false)}
+          />
+        )}
 
-      {/* 4. Teacher Dashboard Modal (Rubrik Penilaian & Lencana) */}
-      {showTeacherDashboard && (
-        <TeacherDashboardModal
-          teams={teams}
-          onUpdateScore={handleUpdateScore}
-          onUpdateBadge={handleUpdateBadge}
-          onResetGame={handleResetGame}
-          onAddTeam={handleAddTeam}
-          onRemoveTeam={handleRemoveTeam}
-          onClose={() => setShowTeacherDashboard(false)}
-          teamAnswers={teamAnswers}
-        />
-      )}
+        {/* 4. Teacher Dashboard Modal (Rubrik Penilaian & Lencana) */}
+        {showTeacherDashboard && (
+          <TeacherDashboardModal
+            teams={teams}
+            onUpdateScore={handleUpdateScore}
+            onUpdateBadge={handleUpdateBadge}
+            onResetGame={handleResetGame}
+            onAddTeam={handleAddTeam}
+            onRemoveTeam={handleRemoveTeam}
+            onClose={() => setShowTeacherDashboard(false)}
+            teamAnswers={teamAnswers}
+          />
+        )}
+      </Suspense>
     </div>
   );
 };

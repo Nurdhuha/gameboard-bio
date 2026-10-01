@@ -11,7 +11,7 @@ interface PawnMarkerProps {
   isStartTile?: boolean;
 }
 
-export const PawnMarker: React.FC<PawnMarkerProps> = ({
+export const PawnMarker: React.FC<PawnMarkerProps> = React.memo(({
   team,
   x,
   y,
@@ -46,7 +46,7 @@ export const PawnMarker: React.FC<PawnMarkerProps> = ({
     <g
       id={`pawn-${team.id}`}
       transform={`translate(${finalX}, ${finalY})`}
-      className="cursor-pointer select-none filter drop-shadow-lg"
+      className="cursor-pointer select-none"
       style={{
         transition: 'transform 0.45s cubic-bezier(0.2, 0.9, 0.3, 1)',
       }}
@@ -102,4 +102,4 @@ export const PawnMarker: React.FC<PawnMarkerProps> = ({
       </g>
     </g>
   );
-};
+});
