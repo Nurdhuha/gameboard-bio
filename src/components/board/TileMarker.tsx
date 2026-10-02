@@ -7,6 +7,7 @@ interface TileMarkerProps {
   isSelected: boolean;
   isCompleted: boolean;
   onClick: (tile: TileData) => void;
+  showActivityCode?: boolean;
 }
 
 export const TileMarker: React.FC<TileMarkerProps> = React.memo(({
@@ -15,6 +16,7 @@ export const TileMarker: React.FC<TileMarkerProps> = React.memo(({
   isSelected,
   isCompleted,
   onClick,
+  showActivityCode = false,
 }) => {
   const isStart = tile.id === 0;
   const isFinish = tile.id === 51;
@@ -187,10 +189,10 @@ export const TileMarker: React.FC<TileMarkerProps> = React.memo(({
       {/* Big Crisp Step Number (1 to 50) */}
       <text
         x="0"
-        y={tile.activityCode ? '2' : '10'}
+        y={showActivityCode && tile.activityCode ? '2' : '10'}
         textAnchor="middle"
         fill={theme.textColor}
-        fontSize={tile.activityCode ? '28' : '32'}
+        fontSize={showActivityCode && tile.activityCode ? '28' : '32'}
         fontWeight="800"
         fontFamily="Lexend, system-ui, sans-serif"
         className="pointer-events-none tracking-tight"
@@ -204,8 +206,8 @@ export const TileMarker: React.FC<TileMarkerProps> = React.memo(({
         {tile.label || tile.id}
       </text>
 
-      {/* Activity Code Sub-Pill (e.g. KE-01, IA-05, L1) */}
-      {tile.activityCode && (
+      {/* Activity Code Sub-Pill (Hanya ditampilkan pada layar Guru) */}
+      {showActivityCode && tile.activityCode && (
         <g transform="translate(0, 15)">
           <rect
             x="-26"

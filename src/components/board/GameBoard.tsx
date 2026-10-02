@@ -11,6 +11,7 @@ interface GameBoardProps {
   selectedTileId: number | null;
   onTileClick: (tile: TileData) => void;
   completedActivities: string[];
+  isTeacher?: boolean;
 }
 
 export const GameBoard: React.FC<GameBoardProps> = ({
@@ -19,6 +20,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   selectedTileId,
   onTileClick,
   completedActivities,
+  isTeacher = false,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const boardInnerRef = useRef<HTMLDivElement>(null);
@@ -445,6 +447,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                   isSelected={isSelected}
                   isCompleted={isCompleted}
                   onClick={handleTileClickWrapper}
+                  showActivityCode={isTeacher}
                 />
               );
             })}

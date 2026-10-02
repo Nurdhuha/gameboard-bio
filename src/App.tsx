@@ -40,6 +40,16 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
+// Helper judul ramah pengguna untuk menyembunyikan kode dan indikator teknis
+const getActivityTitle = (activity: ActivityData) => {
+  if (['KE-06', 'IA-06', 'AE-06', 'JE-06'].includes(activity.code)) {
+    return `Tantangan Lencana - Petak #${activity.tileNumber}`;
+  }
+  return activity.cardType === 'Challenge'
+    ? `Tantangan Lapangan - Petak #${activity.tileNumber}`
+    : `Teka-Teki Analisis - Petak #${activity.tileNumber}`;
+};
+
 export const App: React.FC = () => {
   const location = useLocation();
 
@@ -267,12 +277,9 @@ export const App: React.FC = () => {
       {/* 1. TOP NAVBAR (CALMING, MINIMALIST & CLEAN) */}
       <header className="h-14 sm:h-16 border-b border-stone-200/80 bg-white/95 backdrop-blur-md px-3 sm:px-6 flex items-center justify-between flex-shrink-0 z-30">
         {/* Brand */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center font-bold text-base sm:text-lg text-emerald-700 shadow-sm flex-shrink-0">
-            🌿
-          </div>
-          <h1 className="text-sm sm:text-base font-bold tracking-tight text-slate-800">
-            BioBoard
+        <div className="flex items-center">
+          <h1 className="text-base sm:text-lg font-extrabold tracking-tight text-emerald-800">
+            Ecoplay
           </h1>
         </div>
 
@@ -384,6 +391,7 @@ export const App: React.FC = () => {
                 selectedTileId={inspectedTileId}
                 onTileClick={handleTileClick}
                 completedActivities={completedActivities}
+                isTeacher={true}
               />
             </div>
 
@@ -530,6 +538,7 @@ export const App: React.FC = () => {
                 selectedTileId={inspectedTileId}
                 onTileClick={handleTileClick}
                 completedActivities={completedActivities}
+                isTeacher={false}
               />
             </div>
 
@@ -607,13 +616,10 @@ export const App: React.FC = () => {
                         >
                           {inspectedActivity.cardType}
                         </span>
-                        <span className="text-xs text-stone-600 font-medium">
-                          {inspectedActivity.level} • {inspectedActivity.indicator}
-                        </span>
                       </div>
 
                       <h3 className="text-xs font-bold text-slate-800 leading-snug">
-                        {inspectedActivity.title}
+                        {getActivityTitle(inspectedActivity)}
                       </h3>
                       <p className="text-[11px] text-stone-600 line-clamp-3 leading-relaxed">
                         {inspectedActivity.instruction}
@@ -723,7 +729,7 @@ export const App: React.FC = () => {
                 {inspectedActivity && (
                   <button
                     onClick={() => setActiveActivity(inspectedActivity)}
-                    className="px-3.5 py-2 rounded-xl bg-emerald-700 text-white font-bold text-xs flex items-center gap-1 shadow-sm active:scale-95"
+                    className="px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-emerald-700 text-white font-bold text-[11px] sm:text-xs flex items-center gap-1 shadow-sm active:scale-95"
                   >
                     <BookOpen className="w-3.5 h-3.5" />
                     <span>Buka LKPD</span>
@@ -734,32 +740,27 @@ export const App: React.FC = () => {
           </div>
 
           {isMobileSheetExpanded && (
-            <div className="p-4 space-y-2.5 max-h-56 overflow-y-auto bg-stone-50/50">
-              <div className="flex items-center justify-between text-xs">
+            <div className="p-3.5 sm:p-4 space-y-2 sm:space-y-2.5 max-h-56 overflow-y-auto bg-stone-50/50">
+              <div className="flex items-center justify-between text-[11px] sm:text-xs">
                 <span className="font-bold text-stone-700 flex items-center gap-1.5">
-                  <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-extrabold text-[10px]">
+                  <span className="px-1.5 sm:px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-extrabold text-[9px] sm:text-[10px]">
                     {inspectedActivity ? inspectedActivity.cardType : 'LANGKAH'}
                   </span>
-                  <span>Petak #{inspectedTile.id} {inspectedActivity ? `(${inspectedActivity.code})` : ''}</span>
+                  <span>Petak #{inspectedTile.id}</span>
                 </span>
-                {inspectedActivity && (
-                  <span className="text-[11px] text-stone-500 font-medium">
-                    {inspectedActivity.level} • {inspectedActivity.indicator}
-                  </span>
-                )}
               </div>
 
               {inspectedActivity ? (
                 <>
-                  <h4 className="text-xs font-bold text-slate-900 leading-snug">
-                    {inspectedActivity.title}
+                  <h4 className="text-[11px] sm:text-xs font-bold text-slate-900 leading-snug">
+                    {getActivityTitle(inspectedActivity)}
                   </h4>
-                  <p className="text-[11px] text-stone-600 leading-relaxed line-clamp-3">
+                  <p className="text-[10px] sm:text-[11px] text-stone-600 leading-relaxed line-clamp-3">
                     {inspectedActivity.instruction}
                   </p>
                   <button
                     onClick={() => setActiveActivity(inspectedActivity)}
-                    className="w-full py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5 shadow-sm mt-1"
+                    className="w-full py-1.5 sm:py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] sm:text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5 shadow-sm mt-1"
                   >
                     <BookOpen className="w-3.5 h-3.5" />
                     <span>Buka Lembar Pengerjaan (LKPD) Lengkap</span>

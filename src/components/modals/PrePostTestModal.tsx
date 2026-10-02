@@ -82,7 +82,6 @@ export const PrePostTestModal: React.FC<PrePostTestModalProps> = ({
               {/* Progress Bar */}
               <div className="flex items-center justify-between text-xs text-stone-500 font-semibold mb-1">
                 <span>Soal {currentIndex + 1} dari {questions.length}</span>
-                <span className="text-emerald-700 font-bold">{currentQ.level} • {currentQ.indicator}</span>
               </div>
               <div className="w-full bg-stone-100 h-2 rounded-full overflow-hidden">
                 <div

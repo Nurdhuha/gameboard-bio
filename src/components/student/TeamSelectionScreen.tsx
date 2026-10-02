@@ -18,7 +18,7 @@ export const TeamSelectionScreen: React.FC<TeamSelectionScreenProps> = ({
         <div className="space-y-2">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold shadow-sm">
             <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Petualangan Ekosistem BioBoard</span>
+            <span>Petualangan Ekosistem Ecoplay</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
             Pilih Kelompok Anda

@@ -1,4 +1,4 @@
-# 🌿 BioBoard - Web Board Game Edukatif Ekosistem
+# Ecoplay - Web Board Game Edukatif Ekosistem
 
 Aplikasi permainan papan edukasi biologi berbasis web (*Full Digital Interactive Web App*) pada materi **Ekosistem**, dirancang untuk melatih **6 Indikator Keterampilan Berpikir Kritis** (Facione: Interpretasi, Analisis, Evaluasi, Inferensi, Eksplanasi, dan Regulasi Diri) pada level kognitif C2 hingga C5.
 
