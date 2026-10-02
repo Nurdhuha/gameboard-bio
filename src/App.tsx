@@ -1,4 +1,4 @@
-import React, { useState, Suspense, lazy } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { useLocation } from 'react-router-dom';
 import { GameBoard } from './components/board/GameBoard';
 import { TeamSelectionScreen } from './components/student/TeamSelectionScreen';
@@ -272,10 +272,25 @@ export const App: React.FC = () => {
     setSelectedTeamId(INITIAL_TEAMS[0].id);
   };
 
+  // Kunci window scroll agar navbar atas di mobile tidak pernah terdorong keluar layar
+  useEffect(() => {
+    const handleScrollReset = () => {
+      if (window.scrollY !== 0) {
+        window.scrollTo(0, 0);
+      }
+    };
+    window.addEventListener('scroll', handleScrollReset, { passive: true });
+    window.addEventListener('focusout', handleScrollReset);
+    return () => {
+      window.removeEventListener('scroll', handleScrollReset);
+      window.removeEventListener('focusout', handleScrollReset);
+    };
+  }, []);
+
   return (
-    <div className="h-screen h-[100dvh] w-screen max-w-full bg-[#f8faf9] text-slate-800 flex flex-col font-sans select-none antialiased overflow-hidden">
+    <div className="fixed inset-0 w-full h-full h-[100dvh] bg-[#f8faf9] text-slate-800 flex flex-col font-sans select-none antialiased overflow-hidden">
       {/* 1. TOP NAVBAR (CALMING, MINIMALIST & CLEAN) */}
-      <header className="h-14 sm:h-16 border-b border-stone-200/80 bg-white/95 backdrop-blur-md px-3 sm:px-6 flex items-center justify-between flex-shrink-0 z-30">
+      <header className="sticky top-0 w-full h-14 sm:h-16 border-b border-stone-200/80 bg-white/95 backdrop-blur-md px-3 sm:px-6 flex items-center justify-between flex-shrink-0 z-40 select-none">
         {/* Brand */}
         <div className="flex items-center">
           <h1 className="text-base sm:text-lg font-extrabold tracking-tight text-emerald-800">
@@ -519,7 +534,7 @@ export const App: React.FC = () => {
         /* ================= KONTEN HALAMAN MURID (/) ================= */
         !hasStudentSelectedTeam ? (
           /* Halaman Pemilihan Kelompok Murid Sebelum Masuk Papan */
-          <main className="flex-1 overflow-y-auto flex items-center justify-center">
+          <main className="flex-1 overflow-y-auto flex flex-col">
             <TeamSelectionScreen
               teams={teams}
               onSelectTeam={(teamId) => {

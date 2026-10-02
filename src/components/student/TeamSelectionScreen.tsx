@@ -12,7 +12,7 @@ export const TeamSelectionScreen: React.FC<TeamSelectionScreenProps> = ({
   onSelectTeam,
 }) => {
   return (
-    <div className="min-h-full flex-1 flex flex-col items-center justify-center p-4 sm:p-8 bg-[#f8faf9] text-slate-800">
+    <div className="min-h-full w-full flex-1 flex flex-col items-center justify-start sm:justify-center p-4 sm:p-8 pt-6 sm:pt-8 pb-12 bg-[#f8faf9] text-slate-800">
       <div className="w-full max-w-3xl space-y-6 text-center animate-fade-in">
         {/* Welcome Header */}
         <div className="space-y-2">

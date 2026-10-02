@@ -581,18 +581,6 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                 </p>
               </div>
 
-              {activity.stimulus && (
-                <div className="bg-stone-50/60 border border-stone-200 p-3.5 sm:p-4 rounded-xl sm:rounded-2xl space-y-2">
-                  <div className="text-xs sm:text-sm font-bold text-stone-700 uppercase tracking-wider flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-amber-600" />
-                    Stimulus Informasi / Fenomena
-                  </div>
-                  <p className="text-sm sm:text-base text-slate-700 italic bg-white p-3 sm:p-3.5 rounded-lg sm:rounded-xl border border-stone-200 leading-relaxed whitespace-pre-line">
-                    "{activity.stimulus.content}"
-                  </p>
-                </div>
-              )}
-
               {/* Tautan Bantuan Observasi Khusus IA-01 */}
               {isIA01 && (
                 <div className="bg-emerald-50/90 border border-emerald-200 p-3.5 sm:p-4 rounded-xl sm:rounded-2xl space-y-2">
