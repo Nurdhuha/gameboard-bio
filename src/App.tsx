@@ -12,8 +12,8 @@ const SpinWheel = lazy(() =>
 const ActivityModal = lazy(() =>
   import('./components/modals/ActivityModal').then((m) => ({ default: m.ActivityModal }))
 );
-const PrePostTestModal = lazy(() =>
-  import('./components/modals/PrePostTestModal').then((m) => ({ default: m.PrePostTestModal }))
+const GameRulesModal = lazy(() =>
+  import('./components/modals/GameRulesModal').then((m) => ({ default: m.GameRulesModal }))
 );
 const LeaderboardModal = lazy(() =>
   import('./components/modals/LeaderboardModal').then((m) => ({ default: m.LeaderboardModal }))
@@ -26,7 +26,6 @@ import {
   ChevronRight,
   ChevronLeft,
   FastForward,
-  FileQuestion,
   Sparkles,
   MapPin,
   BookOpen,
@@ -81,7 +80,7 @@ export const App: React.FC = () => {
 
   // Modals state
   const [activeActivity, setActiveActivity] = useState<ActivityData | null>(null);
-  const [showPrePostModal, setShowPrePostModal] = useState<'pre' | 'post' | null>(null);
+  const [showGameRules, setShowGameRules] = useState<boolean>(false);
   const [showLeaderboard, setShowLeaderboard] = useState<boolean>(false);
   const [showTeacherDashboard, setShowTeacherDashboard] = useState<boolean>(false);
 
@@ -218,8 +217,6 @@ export const App: React.FC = () => {
         badgePoints: 0,
         lkpdScore: 0,
         completedActivities: [],
-        hasFinishedPreTest: false,
-        hasFinishedPostTest: false,
       }))
     );
     setTeamAnswers({});
@@ -243,8 +240,6 @@ export const App: React.FC = () => {
         badgePoints: 0,
         lkpdScore: 0,
         avatarIcon: preset.icon,
-        hasFinishedPreTest: false,
-        hasFinishedPostTest: false,
       };
       confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
       return [...prev, newTeam];
@@ -339,34 +334,20 @@ export const App: React.FC = () => {
                     <RefreshCw className="w-3 h-3 text-stone-400 ml-0.5" />
                   </button>
 
-                  {/* Pre-Test & Post-Test Terpisah */}
-                  <button
-                    onClick={() => setShowPrePostModal('pre')}
-                    className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition shadow-sm ${
-                      selectedTeam.hasFinishedPreTest
-                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                        : 'bg-stone-100 hover:bg-stone-200 text-slate-700'
-                    }`}
-                  >
-                    <FileQuestion className="w-3.5 h-3.5 text-emerald-600" />
-                    <span className="hidden sm:inline">Pre-Test</span>
-                  </button>
-
-                  <button
-                    onClick={() => setShowPrePostModal('post')}
-                    className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition shadow-sm ${
-                      selectedTeam.hasFinishedPostTest
-                        ? 'bg-purple-50 text-purple-800 border border-purple-200'
-                        : 'bg-stone-100 hover:bg-stone-200 text-slate-700'
-                    }`}
-                  >
-                    <FileQuestion className="w-3.5 h-3.5 text-purple-600" />
-                    <span className="hidden sm:inline">Post-Test</span>
-                  </button>
                 </>
               )}
             </>
           )}
+
+          {/* Tombol Aturan Permainan */}
+          <button
+            onClick={() => setShowGameRules(true)}
+            className="p-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 hover:bg-emerald-100 text-xs font-semibold flex items-center gap-1 transition active:scale-95 shadow-sm"
+            title="Aturan Permainan"
+          >
+            <BookOpen className="w-4 h-4 text-emerald-700" />
+            <span className="hidden sm:inline">Aturan</span>
+          </button>
 
           {/* Tombol Klasemen Leaderboard */}
           <button
@@ -806,26 +787,9 @@ export const App: React.FC = () => {
           />
         )}
 
-        {/* 2. Pre-Test / Post-Test Modal */}
-        {showPrePostModal && (
-          <PrePostTestModal
-            type={showPrePostModal}
-            team={selectedTeam}
-            onClose={() => setShowPrePostModal(null)}
-            onComplete={(_score) => {
-              setTeams((prev) =>
-                prev.map((t) =>
-                  t.id === selectedTeamId
-                    ? {
-                        ...t,
-                        hasFinishedPreTest: showPrePostModal === 'pre' ? true : t.hasFinishedPreTest,
-                        hasFinishedPostTest: showPrePostModal === 'post' ? true : t.hasFinishedPostTest,
-                      }
-                    : t
-                )
-              );
-            }}
-          />
+        {/* 2. Modal Aturan Permainan */}
+        {showGameRules && (
+          <GameRulesModal onClose={() => setShowGameRules(false)} />
         )}
 
         {/* 3. Leaderboard Modal */}

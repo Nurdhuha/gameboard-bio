@@ -14,7 +14,7 @@ Aplikasi ini memisahkan peran pengguna secara terstruktur melalui sistem *routin
 * **Pengerjaan LKPD Digital:** 24 aktivitas (*Challenge* & *Riddle*) yang memuat instruksi autentik, stimulus pengamatan, dan form jawaban.
 * **Kamera Bukti Lapangan:** Fitur ambil foto langsung menggunakan kamera *smartphone* untuk dokumentasi pengamatan komponen biotik/abiotik.
 * **Refleksi Regulasi Diri:** Fitur pengecekan kunci rujukan konsep biologi dan catatan perbaikan jawaban mandiri.
-* **Evaluasi Pre-Test & Post-Test:** Instrumen tes berpikir kritis untuk mengukur capaian awal dan akhir.
+* **Aturan Permainan Terintegrasi:** Akses cepat panduan tata tertib permainan, sistem zona, dan mekanisme poin kompetisi.
 * **Klasemen Leaderboard:** Pemantauan skor akumulasi LKPD dan poin lencana kecepatan.
 
 ### 2. 👨‍🏫 Interface Guru (`/teachers`)

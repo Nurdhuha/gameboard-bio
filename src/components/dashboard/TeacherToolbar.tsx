@@ -7,7 +7,6 @@ import {
   ChevronLeft,
   FastForward,
   Trophy,
-  FileQuestion,
   Smartphone,
   Monitor,
   Sparkles,
@@ -21,7 +20,6 @@ interface TeacherToolbarProps {
   onChangeMeeting: (meeting: number) => void;
   onMovePawn: (delta: number) => void;
   onJumpToNextActivity: () => void;
-  onOpenTest: (type: 'pre' | 'post') => void;
   onOpenLeaderboard: () => void;
   isMobilePreview: boolean;
   onToggleMobilePreview: () => void;
@@ -35,7 +33,6 @@ export const TeacherToolbar: React.FC<TeacherToolbarProps> = ({
   onChangeMeeting,
   onMovePawn,
   onJumpToNextActivity,
-  onOpenTest,
   onOpenLeaderboard,
   isMobilePreview,
   onToggleMobilePreview,
@@ -120,15 +117,6 @@ export const TeacherToolbar: React.FC<TeacherToolbarProps> = ({
             ))}
           </div>
 
-          {/* Pre/Post Test Triggers */}
-          <button
-            onClick={() => onOpenTest(activeMeeting === 1 ? 'pre' : 'post')}
-            className="p-2 sm:px-3 sm:py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold flex items-center gap-1.5 transition"
-            title="Buka Pre-Test / Post-Test"
-          >
-            <FileQuestion className="w-4 h-4 text-emerald-400" />
-            <span className="hidden lg:inline">{activeMeeting === 1 ? 'Pre-Test' : 'Post-Test'}</span>
-          </button>
 
           {/* Leaderboard Trigger */}
           <button

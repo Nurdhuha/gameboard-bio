@@ -492,8 +492,6 @@ export const INITIAL_TEAMS: Team[] = [
     badgePoints: 0,
     lkpdScore: 0,
     avatarIcon: '🐯',
-    hasFinishedPreTest: false,
-    hasFinishedPostTest: false,
   },
   {
     id: 2,
@@ -505,8 +503,6 @@ export const INITIAL_TEAMS: Team[] = [
     badgePoints: 0,
     lkpdScore: 0,
     avatarIcon: '🦅',
-    hasFinishedPreTest: false,
-    hasFinishedPostTest: false,
   },
   {
     id: 3,
@@ -518,8 +514,6 @@ export const INITIAL_TEAMS: Team[] = [
     badgePoints: 0,
     lkpdScore: 0,
     avatarIcon: '🦎',
-    hasFinishedPreTest: false,
-    hasFinishedPostTest: false,
   }
 ];
 
