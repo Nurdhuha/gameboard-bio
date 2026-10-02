@@ -702,7 +702,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <label className="block text-xs sm:text-sm font-bold text-stone-700 uppercase tracking-wider">
-                        Tabel Pengamatan (Kolom 1: Biotik | Kolom 2: Abiotik)
+                        Tabel Pengamatan
                       </label>
                       <button
                         type="button"
@@ -813,7 +813,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <label className="block text-xs sm:text-sm font-bold text-stone-700 uppercase tracking-wider">
-                        Tabel Pengamatan Interaksi (3 Kolom • 5 Baris)
+                        Tabel Pengamatan Interaksi
                       </label>
                       <button
                         type="button"
@@ -896,7 +896,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <label className="block text-xs sm:text-sm font-bold text-stone-700 uppercase tracking-wider">
-                        Tabel Analisis Interaksi (Pasangan Organisme & Jenis Interaksi)
+                        Tabel Analisis Interaksi
                       </label>
                       <button
                         type="button"
@@ -1154,7 +1154,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <label className="block text-xs sm:text-sm font-bold text-stone-700 uppercase tracking-wider">
-                        Tabel Pengamatan Ekosistem (3 Kolom • Ekosistem, Ciri-ciri, Jenis)
+                        Tabel Pengamatan Ekosistem
                       </label>
                       <button
                         type="button"
