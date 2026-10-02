@@ -786,6 +786,7 @@ export const App: React.FC = () => {
             onClose={() => setActiveActivity(null)}
             onSubmit={handleActivitySubmit}
             isBadgeTile={inspectedTile?.type === 'badge'}
+            previousAnswers={teamAnswers[selectedTeamId] || {}}
           />
         )}
 
