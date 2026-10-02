@@ -52,7 +52,6 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
   const [reflection, setReflection] = useState<string>(
     existingRecord?.reflection || (isSelfRegulationFocus ? existingRecord?.answer || '' : '')
   );
-  const [showReference, setShowReference] = useState<boolean>(false);
 
   // Helper parser & state tabel 2 kolom khusus KE-01
   const parseKE01Data = (savedText?: string) => {
@@ -472,45 +471,26 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
           {isSelfRegulationFocus && activeTab === 'selfReg' && (
             <div className="space-y-3 sm:space-y-4">
               {/* 1. Kunci Rujukan & Validasi Konsep */}
-              <div className="bg-amber-50/70 border border-amber-200/90 p-3 sm:p-4 rounded-xl sm:rounded-2xl space-y-2.5">
+              <div className="bg-amber-50/70 border border-amber-200/90 p-3.5 sm:p-4 rounded-xl sm:rounded-2xl space-y-2.5">
                 <div>
                   <h4 className="text-[11px] sm:text-xs font-bold text-amber-800 uppercase tracking-wider mb-1 flex items-center gap-1.5">
                     <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-700" />
                     Kunci Rujukan & Validasi Konsep
                   </h4>
-                  <p className="text-[10px] sm:text-xs text-amber-700/80">
-                    Bandingkan jawaban kelompokmu dengan rujukan biologi di bawah untuk melatih evaluasi mandiri.
+                  <p className="text-[10px] sm:text-xs text-amber-700/80 leading-relaxed">
+                    Buka dokumen rujukan biologi di bawah untuk memvalidasi dan membandingkan jawaban kelompokmu secara mandiri:
                   </p>
                 </div>
 
-                {cleanCode === 'KE06' && (
-                  <a
-                    href="https://drive.google.com/file/d/1_lJuOVjOoIzU0SRawg7cZp9z44kbmL0b/view?usp=drive_tautan"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full py-2 px-3 bg-amber-700 hover:bg-amber-800 text-white text-xs font-bold rounded-xl transition flex items-center justify-center gap-2 shadow-sm active:scale-95"
-                  >
-                    <FolderUp className="w-4 h-4" />
-                    <span>Buka Dokumen Rujukan Regulasi Diri (Google Drive) ↗</span>
-                  </a>
-                )}
-
-                {showReference ? (
-                  <div className="bg-white border border-amber-300 p-3 sm:p-4 rounded-lg sm:rounded-xl text-xs sm:text-sm text-slate-800 leading-relaxed shadow-sm">
-                    <div className="font-bold text-amber-800 text-[11px] sm:text-xs mb-1">Ringkasan Rujukan Biologi:</div>
-                    <div className="whitespace-pre-line text-xs sm:text-sm text-slate-800 leading-relaxed">
-                      {activity.selfRegulationReference || 'Rujukan konsep disesuaikan dengan materi pembelajaran.'}
-                    </div>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setShowReference(true)}
-                    className="w-full py-1.5 sm:py-2 bg-amber-100 hover:bg-amber-200/80 text-amber-900 border border-amber-300 text-[11px] sm:text-xs font-semibold rounded-lg sm:rounded-xl transition flex items-center justify-center gap-1.5 sm:gap-2 shadow-2xs"
-                  >
-                    <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-700" />
-                    <span>Lihat Ringkasan Rujukan di Sini</span>
-                  </button>
-                )}
+                <a
+                  href="https://drive.google.com/file/d/1_lJuOVjOoIzU0SRawg7cZp9z44kbmL0b/view?usp=drive_tautan"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-2.5 px-3 bg-amber-700 hover:bg-amber-800 text-white text-xs sm:text-sm font-bold rounded-xl transition flex items-center justify-center gap-2 shadow-sm active:scale-95"
+                >
+                  <FolderUp className="w-4 h-4" />
+                  <span>Buka Dokumen Rujukan Regulasi Diri (Google Drive) ↗</span>
+                </a>
               </div>
 
               {/* 2. Riwayat Jawaban Kelompok dari Aktivitas Sebelumnya (KE-01 s/d KE-05) */}
