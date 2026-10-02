@@ -273,7 +273,7 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="h-screen w-screen bg-[#f8faf9] text-slate-800 flex flex-col font-sans select-none antialiased overflow-hidden">
+    <div className="h-screen h-[100dvh] w-screen max-w-full bg-[#f8faf9] text-slate-800 flex flex-col font-sans select-none antialiased overflow-hidden">
       {/* 1. TOP NAVBAR (CALMING, MINIMALIST & CLEAN) */}
       <header className="h-14 sm:h-16 border-b border-stone-200/80 bg-white/95 backdrop-blur-md px-3 sm:px-6 flex items-center justify-between flex-shrink-0 z-30">
         {/* Brand */}
