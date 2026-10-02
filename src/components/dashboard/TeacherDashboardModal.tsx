@@ -265,7 +265,28 @@ export const TeacherDashboardModal: React.FC<TeacherDashboardModalProps> = ({
 
                     <div className="mt-2.5 p-3 rounded-xl bg-stone-50 border border-stone-200/80 min-h-[90px] text-xs text-slate-800">
                       {currentSubmission?.answer ? (
-                        <p className="whitespace-pre-line leading-relaxed">{currentSubmission.answer}</p>
+                        <>
+                          <p className="whitespace-pre-line leading-relaxed">
+                            {currentSubmission.answer.replace(/\[Foto Bukti Lapangan\]:\s*data:image\/[^\s]+/g, '').trim()}
+                          </p>
+                          {currentSubmission.answer.includes('[Foto Bukti Lapangan]:') && (
+                            <div className="mt-2.5 pt-2.5 border-t border-stone-200">
+                              <span className="text-[11px] font-bold text-emerald-800 block mb-1.5 flex items-center gap-1">
+                                📷 Bukti Foto Lapangan Siswa:
+                              </span>
+                              {(() => {
+                                const photoMatch = currentSubmission.answer.match(/\[Foto Bukti Lapangan\]:\s*(data:image\/[^\s]+)/);
+                                return photoMatch ? (
+                                  <img
+                                    src={photoMatch[1]}
+                                    alt="Foto Lapangan Siswa"
+                                    className="max-h-48 rounded-xl border border-stone-300 object-cover shadow-sm"
+                                  />
+                                ) : null;
+                              })()}
+                            </div>
+                          )}
+                        </>
                       ) : (
                         <p className="text-stone-400 italic">
                           Belum ada teks jawaban tersimpan dari kelompok ini. Guru dapat tetap memberi skor rubrik berdasarkan pengamatan langsung di kelas.
