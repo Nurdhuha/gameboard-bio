@@ -87,7 +87,7 @@ export const MobileBoard: React.FC<MobileBoardProps> = ({
   return (
     <div className="w-full max-w-lg mx-auto flex flex-col space-y-4 pb-28 px-3">
       {/* Quick Jump Zone Pills */}
-      <div className="sticky top-16 z-10 bg-[#f8faf9]/95 backdrop-blur-md py-2 flex items-center justify-between gap-1.5 border-b border-stone-200/60 overflow-x-auto text-xs font-semibold">
+      <div className="sticky top-16 z-10 bg-[#f8faf9]/95 backdrop-blur-md py-2.5 flex items-center justify-between gap-2 border-b border-stone-200/60 overflow-x-auto text-xs sm:text-sm font-bold">
         {zones.map((z) => (
           <button
             key={z.id}
@@ -111,7 +111,7 @@ export const MobileBoard: React.FC<MobileBoardProps> = ({
         >
           {/* Zone Header */}
           <div className="flex items-center justify-between border-b border-stone-200/60 pb-2">
-            <h3 className={`text-sm font-bold ${zone.theme.headerText}`}>{zone.name}</h3>
+            <h3 className={`text-sm sm:text-base font-bold ${zone.theme.headerText}`}>{zone.name}</h3>
           </div>
 
           {/* Grid of Tap-friendly Tiles */}
@@ -133,7 +133,7 @@ export const MobileBoard: React.FC<MobileBoardProps> = ({
                 <div
                   key={tile.id}
                   onClick={() => onTileClick(tile)}
-                  className={`relative cursor-pointer select-none rounded-2xl p-2.5 flex flex-col items-center justify-center transition-all active:scale-95 border ${
+                  className={`relative cursor-pointer select-none rounded-2xl p-3 flex flex-col items-center justify-center transition-all active:scale-95 border ${
                     isSelected
                       ? 'bg-white border-slate-900 shadow-md ring-2 ring-slate-900'
                       : isPawnHere
@@ -147,7 +147,7 @@ export const MobileBoard: React.FC<MobileBoardProps> = ({
                       {pawnsOnTile.map((p) => (
                         <span
                           key={p.id}
-                          className="w-6 h-6 rounded-full bg-white shadow-md border-2 flex items-center justify-center text-xs animate-bounce"
+                          className="w-7 h-7 rounded-full bg-white shadow-md border-2 flex items-center justify-center text-xs animate-bounce"
                           style={{ borderColor: p.color }}
                           title={p.name}
                         >
@@ -160,13 +160,13 @@ export const MobileBoard: React.FC<MobileBoardProps> = ({
                   {/* Tile Number / Label */}
                   <div className="flex items-center gap-1 mt-1">
                     {isBadge ? (
-                      <span className="text-amber-500 font-extrabold text-sm">🌟</span>
+                      <span className="text-amber-500 font-extrabold text-base">🌟</span>
                     ) : isFinish ? (
-                      <span className="text-purple-600 font-extrabold text-sm">🏆</span>
+                      <span className="text-purple-600 font-extrabold text-base">🏆</span>
                     ) : isStart ? (
-                      <span className="text-emerald-600 font-extrabold text-xs">🏁</span>
+                      <span className="text-emerald-600 font-extrabold text-sm">🏁</span>
                     ) : null}
-                    <span className="text-sm font-bold text-slate-800">
+                    <span className="text-sm sm:text-base font-bold text-slate-800">
                       {tile.label || `#${tile.id}`}
                     </span>
                   </div>
@@ -174,7 +174,7 @@ export const MobileBoard: React.FC<MobileBoardProps> = ({
                   {/* Activity Code Badge */}
                   {tile.activityCode ? (
                     <div
-                      className={`mt-1 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-tight ${
+                      className={`mt-1.5 px-2 py-0.5 rounded text-xs font-bold uppercase tracking-tight ${
                         isChallenge
                           ? 'bg-emerald-100 text-emerald-800'
                           : isRiddle
@@ -185,12 +185,12 @@ export const MobileBoard: React.FC<MobileBoardProps> = ({
                       {tile.activityCode}
                     </div>
                   ) : (
-                    <div className="mt-1 text-[10px] text-stone-400 font-medium">Langkah</div>
+                    <div className="mt-1.5 text-xs text-stone-400 font-medium">Langkah</div>
                   )}
 
                   {/* Completed Checkmark */}
                   {isCompleted && (
-                    <div className="absolute top-1.5 right-1.5 w-3.5 h-3.5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[8px] font-bold">
+                    <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[9px] font-bold">
                       ✓
                     </div>
                   )}

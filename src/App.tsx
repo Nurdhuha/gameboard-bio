@@ -672,56 +672,57 @@ export const App: React.FC = () => {
         <div className="flex lg:hidden fixed bottom-0 inset-x-0 z-20 flex-col bg-white border-t border-stone-200/90 shadow-2xl rounded-t-3xl transition-all duration-300">
           <button
             onClick={() => setIsMobileSheetExpanded((prev) => !prev)}
-            className="w-full pt-2.5 pb-1 flex flex-col items-center justify-center cursor-pointer text-stone-400 hover:text-stone-600"
+            className="w-full pt-3 pb-1.5 flex flex-col items-center justify-center cursor-pointer text-stone-400 hover:text-stone-600"
           >
-            <div className="w-12 h-1 bg-stone-300 rounded-full mb-1" />
-            <div className="flex items-center gap-1 text-[11px] font-semibold text-stone-500">
+            <div className="w-12 h-1 bg-stone-300 rounded-full mb-1.5" />
+            <div className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-stone-600">
               <span>{selectedTeam.avatarIcon} Posisi Pion: Petak #{selectedTeam.currentTile}</span>
-              {isMobileSheetExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
+              {isMobileSheetExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
             </div>
           </button>
 
-          <div className="px-4 py-2 flex items-center justify-between border-b border-stone-100">
+          <div className="px-4 py-2.5 flex items-center justify-between border-b border-stone-100">
             {isTeacherRoute ? (
               /* Guru Mobile Bar: Monitoring Only */
               <div className="flex items-center justify-between w-full">
-                <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                <span className="text-xs sm:text-sm font-bold text-slate-800 flex items-center gap-1.5">
                   <span>{selectedTeam.avatarIcon}</span>
                   <span>{selectedTeam.name}</span>
                   <span className="text-emerald-700 font-bold ml-1">(Petak #{selectedTeam.currentTile})</span>
                 </span>
                 <button
                   onClick={() => setShowTeacherDashboard(true)}
-                  className="px-3 py-1.5 rounded-xl bg-slate-900 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm"
+                  className="px-3.5 py-2 rounded-xl bg-slate-900 text-white font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-sm"
                 >
-                  <Sliders className="w-3.5 h-3.5 text-emerald-400" />
+                  <Sliders className="w-4 h-4 text-emerald-400" />
                   <span>Panel Penilaian</span>
                 </button>
               </div>
             ) : (
               /* Murid Mobile Bar: Kontrol Pion & LKPD */
               <>
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-2">
                   <button
                     onClick={() => handleMovePawn(-1)}
                     disabled={selectedTeam.currentTile <= 0}
-                    className="p-1.5 rounded-lg bg-stone-100 text-stone-600 disabled:opacity-40"
+                    className="p-2 rounded-xl bg-stone-100 text-stone-600 disabled:opacity-40"
+                    title="Mundur 1 Petak"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => handleMovePawn(1)}
                     disabled={selectedTeam.currentTile >= 50}
-                    className="px-2.5 py-1.5 rounded-lg bg-stone-100 text-slate-700 font-bold text-xs flex items-center gap-1"
+                    className="px-3 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-slate-700 font-bold text-xs sm:text-sm flex items-center gap-1 transition"
                   >
                     <span>+1</span>
-                    <ChevronRight className="w-3.5 h-3.5" />
+                    <ChevronRight className="w-4 h-4" />
                   </button>
                   <button
                     onClick={handleJumpToNextActivity}
-                    className="px-2.5 py-1.5 rounded-lg bg-emerald-50 text-emerald-800 font-bold text-xs flex items-center gap-1"
+                    className="px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-xs sm:text-sm flex items-center gap-1 transition"
                   >
-                    <FastForward className="w-3.5 h-3.5" />
+                    <FastForward className="w-4 h-4" />
                     <span>Lompat</span>
                   </button>
                 </div>
@@ -729,9 +730,9 @@ export const App: React.FC = () => {
                 {inspectedActivity && (
                   <button
                     onClick={() => setActiveActivity(inspectedActivity)}
-                    className="px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-emerald-700 text-white font-bold text-[11px] sm:text-xs flex items-center gap-1 shadow-sm active:scale-95"
+                    className="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-sm active:scale-95 transition"
                   >
-                    <BookOpen className="w-3.5 h-3.5" />
+                    <BookOpen className="w-4 h-4" />
                     <span>Buka LKPD</span>
                   </button>
                 )}
@@ -740,10 +741,10 @@ export const App: React.FC = () => {
           </div>
 
           {isMobileSheetExpanded && (
-            <div className="p-3.5 sm:p-4 space-y-2 sm:space-y-2.5 max-h-56 overflow-y-auto bg-stone-50/50">
-              <div className="flex items-center justify-between text-[11px] sm:text-xs">
+            <div className="p-4 space-y-2.5 max-h-60 overflow-y-auto bg-stone-50/50">
+              <div className="flex items-center justify-between text-xs sm:text-sm">
                 <span className="font-bold text-stone-700 flex items-center gap-1.5">
-                  <span className="px-1.5 sm:px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-extrabold text-[9px] sm:text-[10px]">
+                  <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-extrabold text-[10px] sm:text-xs">
                     {inspectedActivity ? inspectedActivity.cardType : 'LANGKAH'}
                   </span>
                   <span>Petak #{inspectedTile.id}</span>
@@ -752,22 +753,22 @@ export const App: React.FC = () => {
 
               {inspectedActivity ? (
                 <>
-                  <h4 className="text-[11px] sm:text-xs font-bold text-slate-900 leading-snug">
+                  <h4 className="text-sm sm:text-base font-bold text-slate-900 leading-snug">
                     {getActivityTitle(inspectedActivity)}
                   </h4>
-                  <p className="text-[10px] sm:text-[11px] text-stone-600 leading-relaxed line-clamp-3">
+                  <p className="text-xs sm:text-sm text-stone-600 leading-relaxed">
                     {inspectedActivity.instruction}
                   </p>
                   <button
                     onClick={() => setActiveActivity(inspectedActivity)}
-                    className="w-full py-1.5 sm:py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] sm:text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5 shadow-sm mt-1"
+                    className="w-full py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs sm:text-sm font-bold rounded-xl flex items-center justify-center gap-2 shadow-sm mt-1.5 active:scale-95 transition"
                   >
-                    <BookOpen className="w-3.5 h-3.5" />
+                    <BookOpen className="w-4 h-4" />
                     <span>Buka Lembar Pengerjaan (LKPD) Lengkap</span>
                   </button>
                 </>
               ) : (
-                <p className="text-[11px] text-stone-500 py-1">
+                <p className="text-xs sm:text-sm text-stone-500 py-1">
                   Petak langkah transisi. Sentuh petak 🌿 atau 🐉 pada papan.
                 </p>
               )}

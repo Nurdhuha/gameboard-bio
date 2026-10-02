@@ -470,16 +470,16 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
       <div className="relative w-full max-w-2xl max-h-[92vh] sm:max-h-[90vh] flex flex-col bg-white border border-stone-200/90 rounded-2xl sm:rounded-3xl shadow-xl overflow-hidden text-slate-800">
         {/* Modal Header */}
         <div
-          className={`p-3.5 sm:p-5 md:p-6 border-b flex-shrink-0 ${
+          className={`p-4 sm:p-5 md:p-6 border-b flex-shrink-0 ${
             isChallenge
               ? 'bg-emerald-50/70 border-emerald-100 text-emerald-950'
               : 'bg-sky-50/70 border-sky-100 text-sky-950'
           }`}
         >
-          <div className="flex items-center justify-between gap-2 mb-1.5 sm:mb-2.5">
+          <div className="flex items-center justify-between gap-2 mb-2 sm:mb-2.5">
             <div className="flex items-center gap-1.5 sm:gap-2">
               <span
-                className={`px-2.5 sm:px-3 py-0.5 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider ${
+                className={`px-3 py-1 rounded-full text-xs sm:text-sm font-bold uppercase tracking-wider ${
                   isChallenge
                     ? 'bg-emerald-100/90 text-emerald-800 border border-emerald-200'
                     : 'bg-sky-100/90 text-sky-800 border border-sky-200'
@@ -490,48 +490,48 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
             </div>
 
             <div className="flex items-center gap-2 sm:gap-3">
-              <span className="text-[10px] sm:text-xs font-bold bg-white text-stone-700 border border-stone-200 px-2 sm:px-2.5 py-0.5 rounded-full shadow-sm">
+              <span className="text-xs sm:text-sm font-bold bg-white text-stone-700 border border-stone-200 px-2.5 sm:px-3 py-1 rounded-full shadow-sm">
                 Petak #{activity.tileNumber}
               </span>
               <button
                 onClick={onClose}
-                className="p-1 rounded-full hover:bg-black/5 text-stone-500 hover:text-stone-800 transition"
+                className="p-1.5 rounded-full hover:bg-black/5 text-stone-500 hover:text-stone-800 transition"
               >
-                <X className="w-4 h-4 sm:w-5 sm:h-5" />
+                <X className="w-5 h-5 sm:w-6 sm:h-6" />
               </button>
             </div>
           </div>
 
-          <h2 className="text-base sm:text-lg md:text-xl font-bold tracking-tight text-slate-900 leading-snug">
+          <h2 className="text-lg sm:text-xl md:text-2xl font-extrabold tracking-tight text-slate-900 leading-snug">
             {['KE-06', 'IA-06', 'AE-06', 'JE-06'].includes(activity.code)
               ? `Tantangan Lencana - Petak #${activity.tileNumber}`
               : activity.cardType === 'Challenge'
               ? `Tantangan Lapangan - Petak #${activity.tileNumber}`
               : `Teka-Teki Analisis - Petak #${activity.tileNumber}`}
           </h2>
-          <p className="text-[11px] sm:text-xs text-stone-600 mt-0.5">
+          <p className="text-xs sm:text-sm text-stone-600 mt-1">
             Sub-materi: <span className="font-semibold text-slate-800">{activity.zoneName}</span>
           </p>
 
           {isBadgeTile && (
-            <div className="mt-2 sm:mt-3 flex items-center gap-1.5 sm:gap-2 bg-amber-50 border border-amber-200 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl text-amber-800 text-[10px] sm:text-xs font-semibold">
-              <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-600 flex-shrink-0" />
+            <div className="mt-2.5 sm:mt-3 flex items-center gap-2 bg-amber-50 border border-amber-200 px-3 py-2 rounded-xl text-amber-800 text-xs sm:text-sm font-semibold">
+              <Sparkles className="w-4 h-4 text-amber-600 flex-shrink-0" />
               <span>Petak Lencana! Kelompok tercepat akan memperoleh bonus poin lencana!</span>
             </div>
           )}
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex border-b border-stone-100 bg-stone-50/50 px-2 sm:px-4 pt-1 gap-1 sm:gap-2 flex-shrink-0 text-[11px] sm:text-xs font-semibold">
+        <div className="flex border-b border-stone-100 bg-stone-50/50 px-2.5 sm:px-4 pt-1 gap-1.5 sm:gap-2 flex-shrink-0 text-xs sm:text-sm font-bold">
           <button
             onClick={() => setActiveTab('stimulus')}
-            className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-2 sm:py-2.5 border-b-2 transition ${
+            className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 sm:py-3 border-b-2 transition ${
               activeTab === 'stimulus'
                 ? 'border-emerald-700 text-emerald-800 bg-white rounded-t-lg'
                 : 'border-transparent text-stone-500 hover:text-slate-800'
             }`}
           >
-            <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <BookOpen className="w-4 h-4" />
             1. Soal & Petunjuk
           </button>
 
@@ -539,13 +539,13 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
           {!isSelfRegulationFocus && (
             <button
               onClick={() => setActiveTab('lkpd')}
-              className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-2 sm:py-2.5 border-b-2 transition ${
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 sm:py-3 border-b-2 transition ${
                 activeTab === 'lkpd'
                   ? 'border-emerald-700 text-emerald-800 bg-white rounded-t-lg'
                   : 'border-transparent text-stone-500 hover:text-slate-800'
               }`}
             >
-              <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <CheckCircle className="w-4 h-4" />
               2. Lembar LKPD
             </button>
           )}
@@ -554,40 +554,40 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
           {isSelfRegulationFocus && (
             <button
               onClick={() => setActiveTab('selfReg')}
-              className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-2 sm:py-2.5 border-b-2 transition ${
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 sm:py-3 border-b-2 transition ${
                 activeTab === 'selfReg'
                   ? 'border-amber-600 text-amber-800 bg-white rounded-t-lg'
                   : 'border-transparent text-stone-500 hover:text-slate-800'
               }`}
             >
-              <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <ShieldCheck className="w-4 h-4" />
               2. Regulasi Diri & Refleksi
             </button>
           )}
         </div>
 
         {/* Scrollable Body */}
-        <div className="flex-1 overflow-y-auto p-3.5 sm:p-5 md:p-6 space-y-3 sm:space-y-4">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 md:p-6 space-y-3.5 sm:space-y-4">
           {/* TAB 1: SOAL & PETUNJUK */}
           {activeTab === 'stimulus' && (
-            <div className="space-y-3 sm:space-y-4">
-              <div className="bg-stone-50/80 border border-stone-200/90 p-3 sm:p-4 rounded-xl sm:rounded-2xl">
-                <h4 className="text-[11px] sm:text-xs font-bold text-stone-600 uppercase tracking-wider mb-1.5 sm:mb-2 flex items-center gap-1.5">
-                  <HelpCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-700" />
+            <div className="space-y-3.5 sm:space-y-4">
+              <div className="bg-stone-50/80 border border-stone-200/90 p-3.5 sm:p-4 rounded-xl sm:rounded-2xl space-y-2">
+                <h4 className="text-xs sm:text-sm font-bold text-stone-700 uppercase tracking-wider flex items-center gap-1.5">
+                  <HelpCircle className="w-4 h-4 text-emerald-700" />
                   Instruksi Aktivitas
                 </h4>
-                <p className="text-xs sm:text-sm text-slate-800 leading-relaxed font-normal whitespace-pre-line">
+                <p className="text-sm sm:text-base text-slate-800 leading-relaxed font-normal whitespace-pre-line">
                   {activity.instruction}
                 </p>
               </div>
 
               {activity.stimulus && (
-                <div className="bg-stone-50/60 border border-stone-200 p-3 sm:p-4 rounded-xl sm:rounded-2xl space-y-1.5 sm:space-y-2">
-                  <div className="text-[11px] sm:text-xs font-bold text-stone-600 uppercase tracking-wider flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-600" />
+                <div className="bg-stone-50/60 border border-stone-200 p-3.5 sm:p-4 rounded-xl sm:rounded-2xl space-y-2">
+                  <div className="text-xs sm:text-sm font-bold text-stone-700 uppercase tracking-wider flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-amber-600" />
                     Stimulus Informasi / Fenomena
                   </div>
-                  <p className="text-xs sm:text-sm text-slate-700 italic bg-white p-2.5 sm:p-3 rounded-lg sm:rounded-xl border border-stone-200 leading-relaxed whitespace-pre-line">
+                  <p className="text-sm sm:text-base text-slate-700 italic bg-white p-3 sm:p-3.5 rounded-lg sm:rounded-xl border border-stone-200 leading-relaxed whitespace-pre-line">
                     "{activity.stimulus.content}"
                   </p>
                 </div>
@@ -596,18 +596,18 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
               {/* Tautan Bantuan Observasi Khusus IA-01 */}
               {isIA01 && (
                 <div className="bg-emerald-50/90 border border-emerald-200 p-3.5 sm:p-4 rounded-xl sm:rounded-2xl space-y-2">
-                  <div className="text-[11px] sm:text-xs font-bold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
-                    <FolderUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-700" />
+                  <div className="text-xs sm:text-sm font-bold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
+                    <FolderUp className="w-4 h-4 text-emerald-700" />
                     Folder Bantuan Observasi Lapangan
                   </div>
-                  <p className="text-xs text-emerald-950 leading-relaxed">
+                  <p className="text-xs sm:text-sm text-emerald-950 leading-relaxed">
                     Jika kelompok tidak menemukan interaksi langsung selama observasi di lapangan, silakan akses data bantuan melalui folder Google Drive di bawah:
                   </p>
                   <a
                     href="https://drive.google.com/drive/folders/1gjWHJ_srFJXooz0GUNowzd6h0OWKJjj4?usp=sharing"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow-sm transition active:scale-95"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs sm:text-sm font-bold shadow-sm transition active:scale-95"
                   >
                     <ExternalLink className="w-4 h-4" />
                     <span>Buka Folder Bantuan Observasi (Google Drive) ↗</span>
@@ -618,18 +618,18 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
               {/* Tautan Bantuan Observasi Khusus AE-01 */}
               {isAE01 && (
                 <div className="bg-emerald-50/90 border border-emerald-200 p-3.5 sm:p-4 rounded-xl sm:rounded-2xl space-y-2">
-                  <div className="text-[11px] sm:text-xs font-bold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
-                    <FolderUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-700" />
+                  <div className="text-xs sm:text-sm font-bold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
+                    <FolderUp className="w-4 h-4 text-emerald-700" />
                     Folder Bantuan Observasi Lapangan
                   </div>
-                  <p className="text-xs text-emerald-950 leading-relaxed">
+                  <p className="text-xs sm:text-sm text-emerald-950 leading-relaxed">
                     Jika kelompok tidak menemukan objek observasi hubungan makan-memakan secara langsung, silakan akses materi bantuan melalui folder Google Drive di bawah:
                   </p>
                   <a
                     href="https://drive.google.com/drive/folders/13ezailo9K8JRdOMcwhGW5LhhZoC4dnol?usp=sharing"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow-sm transition active:scale-95"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs sm:text-sm font-bold shadow-sm transition active:scale-95"
                   >
                     <ExternalLink className="w-4 h-4" />
                     <span>Buka Folder Bantuan Observasi (Google Drive) ↗</span>
@@ -640,18 +640,18 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
               {/* Tautan Bantuan Observasi Khusus JE-01 */}
               {isJE01 && (
                 <div className="bg-emerald-50/90 border border-emerald-200 p-3.5 sm:p-4 rounded-xl sm:rounded-2xl space-y-2">
-                  <div className="text-[11px] sm:text-xs font-bold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
-                    <FolderUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-700" />
+                  <div className="text-xs sm:text-sm font-bold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
+                    <FolderUp className="w-4 h-4 text-emerald-700" />
                     Folder Bantuan Observasi Ekosistem
                   </div>
-                  <p className="text-xs text-emerald-950 leading-relaxed">
+                  <p className="text-xs sm:text-sm text-emerald-950 leading-relaxed">
                     Jika saat observasi kelompok tidak menemukan objek ekosistem yang sesuai di lingkungan sekitar, silakan akses data bantuan melalui folder Google Drive di bawah:
                   </p>
                   <a
                     href="https://drive.google.com/drive/folders/101cBzYK2R8Jb4ITPkUc_YlgNAQ6Q9MFn?usp=sharing"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow-sm transition active:scale-95"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs sm:text-sm font-bold shadow-sm transition active:scale-95"
                   >
                     <ExternalLink className="w-4 h-4" />
                     <span>Buka Folder Bantuan Observasi (Google Drive) ↗</span>
@@ -662,18 +662,18 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
               {/* Tautan Khusus Pengumpulan Video (KE-05, IA-05, AE-05) */}
               {videoSubmissionLinks[cleanCode] && (
                 <div className="bg-sky-50 border border-sky-200/90 p-3.5 sm:p-4 rounded-xl sm:rounded-2xl space-y-2">
-                  <div className="text-[11px] sm:text-xs font-bold text-sky-800 uppercase tracking-wider flex items-center gap-1.5">
-                    <Video className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-sky-600" />
+                  <div className="text-xs sm:text-sm font-bold text-sky-800 uppercase tracking-wider flex items-center gap-1.5">
+                    <Video className="w-4 h-4 text-sky-600" />
                     {videoSubmissionLinks[cleanCode].title}
                   </div>
-                  <p className="text-xs text-sky-900 leading-relaxed">
+                  <p className="text-xs sm:text-sm text-sky-900 leading-relaxed">
                     Unggah rekaman video presentasi kelompokmu ke folder Google Drive resmi berikut:
                   </p>
                   <a
                     href={videoSubmissionLinks[cleanCode].url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-sky-700 hover:bg-sky-800 text-white text-xs font-bold shadow-sm transition active:scale-95"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-sky-700 hover:bg-sky-800 text-white text-xs sm:text-sm font-bold shadow-sm transition active:scale-95"
                   >
                     <FolderUp className="w-4 h-4" />
                     <span>Buka Google Drive Pengumpulan Video ↗</span>
@@ -684,18 +684,18 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
               {/* Tautan Khusus Dokumen Rujukan Regulasi Diri (KE-06, IA-06, AE-06) */}
               {referenceLinks[cleanCode] && (
                 <div className="bg-amber-50/80 border border-amber-200/90 p-3.5 sm:p-4 rounded-xl sm:rounded-2xl space-y-2">
-                  <div className="text-[11px] sm:text-xs font-bold text-amber-800 uppercase tracking-wider flex items-center gap-1.5">
-                    <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-700" />
+                  <div className="text-xs sm:text-sm font-bold text-amber-800 uppercase tracking-wider flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4 text-amber-700" />
                     {referenceLinks[cleanCode].title}
                   </div>
-                  <p className="text-xs text-amber-900 leading-relaxed">
+                  <p className="text-xs sm:text-sm text-amber-900 leading-relaxed">
                     Akses dokumen rujukan biologi resmi untuk memvalidasi dan merefleksikan jawaban kelompokmu:
                   </p>
                   <a
                     href={referenceLinks[cleanCode].url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-amber-700 hover:bg-amber-800 text-white text-xs font-bold shadow-sm transition active:scale-95"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-700 hover:bg-amber-800 text-white text-xs sm:text-sm font-bold shadow-sm transition active:scale-95"
                   >
                     <FolderUp className="w-4 h-4" />
                     <span>{referenceLinks[cleanCode].label}</span>
@@ -713,22 +713,22 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                 <div className="space-y-3 sm:space-y-4">
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <label className="block text-[11px] sm:text-xs font-semibold text-stone-600 uppercase tracking-wider">
+                      <label className="block text-xs sm:text-sm font-bold text-stone-700 uppercase tracking-wider">
                         Tabel Pengamatan (Kolom 1: Biotik | Kolom 2: Abiotik)
                       </label>
                       <button
                         type="button"
                         onClick={handleAddRow}
-                        className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2.5 py-1 rounded-lg transition"
+                        className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-lg transition"
                       >
-                        <Plus className="w-3.5 h-3.5" />
+                        <Plus className="w-4 h-4" />
                         <span>Tambah Baris</span>
                       </button>
                     </div>
 
                     <div className="overflow-x-auto rounded-xl border border-stone-200 shadow-2xs">
-                      <table className="w-full text-left text-xs">
-                        <thead className="bg-stone-100 text-stone-700 uppercase font-extrabold text-[10px] tracking-wider">
+                      <table className="w-full text-left text-xs sm:text-sm">
+                        <thead className="bg-stone-100 text-stone-700 uppercase font-extrabold text-xs tracking-wider">
                           <tr>
                             <th className="py-2.5 px-3 w-10 text-center">No</th>
                             <th className="py-2.5 px-3">Komponen Biotik</th>
@@ -741,7 +741,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                         <tbody className="divide-y divide-stone-200 bg-white">
                           {tableRows.map((row, idx) => (
                             <tr key={idx} className="hover:bg-stone-50/50">
-                              <td className="py-2 px-3 text-center font-bold text-stone-400 text-xs">
+                              <td className="py-2 px-3 text-center font-bold text-stone-400 text-xs sm:text-sm">
                                 {idx + 1}
                               </td>
                               <td className="py-2 px-2 sm:px-3">
@@ -750,7 +750,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                                   value={row.biotik}
                                   onChange={(e) => handleRowChange(idx, 'biotik', e.target.value)}
                                   placeholder="Contoh: Rumput, Semut..."
-                                  className="w-full bg-stone-50 border border-stone-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-emerald-600 focus:bg-white"
+                                  className="w-full bg-stone-50 border border-stone-200 rounded-lg px-3 py-2 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-emerald-600 focus:bg-white"
                                 />
                               </td>
                               <td className="py-2 px-2 sm:px-3">
@@ -759,7 +759,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                                   value={row.abiotik}
                                   onChange={(e) => handleRowChange(idx, 'abiotik', e.target.value)}
                                   placeholder="Contoh: Tanah, Air, Batu..."
-                                  className="w-full bg-stone-50 border border-stone-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-emerald-600 focus:bg-white"
+                                  className="w-full bg-stone-50 border border-stone-200 rounded-lg px-3 py-2 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-emerald-600 focus:bg-white"
                                 />
                               </td>
                               {tableRows.length > 4 && (
@@ -767,10 +767,10 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                                   <button
                                     type="button"
                                     onClick={() => handleRemoveRow(idx)}
-                                    className="p-1 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-md transition"
+                                    className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-md transition"
                                     title="Hapus baris"
                                   >
-                                    <Trash2 className="w-3.5 h-3.5" />
+                                    <Trash2 className="w-4 h-4" />
                                   </button>
                                 </td>
                               )}
@@ -787,7 +787,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                       <BookOpen className="w-4 h-4 text-emerald-700 flex-shrink-0" />
                       <span>Kolom Jawaban: Penjelasan Perbedaan Biotik dan Abiotik</span>
                     </label>
-                    <p className="text-[11px] sm:text-xs text-stone-600 leading-relaxed">
+                    <p className="text-xs sm:text-sm text-stone-600 leading-relaxed">
                       Berdasarkan data temuan kelompokmu pada tabel pengamatan di atas, jelaskan apa perbedaan mendasar antara komponen biotik dan abiotik:
                     </p>
                     <textarea
@@ -795,7 +795,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                       onChange={(e) => setExplanation(e.target.value)}
                       placeholder="Tuliskan penjelasan perbedaan antara komponen biotik dan abiotik di sini secara lengkap dan runtut..."
                       rows={4}
-                      className="w-full bg-white border border-stone-300 rounded-xl p-3 text-xs sm:text-sm text-slate-800 placeholder-stone-400 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition leading-relaxed"
+                      className="w-full bg-white border border-stone-300 rounded-xl p-3.5 sm:p-4 text-sm sm:text-base text-slate-800 placeholder-stone-400 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition leading-relaxed"
                     />
                   </div>
                 </div>
@@ -803,48 +803,48 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                 /* KHUSUS IA-01: Format Tabel 3 Kolom (Pasangan Organisme, Interaksi, Dampak) 5 Baris */
                 <div className="space-y-3 sm:space-y-4">
                   {/* Banner Tautan Google Drive Observasi */}
-                  <div className="bg-emerald-50 border border-emerald-200 p-3 sm:p-3.5 rounded-xl space-y-1.5">
-                    <div className="text-[11px] sm:text-xs font-bold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
-                      <FolderUp className="w-3.5 h-3.5 text-emerald-700" />
+                  <div className="bg-emerald-50 border border-emerald-200 p-3.5 sm:p-4 rounded-xl space-y-2">
+                    <div className="text-xs sm:text-sm font-bold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
+                      <FolderUp className="w-4 h-4 text-emerald-700" />
                       Folder Bantuan Observasi Lapangan
                     </div>
-                    <p className="text-[11px] text-emerald-950 leading-relaxed">
+                    <p className="text-xs sm:text-sm text-emerald-950 leading-relaxed">
                       Jika kelompokmu tidak menemukan interaksi langsung saat observasi di lapangan, silakan buka file bantuan melalui tautan berikut:
                     </p>
                     <a
                       href="https://drive.google.com/drive/folders/1gjWHJ_srFJXooz0GUNowzd6h0OWKJjj4?usp=sharing"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-bold shadow-xs transition active:scale-95"
+                      className="inline-flex items-center gap-2 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs sm:text-sm font-bold shadow-xs transition active:scale-95"
                     >
-                      <ExternalLink className="w-3.5 h-3.5" />
+                      <ExternalLink className="w-4 h-4" />
                       <span>Buka Folder Bantuan Observasi (Google Drive) ↗</span>
                     </a>
                   </div>
 
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <label className="block text-[11px] sm:text-xs font-semibold text-stone-600 uppercase tracking-wider">
+                      <label className="block text-xs sm:text-sm font-bold text-stone-700 uppercase tracking-wider">
                         Tabel Pengamatan Interaksi (3 Kolom • 5 Baris)
                       </label>
                       <button
                         type="button"
                         onClick={handleAddIA01Row}
-                        className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2.5 py-1 rounded-lg transition"
+                        className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-lg transition"
                       >
-                        <Plus className="w-3.5 h-3.5" />
+                        <Plus className="w-4 h-4" />
                         <span>Tambah Baris</span>
                       </button>
                     </div>
 
                     <div className="overflow-x-auto rounded-xl border border-stone-200 shadow-2xs">
-                      <table className="w-full text-left text-xs">
-                        <thead className="bg-stone-100 text-stone-700 uppercase font-extrabold text-[10px] tracking-wider">
+                      <table className="w-full text-left text-xs sm:text-sm">
+                        <thead className="bg-stone-100 text-stone-700 uppercase font-extrabold text-xs tracking-wider">
                           <tr>
-                            <th className="py-2.5 px-2.5 w-10 text-center">No</th>
-                            <th className="py-2.5 px-2.5">Pasangan Organisme</th>
-                            <th className="py-2.5 px-2.5">Interaksi</th>
-                            <th className="py-2.5 px-2.5">Dampak bagi Organisme</th>
+                            <th className="py-2.5 px-3 w-10 text-center">No</th>
+                            <th className="py-2.5 px-3">Pasangan Organisme</th>
+                            <th className="py-2.5 px-3">Interaksi</th>
+                            <th className="py-2.5 px-3">Dampak bagi Organisme</th>
                             {ia01Rows.length > 5 && (
                               <th className="py-2.5 px-2 w-10 text-center">Hapus</th>
                             )}
@@ -853,34 +853,34 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                         <tbody className="divide-y divide-stone-200 bg-white">
                           {ia01Rows.map((row, idx) => (
                             <tr key={idx} className="hover:bg-stone-50/50">
-                              <td className="py-2 px-2.5 text-center font-bold text-stone-400 text-xs">
+                              <td className="py-2 px-3 text-center font-bold text-stone-400 text-xs sm:text-sm">
                                 {idx + 1}
                               </td>
-                              <td className="py-2 px-2">
+                              <td className="py-2 px-2 sm:px-3">
                                 <input
                                   type="text"
                                   value={row.organisme}
                                   onChange={(e) => handleIA01RowChange(idx, 'organisme', e.target.value)}
                                   placeholder="Contoh: Lebah & Bunga"
-                                  className="w-full bg-stone-50 border border-stone-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-emerald-600 focus:bg-white"
+                                  className="w-full bg-stone-50 border border-stone-200 rounded-lg px-2.5 py-2 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-emerald-600 focus:bg-white"
                                 />
                               </td>
-                              <td className="py-2 px-2">
+                              <td className="py-2 px-2 sm:px-3">
                                 <input
                                   type="text"
                                   value={row.interaksi}
                                   onChange={(e) => handleIA01RowChange(idx, 'interaksi', e.target.value)}
                                   placeholder="Contoh: Mengisap nektar"
-                                  className="w-full bg-stone-50 border border-stone-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-emerald-600 focus:bg-white"
+                                  className="w-full bg-stone-50 border border-stone-200 rounded-lg px-2.5 py-2 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-emerald-600 focus:bg-white"
                                 />
                               </td>
-                              <td className="py-2 px-2">
+                              <td className="py-2 px-2 sm:px-3">
                                 <input
                                   type="text"
                                   value={row.dampak}
                                   onChange={(e) => handleIA01RowChange(idx, 'dampak', e.target.value)}
                                   placeholder="Contoh: Lebah kenyang, bunga terbantu serbuk"
-                                  className="w-full bg-stone-50 border border-stone-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-emerald-600 focus:bg-white"
+                                  className="w-full bg-stone-50 border border-stone-200 rounded-lg px-2.5 py-2 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-emerald-600 focus:bg-white"
                                 />
                               </td>
                               {ia01Rows.length > 5 && (
@@ -888,10 +888,10 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                                   <button
                                     type="button"
                                     onClick={() => handleRemoveIA01Row(idx)}
-                                    className="p-1 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-md transition"
+                                    className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-md transition"
                                     title="Hapus baris"
                                   >
-                                    <Trash2 className="w-3.5 h-3.5" />
+                                    <Trash2 className="w-4 h-4" />
                                   </button>
                                 </td>
                               )}
@@ -907,22 +907,22 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                 <div className="space-y-3 sm:space-y-4">
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <label className="block text-[11px] sm:text-xs font-semibold text-stone-600 uppercase tracking-wider">
+                      <label className="block text-xs sm:text-sm font-bold text-stone-700 uppercase tracking-wider">
                         Tabel Analisis Interaksi (Pasangan Organisme & Jenis Interaksi)
                       </label>
                       <button
                         type="button"
                         onClick={handleAddIA02Row}
-                        className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2.5 py-1 rounded-lg transition"
+                        className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-lg transition"
                       >
-                        <Plus className="w-3.5 h-3.5" />
+                        <Plus className="w-4 h-4" />
                         <span>Tambah Baris</span>
                       </button>
                     </div>
 
                     <div className="overflow-x-auto rounded-xl border border-stone-200 shadow-2xs">
-                      <table className="w-full text-left text-xs">
-                        <thead className="bg-stone-100 text-stone-700 uppercase font-extrabold text-[10px] tracking-wider">
+                      <table className="w-full text-left text-xs sm:text-sm">
+                        <thead className="bg-stone-100 text-stone-700 uppercase font-extrabold text-xs tracking-wider">
                           <tr>
                             <th className="py-2.5 px-3 w-10 text-center">No</th>
                             <th className="py-2.5 px-3">Pasangan Organisme</th>
@@ -935,7 +935,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                         <tbody className="divide-y divide-stone-200 bg-white">
                           {ia02Rows.map((row, idx) => (
                             <tr key={idx} className="hover:bg-stone-50/50">
-                              <td className="py-2 px-3 text-center font-bold text-stone-400 text-xs">
+                              <td className="py-2 px-3 text-center font-bold text-stone-400 text-xs sm:text-sm">
                                 {idx + 1}
                               </td>
                               <td className="py-2 px-2 sm:px-3">
@@ -944,7 +944,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                                   value={row.organisme}
                                   onChange={(e) => handleIA02RowChange(idx, 'organisme', e.target.value)}
                                   placeholder="Contoh: Lebah dan Bunga"
-                                  className="w-full bg-stone-50 border border-stone-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-emerald-600 focus:bg-white"
+                                  className="w-full bg-stone-50 border border-stone-200 rounded-lg px-2.5 py-2 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-emerald-600 focus:bg-white"
                                 />
                               </td>
                               <td className="py-2 px-2 sm:px-3">
@@ -953,7 +953,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                                   value={row.jenisInteraksi}
                                   onChange={(e) => handleIA02RowChange(idx, 'jenisInteraksi', e.target.value)}
                                   placeholder="Contoh: Simbiosis Mutualisme (+ / +)"
-                                  className="w-full bg-stone-50 border border-stone-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-emerald-600 focus:bg-white"
+                                  className="w-full bg-stone-50 border border-stone-200 rounded-lg px-2.5 py-2 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-emerald-600 focus:bg-white"
                                 />
                               </td>
                               {ia02Rows.length > 2 && (
@@ -961,10 +961,10 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                                   <button
                                     type="button"
                                     onClick={() => handleRemoveIA02Row(idx)}
-                                    className="p-1 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-md transition"
+                                    className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-md transition"
                                     title="Hapus baris"
                                   >
-                                    <Trash2 className="w-3.5 h-3.5" />
+                                    <Trash2 className="w-4 h-4" />
                                   </button>
                                 </td>
                               )}
@@ -979,27 +979,27 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                 /* KHUSUS AE-01: Jawaban Ketik + Upload Foto */
                 <div className="space-y-3 sm:space-y-4">
                   {/* Banner Tautan Google Drive Observasi */}
-                  <div className="bg-emerald-50 border border-emerald-200 p-3 sm:p-3.5 rounded-xl space-y-1.5">
-                    <div className="text-[11px] sm:text-xs font-bold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
-                      <FolderUp className="w-3.5 h-3.5 text-emerald-700" />
+                  <div className="bg-emerald-50 border border-emerald-200 p-3.5 sm:p-4 rounded-xl space-y-2">
+                    <div className="text-xs sm:text-sm font-bold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
+                      <FolderUp className="w-4 h-4 text-emerald-700" />
                       Folder Bantuan Observasi Lapangan
                     </div>
-                    <p className="text-[11px] text-emerald-950 leading-relaxed">
+                    <p className="text-xs sm:text-sm text-emerald-950 leading-relaxed">
                       Jika kelompok tidak menemukan objek observasi hubungan makan-memakan di lapangan, silakan buka materi bantuan melalui tautan berikut:
                     </p>
                     <a
                       href="https://drive.google.com/drive/folders/13ezailo9K8JRdOMcwhGW5LhhZoC4dnol?usp=sharing"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-bold shadow-xs transition active:scale-95"
+                      className="inline-flex items-center gap-2 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs sm:text-sm font-bold shadow-xs transition active:scale-95"
                     >
-                      <ExternalLink className="w-3.5 h-3.5" />
+                      <ExternalLink className="w-4 h-4" />
                       <span>Buka Folder Bantuan Observasi (Google Drive) ↗</span>
                     </a>
                   </div>
 
                   <div>
-                    <label className="block text-[11px] sm:text-xs font-semibold text-stone-600 uppercase tracking-wider mb-1.5 sm:mb-2">
+                    <label className="block text-xs sm:text-sm font-bold text-stone-700 uppercase tracking-wider mb-2">
                       Jawaban / Hasil Pengamatan Hubungan Makan-Memakan:
                     </label>
                     <textarea
@@ -1007,17 +1007,17 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                       onChange={(e) => setAnswer(e.target.value)}
                       placeholder="Catat minimal 3 organisme: apa yang dimakan, siapa yang memakan, dan bukti yang ditemukan beserta perannya (produsen/konsumen)..."
                       rows={5}
-                      className="w-full bg-stone-50/50 border border-stone-300 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-xs sm:text-sm text-slate-800 placeholder-stone-400 focus:outline-none focus:border-emerald-600 focus:bg-white transition leading-relaxed"
+                      className="w-full bg-white border border-stone-300 rounded-xl sm:rounded-2xl p-3.5 sm:p-4 text-sm sm:text-base text-slate-800 placeholder-stone-400 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition leading-relaxed"
                     />
                   </div>
 
                   {/* Upload Foto Bukti Pengamatan */}
-                  <div className="space-y-1.5">
-                    <label className="block text-[11px] sm:text-xs font-semibold text-stone-600 uppercase tracking-wider">
+                  <div className="space-y-2">
+                    <label className="block text-xs sm:text-sm font-bold text-stone-700 uppercase tracking-wider">
                       Foto Bukti Lapangan:
                     </label>
 
-                    <div className="bg-stone-50/70 border-2 border-dashed border-stone-300 hover:border-emerald-500 rounded-xl sm:rounded-2xl p-3.5 sm:p-4 text-center transition">
+                    <div className="bg-stone-50/70 border-2 border-dashed border-stone-300 hover:border-emerald-500 rounded-xl sm:rounded-2xl p-4 sm:p-5 text-center transition">
                       <input
                         type="file"
                         id="photo-upload-ae01"
@@ -1031,15 +1031,15 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                           <img
                             src={photoPreview}
                             alt="Bukti Foto Pengamatan"
-                            className="max-h-48 rounded-xl border border-stone-300 object-cover shadow-sm"
+                            className="max-h-52 rounded-xl border border-stone-300 object-cover shadow-sm"
                           />
                           <button
                             type="button"
                             onClick={() => setPhotoPreview(null)}
-                            className="absolute -top-2 -right-2 bg-rose-600 hover:bg-rose-700 text-white p-1 rounded-full text-xs shadow-md transition"
+                            className="absolute -top-2 -right-2 bg-rose-600 hover:bg-rose-700 text-white p-1.5 rounded-full text-xs shadow-md transition"
                             title="Hapus foto"
                           >
-                            <X className="w-3.5 h-3.5" />
+                            <X className="w-4 h-4" />
                           </button>
                         </div>
                       ) : (
@@ -1047,11 +1047,11 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                           htmlFor="photo-upload-ae01"
                           className="flex flex-col items-center justify-center cursor-pointer p-2 hover:text-emerald-700 transition"
                         >
-                          <Camera className="w-7 h-7 text-stone-400 mb-1" />
-                          <span className="text-xs font-bold text-slate-700">
+                          <Camera className="w-8 h-8 text-stone-400 mb-2" />
+                          <span className="text-sm sm:text-base font-bold text-slate-700">
                             Ambil Foto / Unggah Bukti Hubungan Makan-Memakan
                           </span>
-                          <span className="text-[11px] text-stone-400 mt-0.5">
+                          <span className="text-xs sm:text-sm text-stone-500 mt-1">
                             (Gunakan kamera smartphone atau pilih file foto dari galeri)
                           </span>
                         </label>
@@ -1062,27 +1062,27 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
               ) : isAE02 ? (
                 /* KHUSUS AE-02: Tampilan Panah Rantai Makanan + Jawaban Ketik */
                 <div className="space-y-3 sm:space-y-4">
-                  <div className="bg-emerald-50/60 border border-emerald-200/90 p-3 sm:p-4 rounded-xl sm:rounded-2xl space-y-2.5">
+                  <div className="bg-emerald-50/60 border border-emerald-200/90 p-3.5 sm:p-4 rounded-xl sm:rounded-2xl space-y-3">
                     <div className="flex items-center justify-between">
-                      <label className="block text-xs font-bold text-emerald-950 uppercase tracking-wider flex items-center gap-1.5">
-                        <Sparkles className="w-3.5 h-3.5 text-emerald-700" />
+                      <label className="block text-xs sm:text-sm font-bold text-emerald-950 uppercase tracking-wider flex items-center gap-1.5">
+                        <Sparkles className="w-4 h-4 text-emerald-700" />
                         <span>Bagan Rantai Makanan (Aliran Energi):</span>
                       </label>
                       <button
                         type="button"
                         onClick={handleAddChainNode}
-                        className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-white hover:bg-emerald-100 border border-emerald-300 px-2.5 py-1 rounded-lg transition shadow-2xs"
+                        className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-emerald-800 bg-white hover:bg-emerald-100 border border-emerald-300 px-3 py-1.5 rounded-lg transition shadow-2xs"
                       >
-                        <Plus className="w-3.5 h-3.5 text-emerald-700" />
+                        <Plus className="w-4 h-4 text-emerald-700" />
                         <span>Tambah Tingkat Panah</span>
                       </button>
                     </div>
 
-                    <p className="text-[11px] text-emerald-800">
+                    <p className="text-xs sm:text-sm text-emerald-900 leading-relaxed">
                       Tanda panah (→) menunjukkan arah aliran energi dari organisme yang dimakan menuju pemakan.
                     </p>
 
-                    <div className="flex flex-wrap items-center gap-2 p-2.5 bg-white rounded-xl border border-emerald-200/80 shadow-2xs">
+                    <div className="flex flex-wrap items-center gap-2 p-2.5 sm:p-3 bg-white rounded-xl border border-emerald-200/80 shadow-2xs">
                       {chainNodes.map((node, i) => (
                         <React.Fragment key={i}>
                           {i > 0 && (
@@ -1090,8 +1090,8 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                               <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 flex-shrink-0" />
                             </div>
                           )}
-                          <div className="flex items-center gap-1 bg-stone-50 border border-stone-200 rounded-lg p-1 shadow-2xs">
-                            <span className="text-[10px] font-extrabold text-emerald-800 px-1.5 py-0.5 rounded bg-emerald-100/90 whitespace-nowrap">
+                          <div className="flex items-center gap-1.5 bg-stone-50 border border-stone-200 rounded-lg p-1.5 shadow-2xs">
+                            <span className="text-xs font-bold text-emerald-800 px-2 py-0.5 rounded bg-emerald-100/90 whitespace-nowrap">
                               {i === 0 ? 'Produsen' : `Konsumen ${i}`}
                             </span>
                             <input
@@ -1099,7 +1099,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                               value={node}
                               onChange={(e) => handleChainNodeChange(i, e.target.value)}
                               placeholder={i === 0 ? 'Rumput' : i === 1 ? 'Belalang' : 'Burung'}
-                              className="w-24 sm:w-32 bg-white border border-stone-200 rounded px-2 py-1 text-xs text-slate-800 focus:outline-none focus:border-emerald-600"
+                              className="w-28 sm:w-36 bg-white border border-stone-200 rounded px-2.5 py-1.5 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-emerald-600"
                             />
                             {chainNodes.length > 2 && (
                               <button
@@ -1108,7 +1108,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                                 className="p-1 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded transition"
                                 title="Hapus tingkat ini"
                               >
-                                <Trash2 className="w-3 h-3" />
+                                <Trash2 className="w-3.5 h-3.5" />
                               </button>
                             )}
                           </div>
@@ -1118,14 +1118,14 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                   </div>
 
                   <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <label className="block text-[11px] sm:text-xs font-semibold text-stone-600 uppercase tracking-wider">
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="block text-xs sm:text-sm font-bold text-stone-700 uppercase tracking-wider">
                         Uraian Analisis & Penjelasan Tingkat Trofik:
                       </label>
                       <button
                         type="button"
                         onClick={() => setAnswer((prev) => (prev ? prev + ' → ' : '→ '))}
-                        className="text-[10px] sm:text-[11px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded transition"
+                        className="text-xs sm:text-sm font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2.5 py-1 rounded-lg transition"
                         title="Sisipkan tanda panah ke teks"
                       >
                         + Sisipkan Panah (→)
@@ -1136,7 +1136,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                       onChange={(e) => setAnswer(e.target.value)}
                       placeholder="Jelaskan peran masing-masing organisme dan arah perpindahan energi pada rantai makanan di atas..."
                       rows={5}
-                      className="w-full bg-stone-50/50 border border-stone-300 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-xs sm:text-sm text-slate-800 placeholder-stone-400 focus:outline-none focus:border-emerald-600 focus:bg-white transition leading-relaxed"
+                      className="w-full bg-white border border-stone-300 rounded-xl sm:rounded-2xl p-3.5 sm:p-4 text-sm sm:text-base text-slate-800 placeholder-stone-400 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition leading-relaxed"
                     />
                   </div>
                 </div>
@@ -1144,48 +1144,48 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                 /* KHUSUS JE-01: Format Tabel 3 Kolom (Ekosistem, Ciri-ciri, Jenis) */
                 <div className="space-y-3 sm:space-y-4">
                   {/* Banner Tautan Google Drive Observasi */}
-                  <div className="bg-emerald-50 border border-emerald-200 p-3 sm:p-3.5 rounded-xl space-y-1.5">
-                    <div className="text-[11px] sm:text-xs font-bold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
-                      <FolderUp className="w-3.5 h-3.5 text-emerald-700" />
+                  <div className="bg-emerald-50 border border-emerald-200 p-3.5 sm:p-4 rounded-xl space-y-2">
+                    <div className="text-xs sm:text-sm font-bold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
+                      <FolderUp className="w-4 h-4 text-emerald-700" />
                       Folder Bantuan Observasi Ekosistem
                     </div>
-                    <p className="text-[11px] text-emerald-950 leading-relaxed">
+                    <p className="text-xs sm:text-sm text-emerald-950 leading-relaxed">
                       Jika saat observasi kelompok tidak menemukan objek ekosistem yang sesuai di lingkungan sekitar, silakan buka file bantuan melalui tautan berikut:
                     </p>
                     <a
                       href="https://drive.google.com/drive/folders/101cBzYK2R8Jb4ITPkUc_YlgNAQ6Q9MFn?usp=sharing"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-bold shadow-xs transition active:scale-95"
+                      className="inline-flex items-center gap-2 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs sm:text-sm font-bold shadow-xs transition active:scale-95"
                     >
-                      <ExternalLink className="w-3.5 h-3.5" />
+                      <ExternalLink className="w-4 h-4" />
                       <span>Buka Folder Bantuan Observasi (Google Drive) ↗</span>
                     </a>
                   </div>
 
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <label className="block text-[11px] sm:text-xs font-semibold text-stone-600 uppercase tracking-wider">
+                      <label className="block text-xs sm:text-sm font-bold text-stone-700 uppercase tracking-wider">
                         Tabel Pengamatan Ekosistem (3 Kolom • Ekosistem, Ciri-ciri, Jenis)
                       </label>
                       <button
                         type="button"
                         onClick={handleAddJE01Row}
-                        className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2.5 py-1 rounded-lg transition"
+                        className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-lg transition"
                       >
-                        <Plus className="w-3.5 h-3.5" />
+                        <Plus className="w-4 h-4" />
                         <span>Tambah Baris</span>
                       </button>
                     </div>
 
                     <div className="overflow-x-auto rounded-xl border border-stone-200 shadow-2xs">
-                      <table className="w-full text-left text-xs">
-                        <thead className="bg-stone-100 text-stone-700 uppercase font-extrabold text-[10px] tracking-wider">
+                      <table className="w-full text-left text-xs sm:text-sm">
+                        <thead className="bg-stone-100 text-stone-700 uppercase font-extrabold text-xs tracking-wider">
                           <tr>
-                            <th className="py-2.5 px-2.5 w-10 text-center">No</th>
-                            <th className="py-2.5 px-2.5">Ekosistem</th>
-                            <th className="py-2.5 px-2.5">Ciri-ciri</th>
-                            <th className="py-2.5 px-2.5">Jenis</th>
+                            <th className="py-2.5 px-3 w-10 text-center">No</th>
+                            <th className="py-2.5 px-3">Ekosistem</th>
+                            <th className="py-2.5 px-3">Ciri-ciri</th>
+                            <th className="py-2.5 px-3">Jenis</th>
                             {je01Rows.length > 2 && (
                               <th className="py-2.5 px-2 w-10 text-center">Hapus</th>
                             )}
@@ -1194,34 +1194,34 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                         <tbody className="divide-y divide-stone-200 bg-white">
                           {je01Rows.map((row, idx) => (
                             <tr key={idx} className="hover:bg-stone-50/50">
-                              <td className="py-2 px-2.5 text-center font-bold text-stone-400 text-xs">
+                              <td className="py-2 px-3 text-center font-bold text-stone-400 text-xs sm:text-sm">
                                 {idx + 1}
                               </td>
-                              <td className="py-2 px-2">
+                              <td className="py-2 px-2 sm:px-3">
                                 <input
                                   type="text"
                                   value={row.ekosistem}
                                   onChange={(e) => handleJE01RowChange(idx, 'ekosistem', e.target.value)}
                                   placeholder="Contoh: Hutan Hujan Tropis / Kolam Ikan"
-                                  className="w-full bg-stone-50 border border-stone-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-emerald-600 focus:bg-white"
+                                  className="w-full bg-stone-50 border border-stone-200 rounded-lg px-2.5 py-2 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-emerald-600 focus:bg-white"
                                 />
                               </td>
-                              <td className="py-2 px-2">
+                              <td className="py-2 px-2 sm:px-3">
                                 <input
                                   type="text"
                                   value={row.ciriCiri}
                                   onChange={(e) => handleJE01RowChange(idx, 'ciriCiri', e.target.value)}
                                   placeholder="Suhu, curah hujan, vegetasi, fauna khas..."
-                                  className="w-full bg-stone-50 border border-stone-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-emerald-600 focus:bg-white"
+                                  className="w-full bg-stone-50 border border-stone-200 rounded-lg px-2.5 py-2 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-emerald-600 focus:bg-white"
                                 />
                               </td>
-                              <td className="py-2 px-2">
+                              <td className="py-2 px-2 sm:px-3">
                                 <input
                                   type="text"
                                   value={row.jenis}
                                   onChange={(e) => handleJE01RowChange(idx, 'jenis', e.target.value)}
                                   placeholder="Alami / Buatan"
-                                  className="w-full bg-stone-50 border border-stone-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-emerald-600 focus:bg-white"
+                                  className="w-full bg-stone-50 border border-stone-200 rounded-lg px-2.5 py-2 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-emerald-600 focus:bg-white"
                                 />
                               </td>
                               {je01Rows.length > 2 && (
@@ -1229,10 +1229,10 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                                   <button
                                     type="button"
                                     onClick={() => handleRemoveJE01Row(idx)}
-                                    className="p-1 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-md transition"
+                                    className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-md transition"
                                     title="Hapus baris"
                                   >
-                                    <Trash2 className="w-3.5 h-3.5" />
+                                    <Trash2 className="w-4 h-4" />
                                   </button>
                                 </td>
                               )}
@@ -1246,19 +1246,19 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
               ) : videoSubmissionLinks[cleanCode] ? (
                 /* KHUSUS PENGUMPULAN VIDEO DRIVE (KE-05, IA-05, AE-05, JE-05) */
                 <div className="space-y-3 sm:space-y-4">
-                  <div className="bg-sky-50 border border-sky-200 p-3 sm:p-4 rounded-xl space-y-2">
-                    <div className="text-[11px] sm:text-xs font-bold text-sky-800 uppercase tracking-wider flex items-center gap-1.5">
-                      <Video className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-sky-600" />
+                  <div className="bg-sky-50 border border-sky-200 p-3.5 sm:p-4 rounded-xl space-y-2">
+                    <div className="text-xs sm:text-sm font-bold text-sky-800 uppercase tracking-wider flex items-center gap-1.5">
+                      <Video className="w-4 h-4 text-sky-600" />
                       Tautan Pengumpulan Video Google Drive
                     </div>
-                    <p className="text-xs text-sky-900 leading-relaxed">
+                    <p className="text-xs sm:text-sm text-sky-950 leading-relaxed">
                       Unggah file video presentasi kelompok ke tautan Google Drive resmi di bawah ini:
                     </p>
                     <a
                       href={videoSubmissionLinks[cleanCode].url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-sky-700 hover:bg-sky-800 text-white text-xs font-bold shadow-sm transition active:scale-95"
+                      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-sky-700 hover:bg-sky-800 text-white text-xs sm:text-sm font-bold shadow-sm transition active:scale-95"
                     >
                       <FolderUp className="w-4 h-4" />
                       <span>{videoSubmissionLinks[cleanCode].title} ↗</span>
@@ -1266,7 +1266,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                   </div>
 
                   <div>
-                    <label className="block text-[11px] sm:text-xs font-semibold text-stone-600 uppercase tracking-wider mb-1.5 sm:mb-2">
+                    <label className="block text-xs sm:text-sm font-bold text-stone-700 uppercase tracking-wider mb-2">
                       Konfirmasi Pengumpulan Video & Catatan Presentasi:
                     </label>
                     <textarea
@@ -1274,14 +1274,14 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                       onChange={(e) => setAnswer(e.target.value)}
                       placeholder="Contoh: 'Video presentasi kelompok telah diunggah dengan nama file: Video_Kelompok 1.mp4'. Tuliskan juga ringkasan temuan dan poin presentasi kalian di sini..."
                       rows={5}
-                      className="w-full bg-stone-50/50 border border-stone-300 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-xs sm:text-sm text-slate-800 placeholder-stone-400 focus:outline-none focus:border-emerald-600 focus:bg-white transition leading-relaxed"
+                      className="w-full bg-white border border-stone-300 rounded-xl sm:rounded-2xl p-3.5 sm:p-4 text-sm sm:text-base text-slate-800 placeholder-stone-400 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition leading-relaxed"
                     />
                   </div>
                 </div>
               ) : (
                 /* KE-02..04, IA-03..04, AE-03..04, JE-02..04: Jawaban Ketik Standar */
                 <div>
-                  <label className="block text-[11px] sm:text-xs font-semibold text-stone-600 uppercase tracking-wider mb-1.5 sm:mb-2">
+                  <label className="block text-xs sm:text-sm font-bold text-stone-700 uppercase tracking-wider mb-2">
                     Jawaban / Hasil Analisis Kelompok:
                   </label>
                   <textarea
@@ -1289,7 +1289,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                     onChange={(e) => setAnswer(e.target.value)}
                     placeholder="Tuliskan temuan kelompokmu di sini secara lengkap dan runtut..."
                     rows={6}
-                    className="w-full bg-stone-50/50 border border-stone-300 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-xs sm:text-sm text-slate-800 placeholder-stone-400 focus:outline-none focus:border-emerald-600 focus:bg-white transition leading-relaxed"
+                    className="w-full bg-white border border-stone-300 rounded-xl sm:rounded-2xl p-3.5 sm:p-4 text-sm sm:text-base text-slate-800 placeholder-stone-400 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition leading-relaxed"
                   />
                 </div>
               )}
@@ -1302,11 +1302,11 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
               {/* 1. Kunci Rujukan & Validasi Konsep */}
               <div className="bg-amber-50/70 border border-amber-200/90 p-3.5 sm:p-4 rounded-xl sm:rounded-2xl space-y-2.5">
                 <div>
-                  <h4 className="text-[11px] sm:text-xs font-bold text-amber-800 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                    <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-700" />
+                  <h4 className="text-xs sm:text-sm font-bold text-amber-800 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4 text-amber-700" />
                     Kunci Rujukan & Validasi Konsep
                   </h4>
-                  <p className="text-[10px] sm:text-xs text-amber-700/80 leading-relaxed">
+                  <p className="text-xs sm:text-sm text-amber-900 leading-relaxed">
                     Buka dokumen rujukan di bawah untuk memvalidasi dan membandingkan jawaban kelompokmu secara mandiri:
                   </p>
                 </div>
@@ -1316,7 +1316,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                     href={referenceLinks[cleanCode].url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full py-2.5 px-3 bg-amber-700 hover:bg-amber-800 text-white text-xs sm:text-sm font-bold rounded-xl transition flex items-center justify-center gap-2 shadow-sm active:scale-95"
+                    className="w-full py-2.5 sm:py-3 px-4 bg-amber-700 hover:bg-amber-800 text-white text-xs sm:text-sm font-bold rounded-xl transition flex items-center justify-center gap-2 shadow-sm active:scale-95"
                   >
                     <FolderUp className="w-4 h-4" />
                     <span>{referenceLinks[cleanCode].label}</span>
@@ -1327,25 +1327,25 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
               {/* 2. Riwayat Jawaban Kelompok dari Aktivitas Sebelumnya */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <h5 className="text-[11px] sm:text-xs font-bold text-stone-700 uppercase tracking-wider flex items-center gap-1.5">
-                    <History className="w-3.5 h-3.5 text-stone-500" />
+                  <h5 className="text-xs sm:text-sm font-bold text-stone-700 uppercase tracking-wider flex items-center gap-1.5">
+                    <History className="w-4 h-4 text-stone-500" />
                     Riwayat Jawaban Kelompok ({previousActivityCodes[0]} s/d {previousActivityCodes[previousActivityCodes.length - 1]}):
                   </h5>
-                  <span className="text-[10px] text-stone-400 font-medium">Bandingkan dengan rujukan</span>
+                  <span className="text-xs text-stone-500 font-medium">Bandingkan dengan rujukan</span>
                 </div>
 
-                <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
                   {previousActivityCodes.map((code) => {
                     const act = ACTIVITIES[code];
                     const prevData = previousAnswers[code];
                     return (
-                      <div key={code} className="p-2.5 sm:p-3 rounded-xl border border-stone-200/90 bg-white shadow-2xs space-y-1">
-                        <div className="flex items-center justify-between text-[11px]">
+                      <div key={code} className="p-3 rounded-xl border border-stone-200/90 bg-white shadow-2xs space-y-1.5">
+                        <div className="flex items-center justify-between text-xs sm:text-sm">
                           <span className="font-bold text-slate-800">
                             Petak #{act?.tileNumber || '?'}: {act ? (act.cardType === 'Challenge' ? 'Tantangan Lapangan' : 'Teka-Teki Analisis') : code}
                           </span>
                           <span
-                            className={`text-[9px] sm:text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                            className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${
                               prevData?.answer
                                 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                                 : 'bg-stone-100 text-stone-500 border border-stone-200'
@@ -1355,18 +1355,18 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                           </span>
                         </div>
                         {prevData?.answer ? (
-                          <div className="text-xs text-stone-700 bg-stone-50 p-2 rounded-lg border border-stone-100 leading-relaxed">
+                          <div className="text-xs sm:text-sm text-stone-700 bg-stone-50 p-2.5 rounded-lg border border-stone-100 leading-relaxed">
                             <p className="whitespace-pre-line">
                               {prevData.answer.replace(/\[Foto Bukti Lapangan\]:\s*data:image\/[^\s]+/g, '[Foto Bukti Lapangan Terlampir]').trim()}
                             </p>
                             {prevData.answer.includes('[Foto Bukti Lapangan]:') && (
-                              <span className="inline-block mt-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                              <span className="inline-block mt-1 text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                                 📷 Ada Bukti Foto
                               </span>
                             )}
                           </div>
                         ) : (
-                          <p className="text-[11px] text-stone-400 italic py-0.5">
+                          <p className="text-xs sm:text-sm text-stone-400 italic py-0.5">
                             Kelompok belum menyimpan jawaban untuk aktivitas ini.
                           </p>
                         )}
@@ -1378,7 +1378,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
 
               {/* 3. Satu Kolom Jawaban Ketik: Refleksi & Perbaikan Jawaban */}
               <div>
-                <label className="block text-[11px] sm:text-xs font-semibold text-stone-600 uppercase tracking-wider mb-1.5 sm:mb-2">
+                <label className="block text-xs sm:text-sm font-bold text-stone-700 uppercase tracking-wider mb-2">
                   Refleksi & Perbaikan Jawaban Kelompok:
                 </label>
                 <textarea
@@ -1386,7 +1386,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                   onChange={(e) => setReflection(e.target.value)}
                   placeholder="Periksa kembali jawaban kelompokmu di atas dengan membandingkannya terhadap dokumen rujukan. Tuliskan jika ada bagian yang diperbaiki atau alasan mempertahankan jawaban..."
                   rows={4}
-                  className="w-full bg-stone-50/50 border border-stone-300 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-xs sm:text-sm text-slate-800 placeholder-stone-400 focus:outline-none focus:border-amber-600 focus:bg-white transition leading-relaxed"
+                  className="w-full bg-white border border-stone-300 rounded-xl sm:rounded-2xl p-3.5 sm:p-4 text-sm sm:text-base text-slate-800 placeholder-stone-400 focus:outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20 transition leading-relaxed"
                 />
               </div>
             </div>
@@ -1394,24 +1394,24 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
         </div>
 
         {/* Modal Footer */}
-        <div className="p-3 sm:p-4 md:p-5 bg-stone-50/80 border-t border-stone-100 flex items-center justify-between flex-shrink-0">
-          <div className="text-[11px] sm:text-xs text-stone-500">
+        <div className="p-3.5 sm:p-4 md:p-5 bg-stone-50/80 border-t border-stone-100 flex items-center justify-between flex-shrink-0">
+          <div className="text-xs sm:text-sm text-stone-600">
             Tim: <span className="font-bold text-slate-800">{team.name}</span>
           </div>
 
-          <div className="flex gap-1.5 sm:gap-2">
+          <div className="flex gap-2">
             <button
               onClick={onClose}
-              className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-semibold text-stone-600 hover:text-slate-800 hover:bg-stone-200/60 transition"
+              className="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold text-stone-600 hover:text-slate-800 hover:bg-stone-200/60 transition"
             >
               Tutup
             </button>
             <button
               onClick={handleSubmit}
-              className="px-3.5 sm:px-5 py-1.5 sm:py-2.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 flex items-center gap-1.5 sm:gap-2 shadow-sm transition active:scale-95"
+              className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-emerald-700 hover:bg-emerald-800 flex items-center gap-1.5 sm:gap-2 shadow-sm transition active:scale-95"
             >
               <span>Kirim Jawaban</span>
-              <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         </div>
