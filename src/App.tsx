@@ -26,6 +26,7 @@ import { TeacherLoginScreen } from './components/auth/TeacherLoginScreen';
 import { TeacherLobbyScreen } from './components/dashboard/TeacherLobbyScreen';
 import { TeacherSessionCreator } from './components/dashboard/TeacherSessionCreator';
 import { StudentWaitingLobby } from './components/student/StudentWaitingLobby';
+import { getBackendUrl } from './config/api';
 import {
   Trophy,
   ChevronRight,
@@ -144,7 +145,7 @@ export const App: React.FC = () => {
   useEffect(() => {
     if (!activeSession?.roomCode) return;
 
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+    const backendUrl = getBackendUrl();
     const socket: Socket = io(backendUrl, {
       transports: ['websocket', 'polling'],
       reconnectionAttempts: 5,
@@ -208,7 +209,7 @@ export const App: React.FC = () => {
   // Polling Fallback: Memastikan siswa otomatis masuk ke papan meskipun WebSocket terputus
   useEffect(() => {
     if (isTeacherRoute || !activeSession?.roomCode || studentGamePhase !== 'lobby') return;
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+    const backendUrl = getBackendUrl();
     const interval = setInterval(async () => {
       try {
         const res = await fetch(`${backendUrl}/api/sessions/${encodeURIComponent(activeSession.roomCode)}`);
@@ -237,7 +238,7 @@ export const App: React.FC = () => {
     setJoinRoomError(null);
     setIsJoiningRoom(true);
     try {
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+      const backendUrl = getBackendUrl();
       const cleanCode = code.trim().toUpperCase();
       const res = await fetch(`${backendUrl}/api/sessions/${encodeURIComponent(cleanCode)}`);
       const data = await res.json();
@@ -310,7 +311,7 @@ export const App: React.FC = () => {
     const token = localStorage.getItem('ecoplay_teacher_token');
     if (token && activeSession?.roomCode) {
       try {
-        const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+        const backendUrl = getBackendUrl();
         await fetch(`${backendUrl}/api/sessions/${activeSession.roomCode}/start`, {
           method: 'POST',
           headers: {
@@ -332,7 +333,7 @@ export const App: React.FC = () => {
     if (!authToken) return;
 
     setIsLoadingSession(true);
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+    const backendUrl = getBackendUrl();
 
     try {
       // 1. Ambil daftar riwayat sesi kelas milik guru di Supabase
@@ -425,7 +426,7 @@ export const App: React.FC = () => {
     const token = localStorage.getItem('ecoplay_teacher_token');
     if (!token) return;
 
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+    const backendUrl = getBackendUrl();
     fetch(`${backendUrl}/api/auth/me`, {
       headers: { Authorization: `Bearer ${token}` },
     })
@@ -445,7 +446,7 @@ export const App: React.FC = () => {
     const token = localStorage.getItem('ecoplay_teacher_token');
     if (token) {
       try {
-        const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+        const backendUrl = getBackendUrl();
         const res = await fetch(`${backendUrl}/api/sessions/create`, {
           method: 'POST',
           headers: {

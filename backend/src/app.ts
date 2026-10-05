@@ -34,22 +34,26 @@ export function createApp(): Application {
   app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
   // Sajikan berkas statis foto observasi yang diunggah
-  const uploadDir = path.resolve(__dirname, '../uploads');
+  const uploadDir = process.env.VERCEL
+    ? path.join('/tmp', 'uploads')
+    : path.resolve(__dirname, '../uploads');
   app.use('/uploads', express.static(uploadDir));
 
-  // Endpoint Cek Kesehatan (Healthcheck - untuk Render Always-Awake & Uptime Robot)
-  app.get('/api/health', (_req: Request, res: Response) => {
+  // Endpoint Cek Kesehatan (Healthcheck)
+  app.get(['/api/health', '/health'], (_req: Request, res: Response) => {
     res.status(200).json({
       status: 'ok',
-      service: 'Ecoplay Backend API',
+      service: 'Ecoplay Backend API (Vercel Serverless & Express)',
       uptime: process.uptime(),
       timestamp: new Date().toISOString(),
     });
   });
 
-  // Daftarkan Rute REST API
+  // Daftarkan Rute REST API (mendukung dengan dan tanpa prefiks /api)
   app.use('/api/auth', authRoutes);
+  app.use('/auth', authRoutes);
   app.use('/api/sessions', sessionRoutes);
+  app.use('/sessions', sessionRoutes);
 
   // Penanganan Error Terpusat
   app.use(errorHandler);

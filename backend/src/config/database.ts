@@ -37,8 +37,9 @@ const knexConfig: Knex.Config = {
         database: process.env.DB_NAME || 'ecoplay',
       },
   pool: {
-    min: 2,
-    max: 10,
+    min: 0,
+    max: process.env.VERCEL ? 3 : 10,
+    idleTimeoutMillis: 30000,
   },
 };
 

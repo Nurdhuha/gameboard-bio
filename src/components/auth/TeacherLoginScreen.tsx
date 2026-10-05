@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { LogIn, UserPlus, BookOpen, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { getBackendUrl } from '../../config/api';
 
 interface TeacherLoginScreenProps {
   onLoginSuccess: (teacher: { id: string; name: string; email: string }, token: string) => void;
@@ -40,7 +41,7 @@ export const TeacherLoginScreen: React.FC<TeacherLoginScreenProps> = ({
     setIsLoading(true);
 
     try {
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+      const backendUrl = getBackendUrl();
       const endpoint = tab === 'login' ? '/api/auth/login' : '/api/auth/register';
       const body = tab === 'login' ? { email, password } : { name, email, password };
 
@@ -63,7 +64,16 @@ export const TeacherLoginScreen: React.FC<TeacherLoginScreenProps> = ({
       onLoginSuccess(data.teacher, data.token);
     } catch (err: any) {
       console.warn('Login error:', err.message);
-      setErrorMsg(err.message || 'Gagal memproses data.');
+      const isNetworkError =
+        err.message === 'Failed to fetch' ||
+        err.name === 'TypeError' ||
+        err.message?.includes('NetworkError') ||
+        err.message?.includes('fetch');
+      setErrorMsg(
+        isNetworkError
+          ? 'Gagal terhubung ke server backend. Pastikan server backend sedang aktif di port 5000 (npm --prefix backend run dev).'
+          : (err.message || 'Gagal memproses data.')
+      );
     } finally {
       setIsLoading(false);
     }

@@ -2,11 +2,17 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 
-const uploadDir = path.resolve(__dirname, '../../uploads');
+const uploadDir = process.env.VERCEL
+  ? path.join('/tmp', 'uploads')
+  : path.resolve(__dirname, '../../uploads');
 
-// Pastikan direktori uploads tersedia
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
+// Pastikan direktori uploads tersedia (gunakan /tmp di Vercel Serverless)
+try {
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+} catch {
+  // Abaikan error perizinan sistem berkas jika di lingkungan serverless
 }
 
 const storage = multer.diskStorage({
