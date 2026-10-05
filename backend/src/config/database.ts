@@ -5,9 +5,6 @@ import dotenv from 'dotenv';
 import path from 'path';
 
 dotenv.config();
-if (!process.env.DATABASE_URL) {
-  dotenv.config({ path: path.resolve(__dirname, '../../.env') });
-}
 
 const connectionString = process.env.DATABASE_URL;
 

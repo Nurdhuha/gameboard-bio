@@ -4,7 +4,7 @@ import "pg";
 // backend/src/app.ts
 import express from "express";
 import cors from "cors";
-import path3 from "path";
+import path2 from "path";
 
 // backend/src/routes/authRoutes.ts
 import { Router } from "express";
@@ -17,11 +17,7 @@ import jwt from "jsonwebtoken";
 import "pg";
 import knex from "knex";
 import dotenv from "dotenv";
-import path from "path";
 dotenv.config();
-if (!process.env.DATABASE_URL) {
-  dotenv.config({ path: path.resolve(__dirname, "../../.env") });
-}
 var connectionString = process.env.DATABASE_URL;
 var knexConfig = {
   client: "pg",
@@ -741,9 +737,9 @@ async function exportExcel(req, res) {
 
 // backend/src/config/storage.ts
 import multer from "multer";
-import path2 from "path";
+import path from "path";
 import fs from "fs";
-var uploadDir = process.env.VERCEL ? path2.join("/tmp", "uploads") : path2.resolve(__dirname, "../../uploads");
+var uploadDir = process.env.VERCEL ? path.join("/tmp", "uploads") : path.resolve(process.cwd(), "uploads");
 try {
   if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
@@ -758,7 +754,7 @@ var storage = multer.diskStorage({
     const roomCode = req.params.roomCode || "GENERAL";
     const timestamp = Date.now();
     const randomSuffix = Math.round(Math.random() * 1e4);
-    const ext = path2.extname(file.originalname).toLowerCase() || ".jpg";
+    const ext = path.extname(file.originalname).toLowerCase() || ".jpg";
     cb(null, `foto-${roomCode}-${timestamp}-${randomSuffix}${ext}`);
   }
 });
@@ -834,7 +830,7 @@ function createApp() {
   );
   app.use(express.json({ limit: "10mb" }));
   app.use(express.urlencoded({ extended: true, limit: "10mb" }));
-  const uploadDir2 = process.env.VERCEL ? path3.join("/tmp", "uploads") : path3.resolve(__dirname, "../uploads");
+  const uploadDir2 = process.env.VERCEL ? path2.join("/tmp", "uploads") : path2.resolve(process.cwd(), "uploads");
   app.use("/uploads", express.static(uploadDir2));
   app.get(["/api/health", "/health", "/api", "/api/index.ts"], (_req, res) => {
     res.status(200).json({

@@ -36,7 +36,7 @@ export function createApp(): Application {
   // Sajikan berkas statis foto observasi yang diunggah
   const uploadDir = process.env.VERCEL
     ? path.join('/tmp', 'uploads')
-    : path.resolve(__dirname, '../uploads');
+    : path.resolve(process.cwd(), 'uploads');
   app.use('/uploads', express.static(uploadDir));
 
   // Endpoint Cek Kesehatan (Healthcheck)

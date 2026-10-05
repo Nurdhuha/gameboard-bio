@@ -4,7 +4,7 @@ import fs from 'fs';
 
 const uploadDir = process.env.VERCEL
   ? path.join('/tmp', 'uploads')
-  : path.resolve(__dirname, '../../uploads');
+  : path.resolve(process.cwd(), 'uploads');
 
 // Pastikan direktori uploads tersedia (gunakan /tmp di Vercel Serverless)
 try {
