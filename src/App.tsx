@@ -1,5 +1,6 @@
-import React, { useState, useEffect, Suspense, lazy } from 'react';
+import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
 import { useLocation } from 'react-router-dom';
+import { io, Socket } from 'socket.io-client';
 import { GameBoard } from './components/board/GameBoard';
 import { TeamSelectionScreen } from './components/student/TeamSelectionScreen';
 import { INITIAL_TEAMS, TEAM_PRESETS, BOARD_TILES, ACTIVITIES } from './data/boardData';
@@ -21,6 +22,10 @@ const LeaderboardModal = lazy(() =>
 const TeacherDashboardModal = lazy(() =>
   import('./components/dashboard/TeacherDashboardModal').then((m) => ({ default: m.TeacherDashboardModal }))
 );
+import { TeacherLoginScreen } from './components/auth/TeacherLoginScreen';
+import { TeacherLobbyScreen } from './components/dashboard/TeacherLobbyScreen';
+import { TeacherSessionCreator } from './components/dashboard/TeacherSessionCreator';
+import { StudentWaitingLobby } from './components/student/StudentWaitingLobby';
 import {
   Trophy,
   ChevronRight,
@@ -36,6 +41,10 @@ import {
   Users,
   RefreshCw,
   UserPlus,
+  Monitor,
+  LogOut,
+  LayoutDashboard,
+  Loader2,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -60,8 +69,51 @@ export const App: React.FC = () => {
   // Status halaman murid: apakah sudah memilih kelompok atau belum
   const [hasStudentSelectedTeam, setHasStudentSelectedTeam] = useState<boolean>(false);
 
-  // Status tampilan guru di /teachers: 'spin' (roda putar penentuan giliran) atau 'board' (papan kelas)
-  const [teacherGamePhase, setTeacherGamePhase] = useState<'spin' | 'board'>('spin');
+  // Status Autentikasi Guru (localStorage check)
+  const [teacherAuth, setTeacherAuth] = useState<{ id: string; name: string; email: string } | null>(() => {
+    try {
+      const saved = localStorage.getItem('ecoplay_teacher_profile');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [isTeacherDemoMode, setIsTeacherDemoMode] = useState<boolean>(false);
+  const [isLoadingSession, setIsLoadingSession] = useState<boolean>(false);
+  const [showSessionCreator, setShowSessionCreator] = useState<boolean>(false);
+
+  // Sesi Ruang Kelas Aktif
+  const [activeSession, setActiveSession] = useState<{
+    roomCode: string;
+    className: string;
+    academicYear: string;
+  } | null>(() => {
+    if (isTeacherRoute) {
+      try {
+        const saved = localStorage.getItem('ecoplay_teacher_active_session');
+        return saved ? JSON.parse(saved) : null;
+      } catch {
+        return null;
+      }
+    }
+    try {
+      const saved = sessionStorage.getItem('ecoplay_student_session');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  // State untuk siswa bergabung ke ruang kelas
+  const [isJoiningRoom, setIsJoiningRoom] = useState<boolean>(false);
+  const [joinRoomError, setJoinRoomError] = useState<string | null>(null);
+  const socketRef = useRef<Socket | null>(null);
+
+  // Status tampilan guru di /teachers: 'lobby' (ruang tunggu) | 'spin' (roda putar) | 'board' (papan kelas)
+  const [teacherGamePhase, setTeacherGamePhase] = useState<'lobby' | 'spin' | 'board'>('lobby');
+
+  // Status tampilan murid di /: 'lobby' (ruang tunggu siswa) | 'board' (papan kelas)
+  const [studentGamePhase, setStudentGamePhase] = useState<'lobby' | 'board'>('lobby');
 
   const [teams, setTeams] = useState<Team[]>(INITIAL_TEAMS);
   const [selectedTeamId, setSelectedTeamId] = useState<number>(1);
@@ -88,12 +140,352 @@ export const App: React.FC = () => {
   const inspectedTile = BOARD_TILES.find((t) => t.id === inspectedTileId) || BOARD_TILES[0];
   const inspectedActivity = inspectedTile.activityCode ? ACTIVITIES[inspectedTile.activityCode] : null;
 
+  // Real-time WebSocket Synchronization via Socket.io
+  useEffect(() => {
+    if (!activeSession?.roomCode) return;
+
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+    const socket: Socket = io(backendUrl, {
+      transports: ['websocket', 'polling'],
+      reconnectionAttempts: 5,
+    });
+    socketRef.current = socket;
+
+    socket.emit('session:join', {
+      roomCode: activeSession.roomCode,
+      role: isTeacherRoute ? 'teacher' : 'student',
+      teamId: selectedTeamId ? String(selectedTeamId) : undefined,
+    });
+
+    socket.on('session:sync_state', ({ session, teams: serverTeams }) => {
+      if (serverTeams && serverTeams.length > 0) {
+        setTeams(serverTeams);
+      }
+      if (session?.phase && session.phase !== 'lobby') {
+        setStudentGamePhase('board');
+        setTeacherGamePhase(session.phase as any);
+      }
+    });
+
+    // Otomatis buka papan permainan siswa saat guru menekan Mulai Permainan
+    socket.on('game:started', ({ phase }) => {
+      setStudentGamePhase('board');
+      setTeacherGamePhase((phase as any) || 'spin');
+      confetti({ particleCount: 90, spread: 80, origin: { y: 0.5 } });
+    });
+
+    socket.on('phase:updated', ({ phase }) => {
+      if (phase && phase !== 'lobby') {
+        setStudentGamePhase('board');
+      }
+      setTeacherGamePhase(phase as any);
+    });
+
+    socket.on('pawn:moved', ({ teamId, targetTile }) => {
+      setTeams((prev) =>
+        prev.map((t) => {
+          if (String(t.id) === String(teamId) || String(t.teamNumber) === String(teamId)) {
+            return { ...t, currentTile: targetTile };
+          }
+          return t;
+        })
+      );
+    });
+
+    socket.on('class:ended', ({ message }) => {
+      alert(message || 'Sesi kelas telah diakhiri oleh Bapak/Ibu Guru.');
+      setStudentGamePhase('lobby');
+      setTeacherGamePhase('lobby');
+      setHasStudentSelectedTeam(false);
+    });
+
+    return () => {
+      socket.disconnect();
+      socketRef.current = null;
+    };
+  }, [activeSession?.roomCode, isTeacherRoute, selectedTeamId]);
+
+  // Polling Fallback: Memastikan siswa otomatis masuk ke papan meskipun WebSocket terputus
+  useEffect(() => {
+    if (isTeacherRoute || !activeSession?.roomCode || studentGamePhase !== 'lobby') return;
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`${backendUrl}/api/sessions/${encodeURIComponent(activeSession.roomCode)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.session) {
+            if (data.session.phase && data.session.phase !== 'lobby') {
+              setStudentGamePhase('board');
+              confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
+            }
+            if (data.teams && data.teams.length > 0) {
+              setTeams(data.teams);
+            }
+          }
+        }
+      } catch {
+        // silent fallback
+      }
+    }, 2500);
+
+    return () => clearInterval(interval);
+  }, [isTeacherRoute, activeSession?.roomCode, studentGamePhase]);
+
+  // Siswa memasukkan kode kelas dan memvalidasi ke server backend
+  const handleStudentJoinRoom = async (code: string) => {
+    setJoinRoomError(null);
+    setIsJoiningRoom(true);
+    try {
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+      const cleanCode = code.trim().toUpperCase();
+      const res = await fetch(`${backendUrl}/api/sessions/${encodeURIComponent(cleanCode)}`);
+      const data = await res.json();
+      if (res.ok && data.success && data.session) {
+        const sessionData = {
+          roomCode: data.session.roomCode || data.session.room_code || cleanCode,
+          className: data.session.className || data.session.class_name || 'Kelas Ecoplay',
+          academicYear: data.session.academicYear || data.session.academic_year || '2026/2027',
+        };
+        setActiveSession(sessionData);
+        sessionStorage.setItem('ecoplay_student_session', JSON.stringify(sessionData));
+        if (data.teams && data.teams.length > 0) {
+          setTeams(data.teams);
+        }
+        if (data.session.phase && data.session.phase !== 'lobby') {
+          setStudentGamePhase('board');
+        } else {
+          setStudentGamePhase('lobby');
+        }
+        return true;
+      } else {
+        setJoinRoomError(
+          data.message || `Kode kelas "${cleanCode}" tidak ditemukan. Pastikan kode sesuai dengan yang ada di proyektor guru.`
+        );
+        return false;
+      }
+    } catch (err: any) {
+      console.warn('Backend server unreachable during room join:', err);
+      setJoinRoomError('Gagal menghubungi server backend. Pastikan server backend sudah aktif, atau pilih Mode Simulasi.');
+      return false;
+    } finally {
+      setIsJoiningRoom(false);
+    }
+  };
+
+  // Siswa memilih mode simulasi mandiri / offline
+  const handleStudentDemoMode = () => {
+    const demoSession = {
+      roomCode: 'ECO-DEMO',
+      className: 'Kelas Simulasi Standalone',
+      academicYear: '2026/2027',
+    };
+    setActiveSession(demoSession);
+    setJoinRoomError(null);
+  };
+
+  // Siswa mengganti kode kelas
+  const handleChangeRoomCode = () => {
+    setActiveSession(null);
+    setHasStudentSelectedTeam(false);
+    setStudentGamePhase('lobby');
+    sessionStorage.removeItem('ecoplay_student_session');
+  };
+
   // Handle selesai sesi spin di /teachers
   const handleSpinComplete = (orderedTeams: Team[]) => {
     setTeams(orderedTeams);
     setSelectedTeamId(orderedTeams[0].id);
     setTeacherGamePhase('board');
+    setStudentGamePhase('board');
     confetti({ particleCount: 100, spread: 80, origin: { y: 0.5 } });
+  };
+
+  // Guru memulai permainan dari ruang tunggu proyektor
+  const handleTeacherStartGame = async () => {
+    if (socketRef.current && activeSession?.roomCode) {
+      socketRef.current.emit('game:start', { roomCode: activeSession.roomCode, initialPhase: 'spin' });
+    }
+
+    const token = localStorage.getItem('ecoplay_teacher_token');
+    if (token && activeSession?.roomCode) {
+      try {
+        const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+        await fetch(`${backendUrl}/api/sessions/${activeSession.roomCode}/start`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+      } catch (err) {
+        console.warn('Backend start session request skipped or failed:', err);
+      }
+    }
+    setTeacherGamePhase('spin');
+    setStudentGamePhase('board');
+    confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
+  };
+
+  // Guru otomatis mengambil sesi aktif atau membuat sesi baru jika belum ada
+  const fetchOrCreateTeacherSession = async (token?: string | null) => {
+    const authToken = token || localStorage.getItem('ecoplay_teacher_token');
+    if (!authToken) return;
+
+    setIsLoadingSession(true);
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+
+    try {
+      // 1. Ambil daftar riwayat sesi kelas milik guru di Supabase
+      const res = await fetch(`${backendUrl}/api/sessions/my/list`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+      const data = await res.json();
+
+      let currentSession: any = null;
+      if (res.ok && data.success && Array.isArray(data.sessions)) {
+        // Cari sesi yang statusnya masih aktif
+        currentSession = data.sessions.find(
+          (s: any) => s.isActive !== false && s.is_active !== false && s.phase !== 'ended'
+        );
+      }
+
+      // 2. Jika belum ada sesi aktif, otomatis buatkan sesi baru di database Supabase!
+      if (!currentSession) {
+        const createRes = await fetch(`${backendUrl}/api/sessions/create`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${authToken}`,
+          },
+          body: JSON.stringify({
+            className: 'Kelas X Biologi & Sains',
+            academicYear: '2026/2027',
+          }),
+        });
+        const createData = await createRes.json();
+        if (createRes.ok && createData.success && createData.session) {
+          currentSession = createData.session;
+          if (createData.teams && createData.teams.length > 0) {
+            setTeams(createData.teams);
+          }
+        }
+      }
+
+      // 3. Pasang sesi aktif ke state dan simpan agar siswa bisa bergabung
+      if (currentSession) {
+        const formatted = {
+          roomCode: currentSession.roomCode || currentSession.room_code,
+          className: currentSession.className || currentSession.class_name || 'Kelas X Biologi & Sains',
+          academicYear: currentSession.academicYear || currentSession.academic_year || '2026/2027',
+        };
+        setActiveSession(formatted);
+        localStorage.setItem('ecoplay_teacher_active_session', JSON.stringify(formatted));
+
+        // Sinkronisasi data kelompok dari database Supabase
+        try {
+          const teamsRes = await fetch(`${backendUrl}/api/sessions/${encodeURIComponent(formatted.roomCode)}/teams`);
+          const teamsData = await teamsRes.json();
+          if (teamsRes.ok && teamsData.success && Array.isArray(teamsData.teams)) {
+            setTeams(teamsData.teams);
+          }
+        } catch {
+          // toleransi jika gagal ambil tim
+        }
+
+        setTeacherGamePhase('lobby');
+        setShowSessionCreator(false);
+      }
+    } catch (err) {
+      console.warn('Gagal memuat sesi aktif dari server:', err);
+      if (!activeSession) {
+        const fallbackSession = {
+          roomCode: `ECO-${Math.floor(100 + Math.random() * 900)}`,
+          className: 'Kelas X Biologi',
+          academicYear: '2026/2027',
+        };
+        setActiveSession(fallbackSession);
+        localStorage.setItem('ecoplay_teacher_active_session', JSON.stringify(fallbackSession));
+        setTeacherGamePhase('lobby');
+      }
+    } finally {
+      setIsLoadingSession(false);
+    }
+  };
+
+  // Otomatis sinkronisasi sesi kelas aktif saat halaman guru dibuka
+  useEffect(() => {
+    if (isTeacherRoute && teacherAuth && !isTeacherDemoMode) {
+      fetchOrCreateTeacherSession();
+    }
+  }, [isTeacherRoute, teacherAuth?.id]);
+
+  // Sinkronisasi data nama guru terkini langsung dari database Supabase
+  useEffect(() => {
+    if (!isTeacherRoute || isTeacherDemoMode) return;
+    const token = localStorage.getItem('ecoplay_teacher_token');
+    if (!token) return;
+
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+    fetch(`${backendUrl}/api/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.success && data?.teacher?.name) {
+          setTeacherAuth(data.teacher);
+          localStorage.setItem('ecoplay_teacher_profile', JSON.stringify(data.teacher));
+        }
+      })
+      .catch((err) => console.warn('Gagal sinkronisasi data guru dari database:', err));
+  }, [isTeacherRoute, isTeacherDemoMode]);
+
+  // Guru membuat sesi kelas baru secara eksplisit
+  const handleCreateSession = async (className: string, academicYear: string) => {
+    let roomCode = `ECO-${Math.floor(100 + Math.random() * 900)}`;
+    const token = localStorage.getItem('ecoplay_teacher_token');
+    if (token) {
+      try {
+        const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+        const res = await fetch(`${backendUrl}/api/sessions/create`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ className, academicYear }),
+        });
+        const data = await res.json();
+        if (res.ok && data.success && (data.session?.roomCode || data.session?.room_code)) {
+          roomCode = data.session.roomCode || data.session.room_code;
+          if (data.teams && data.teams.length > 0) {
+            setTeams(data.teams);
+          }
+        }
+      } catch (err) {
+        console.warn('Backend server not reachable, using local roomCode:', roomCode);
+      }
+    }
+    const newSession = {
+      roomCode,
+      className,
+      academicYear,
+    };
+    setActiveSession(newSession);
+    localStorage.setItem('ecoplay_teacher_active_session', JSON.stringify(newSession));
+    setShowSessionCreator(false);
+    setTeacherGamePhase('lobby');
+  };
+
+  // Guru keluar dari akun / sesi kelas
+  const handleTeacherLogout = () => {
+    localStorage.removeItem('ecoplay_teacher_token');
+    localStorage.removeItem('ecoplay_teacher_profile');
+    localStorage.removeItem('ecoplay_teacher_active_session');
+    setTeacherAuth(null);
+    setIsTeacherDemoMode(false);
+    setActiveSession(null);
+    setShowSessionCreator(false);
+    setTeacherGamePhase('lobby');
   };
 
   // Gerakkan pion tim aktif
@@ -106,6 +498,15 @@ export const App: React.FC = () => {
           // Cek jika tiba di petak lencana
           if ([10, 22, 38, 50].includes(nextTile) && nextTile !== team.currentTile) {
             confetti({ particleCount: 70, spread: 60, origin: { y: 0.5 } });
+          }
+
+          if (socketRef.current && activeSession?.roomCode) {
+            socketRef.current.emit('pawn:move', {
+              roomCode: activeSession.roomCode,
+              teamId: String(selectedTeamId),
+              targetTile: nextTile,
+              delta,
+            });
           }
 
           setInspectedTileId(nextTile);
@@ -208,7 +609,7 @@ export const App: React.FC = () => {
     confetti({ particleCount: 60, spread: 50, origin: { y: 0.6 } });
   };
 
-  // Guru mereset permainan ke awal
+  // Guru mereset permainan ke awal / mengakhiri kelas
   const handleResetGame = () => {
     setTeams(
       INITIAL_TEAMS.map((t) => ({
@@ -221,7 +622,9 @@ export const App: React.FC = () => {
     );
     setTeamAnswers({});
     setCompletedActivities([]);
-    setTeacherGamePhase('spin');
+    setTeacherGamePhase('lobby');
+    setStudentGamePhase('lobby');
+    setHasStudentSelectedTeam(false);
     setShowTeacherDashboard(false);
   };
 
@@ -287,10 +690,15 @@ export const App: React.FC = () => {
       {/* 1. TOP NAVBAR (CALMING, MINIMALIST & CLEAN) */}
       <header className="sticky top-0 w-full h-14 sm:h-16 border-b border-stone-200/80 bg-white/95 backdrop-blur-md px-3 sm:px-6 flex items-center justify-between flex-shrink-0 z-40 select-none">
         {/* Brand */}
-        <div className="flex items-center">
+        <div className="flex items-center gap-2">
           <h1 className="text-base sm:text-lg font-extrabold tracking-tight text-emerald-800">
             Ecoplay
           </h1>
+          {isTeacherRoute && (
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+              Guru {activeSession ? `• ${activeSession.roomCode}` : ''}
+            </span>
+          )}
         </div>
 
         {/* RIGHT ACTIONS BERDASARKAN ROUTE */}
@@ -298,25 +706,55 @@ export const App: React.FC = () => {
           {isTeacherRoute ? (
             /* --- KONTROL NAVIGASI GURU (/teachers) --- */
             <>
-              {/* Tombol Panel Guru */}
-              <button
-                onClick={() => setShowTeacherDashboard(true)}
-                className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold flex items-center gap-1.5 transition shadow-sm"
-                title="Buka Penilaian Rubrik & Lencana"
-              >
-                <Sliders className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Panel Penilaian</span>
-              </button>
+              {(!teacherAuth && !isTeacherDemoMode) || !activeSession ? (
+                /* Di Layar Login / Buat Sesi: navbar minimalis */
+                null
+              ) : teacherGamePhase === 'lobby' ? (
+                /* Di Layar Lobby Guru */
+                <>
+                  <button
+                    onClick={handleTeacherLogout}
+                    className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-stone-100 hover:bg-rose-50 hover:text-rose-700 text-stone-600 text-xs font-semibold flex items-center gap-1 transition shadow-xs"
+                    title="Keluar dari akun/sesi"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Keluar</span>
+                  </button>
+                </>
+              ) : (
+                /* Di Sesi Papan / Spin Guru */
+                <>
+                  {/* Tombol Balik ke Lobby Kelas */}
+                  <button
+                    onClick={() => setTeacherGamePhase('lobby')}
+                    className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-slate-700 text-xs font-semibold flex items-center gap-1 transition shadow-xs"
+                    title="Kembali ke Ruang Tunggu / Kode Kelas"
+                  >
+                    <LayoutDashboard className="w-3.5 h-3.5 text-emerald-700" />
+                    <span className="hidden lg:inline">Lobby ({activeSession?.roomCode})</span>
+                  </button>
 
-              {/* Tombol Spin Giliran (Hanya di Guru) */}
-              <button
-                onClick={() => setTeacherGamePhase(teacherGamePhase === 'spin' ? 'board' : 'spin')}
-                className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-slate-700 text-xs font-semibold flex items-center gap-1 transition shadow-sm"
-                title="Sesi Putar Roda Giliran Kelompok"
-              >
-                <Dices className="w-3.5 h-3.5 text-emerald-700" />
-                <span className="hidden lg:inline">{teacherGamePhase === 'spin' ? 'Ke Papan' : 'Spin Giliran'}</span>
-              </button>
+                  {/* Tombol Panel Guru */}
+                  <button
+                    onClick={() => setShowTeacherDashboard(true)}
+                    className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold flex items-center gap-1.5 transition shadow-sm"
+                    title="Buka Penilaian Rubrik & Lencana"
+                  >
+                    <Sliders className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Panel Penilaian</span>
+                  </button>
+
+                  {/* Tombol Spin Giliran (Hanya di Guru) */}
+                  <button
+                    onClick={() => setTeacherGamePhase(teacherGamePhase === 'spin' ? 'board' : 'spin')}
+                    className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-slate-700 text-xs font-semibold flex items-center gap-1 transition shadow-sm"
+                    title="Sesi Putar Roda Giliran Kelompok"
+                  >
+                    <Dices className="w-3.5 h-3.5 text-emerald-700" />
+                    <span className="hidden lg:inline">{teacherGamePhase === 'spin' ? 'Ke Papan' : 'Spin Giliran'}</span>
+                  </button>
+                </>
+              )}
             </>
           ) : (
             /* --- KONTROL NAVIGASI MURID (/) --- */
@@ -333,7 +771,6 @@ export const App: React.FC = () => {
                     <span className="hidden sm:inline">{selectedTeam.name}</span>
                     <RefreshCw className="w-3 h-3 text-stone-400 ml-0.5" />
                   </button>
-
                 </>
               )}
             </>
@@ -364,8 +801,60 @@ export const App: React.FC = () => {
       {/* 2. MAIN WORKSPACE */}
       {isTeacherRoute ? (
         /* ================= KONTEN HALAMAN GURU (/teachers) ================= */
-        teacherGamePhase === 'spin' ? (
-          /* Sesi Spin di Layar Guru */
+        !teacherAuth && !isTeacherDemoMode ? (
+          /* 1. Layar Login & Registrasi Guru */
+          <main className="flex-1 overflow-y-auto flex items-center justify-center p-3 sm:p-6">
+            <TeacherLoginScreen
+              onLoginSuccess={(profile, token) => {
+                setTeacherAuth(profile);
+                setIsTeacherDemoMode(false);
+                fetchOrCreateTeacherSession(token);
+              }}
+            />
+          </main>
+        ) : isLoadingSession ? (
+          /* Layar Loading Pengambilan / Pembuatan Kode Kelas */
+          <main className="flex-1 overflow-y-auto flex flex-col items-center justify-center p-6 space-y-2">
+            <Loader2 className="w-7 h-7 text-emerald-700 animate-spin" />
+            <p className="text-xs font-semibold text-stone-500">Menyiapkan ruang kelas...</p>
+          </main>
+        ) : showSessionCreator ? (
+          /* 2. Layar Pembuatan Sesi Ruang Kelas Baru (jika guru ingin ganti kelas) */
+          <main className="flex-1 overflow-y-auto flex items-center justify-center p-3 sm:p-6">
+            <TeacherSessionCreator
+              teacherName={teacherAuth?.name}
+              onCreateSession={handleCreateSession}
+              onLogout={handleTeacherLogout}
+              onCancel={activeSession ? () => setShowSessionCreator(false) : undefined}
+            />
+          </main>
+        ) : activeSession && teacherGamePhase === 'lobby' ? (
+          /* 3. Layar Ruang Tunggu Guru (Proyektor) - KODE KELAS TAMPIL LANGSUNG! */
+          <main className="flex-1 overflow-y-auto flex flex-col">
+            <TeacherLobbyScreen
+              roomCode={activeSession.roomCode}
+              className={activeSession.className}
+              academicYear={activeSession.academicYear}
+              teacherName={teacherAuth?.name}
+              teams={teams}
+              onStartGame={handleTeacherStartGame}
+              onAddTeam={handleAddTeam}
+              onRemoveTeam={handleRemoveTeam}
+              onLogout={handleTeacherLogout}
+              onNewSession={() => setShowSessionCreator(true)}
+            />
+          </main>
+        ) : !activeSession ? (
+          /* Fallback jika belum ada sesi dan tidak sedang loading */
+          <main className="flex-1 overflow-y-auto flex items-center justify-center p-3 sm:p-6">
+            <TeacherSessionCreator
+              teacherName={teacherAuth?.name}
+              onCreateSession={handleCreateSession}
+              onLogout={handleTeacherLogout}
+            />
+          </main>
+        ) : teacherGamePhase === 'spin' ? (
+          /* 4. Sesi Spin Roda Giliran di Layar Guru */
           <main className="flex-1 overflow-y-auto flex items-center justify-center p-3 sm:p-6">
             <Suspense fallback={<div className="text-stone-400 text-xs py-8">Memuat Roda Putar...</div>}>
               <SpinWheel
@@ -378,7 +867,7 @@ export const App: React.FC = () => {
             </Suspense>
           </main>
         ) : (
-          /* Sesi Papan Overview Kelas di Layar Guru */
+          /* 5. Sesi Papan Overview Kelas di Layar Guru */
           <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
             <div className="flex-1 flex flex-col items-center justify-center p-0 lg:p-5 overflow-hidden relative h-full bg-[#1b9cb0] lg:bg-transparent">
               <GameBoard
@@ -514,18 +1003,35 @@ export const App: React.FC = () => {
       ) : (
         /* ================= KONTEN HALAMAN MURID (/) ================= */
         !hasStudentSelectedTeam ? (
-          /* Halaman Pemilihan Kelompok Murid Sebelum Masuk Papan */
+          /* 1. Halaman Input Kode Kelas & Pemilihan Kelompok Murid */
           <main className="flex-1 overflow-y-auto flex flex-col">
             <TeamSelectionScreen
               teams={teams}
+              roomCode={activeSession?.roomCode}
+              className={activeSession?.className}
+              onJoinRoomCode={handleStudentJoinRoom}
               onSelectTeam={(teamId) => {
                 setSelectedTeamId(teamId);
                 setHasStudentSelectedTeam(true);
               }}
+              onChangeRoomCode={handleChangeRoomCode}
+              onUseDemoMode={handleStudentDemoMode}
+              isLoading={isJoiningRoom}
+              error={joinRoomError}
+            />
+          </main>
+        ) : studentGamePhase === 'lobby' ? (
+          /* 2. Ruang Tunggu Siswa Menunggu Guru Memulai Sesi */
+          <main className="flex-1 overflow-y-auto flex flex-col">
+            <StudentWaitingLobby
+              team={selectedTeam}
+              roomCode={activeSession?.roomCode || 'ECO-729'}
+              className={activeSession?.className || 'Kelas Biologi'}
+              onChangeTeam={() => setHasStudentSelectedTeam(false)}
             />
           </main>
         ) : (
-          /* Papan Permainan Murid (Fokus Kelompok) */
+          /* 3. Papan Permainan Murid (Fokus Kelompok) */
           <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
             <div className="flex-1 flex flex-col items-center justify-center p-0 lg:p-5 overflow-hidden relative h-full bg-[#1b9cb0] lg:bg-transparent">
               <GameBoard

@@ -463,23 +463,29 @@ export const TeacherDashboardModal: React.FC<TeacherDashboardModalProps> = ({
                 </div>
               </div>
 
-              {/* Reset Game & Troubleshoot */}
-              <div className="bg-rose-50/50 border border-rose-200/80 p-5 rounded-2xl shadow-sm space-y-3">
-                <h3 className="text-sm font-bold text-rose-900">Pengaturan Reset / Mulai Ulang Kelas:</h3>
-                <p className="text-xs text-rose-700">
-                  Gunakan ini jika ingin mengembalikan seluruh posisi pion ke petak START dan mengosongkan nilai untuk sesi kelas baru.
+              {/* Akhiri Sesi Kelas & Bersihkan Data */}
+              <div className="bg-rose-50/70 border border-rose-200 p-5 rounded-2xl shadow-sm space-y-3">
+                <div className="flex items-center gap-2 text-rose-900 font-bold text-sm">
+                  <RotateCcw className="w-4 h-4 text-rose-600" />
+                  <span>Fitur Akhiri Sesi Kelas:</span>
+                </div>
+                <p className="text-xs text-rose-700 leading-relaxed">
+                  Gunakan tombol ini setelah proses pembelajaran selesai. Tindakan ini akan <strong>menghapus seluruh jawaban LKPD siswa</strong>, mengembalikan seluruh pion ke petak START, dan mereset perolehan skor agar website kembali bersih dan siap digunakan untuk kelas berikutnya.
                 </p>
 
                 <button
                   onClick={() => {
-                    if (window.confirm('Apakah Anda yakin ingin mereset seluruh posisi pion dan skor LKPD untuk kelas ini?')) {
+                    const confirmed = window.confirm(
+                      '⚠️ KONFIRMASI AKHIRI KELAS:\n\nApakah Anda yakin ingin mengakhiri sesi kelas ini?\n\nSeluruh progres permainan, posisi pion kelompok, dan jawaban LKPD yang ada di website ini akan dihapus dan dikosongkan kembali.'
+                    );
+                    if (confirmed) {
                       onResetGame();
                     }
                   }}
-                  className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold flex items-center gap-2 shadow-sm transition"
+                  className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold flex items-center gap-2 shadow-sm transition active:scale-95"
                 >
                   <RotateCcw className="w-4 h-4" />
-                  <span>Reset Permainan ke Posisi Awal</span>
+                  <span>🛑 Akhiri Kelas & Hapus Seluruh Progres</span>
                 </button>
               </div>
             </div>

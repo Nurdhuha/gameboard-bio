@@ -54,6 +54,7 @@ export interface Team {
   badgePoints: number;     // from speed badges
   lkpdScore: number;       // from rubric 0-3
   avatarIcon: string;
+  teamNumber?: number;
   hasFinishedPreTest?: boolean;
   hasFinishedPostTest?: boolean;
 }
