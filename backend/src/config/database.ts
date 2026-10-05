@@ -1,3 +1,4 @@
+import 'pg';
 import knex, { Knex } from 'knex';
 import dotenv from 'dotenv';
 
