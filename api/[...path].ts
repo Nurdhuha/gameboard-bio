@@ -4,13 +4,11 @@ import { createApp } from '../backend/src/app';
 const app = createApp();
 
 export default function handler(req: Request, res: Response) {
-  // Pulihkan URL asli jika Vercel rewrite memodifikasi req.url
   const matchedPath = (req.headers['x-matched-path'] || req.headers['x-forwarded-uri']) as string | undefined;
   if (matchedPath && typeof matchedPath === 'string') {
     req.url = matchedPath;
   }
 
-  // Jalankan Express dengan callback penutup agar response tidak pernah menggantung di Vercel
   return app(req, res, (err: any) => {
     if (err) {
       console.error('Vercel Serverless Express Error:', err);

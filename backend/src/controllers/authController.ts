@@ -84,7 +84,17 @@ export async function login(req: Request, res: Response): Promise<void> {
       },
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message || 'Gagal melakukan login.' });
+    console.error('Login error:', error);
+    const isConnError =
+      error.message?.includes('ECONNREFUSED') ||
+      error.message?.includes('connect') ||
+      error.code === 'ECONNREFUSED';
+    res.status(500).json({
+      success: false,
+      message: isConnError
+        ? 'Gagal terhubung ke database Supabase. Pastikan Environment Variable DATABASE_URL sudah diatur di dashboard Vercel.'
+        : (error.message || 'Gagal melakukan login.'),
+    });
   }
 }
 

@@ -51,7 +51,16 @@ export const TeacherLoginScreen: React.FC<TeacherLoginScreenProps> = ({
         body: JSON.stringify(body),
       });
 
-      const data = await response.json();
+      const responseText = await response.text();
+      let data: any = {};
+      try {
+        data = JSON.parse(responseText);
+      } catch {
+        if (response.status >= 500) {
+          throw new Error('Server backend Vercel mengalami kendala. Pastikan Environment Variable DATABASE_URL sudah diatur di dashboard Vercel.');
+        }
+        throw new Error(responseText || `Gagal menghubungi server (Status ${response.status}).`);
+      }
 
       if (!response.ok || !data.success) {
         throw new Error(data.message || 'Terjadi kesalahan saat memproses data.');

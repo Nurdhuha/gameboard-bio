@@ -40,7 +40,7 @@ export function createApp(): Application {
   app.use('/uploads', express.static(uploadDir));
 
   // Endpoint Cek Kesehatan (Healthcheck)
-  app.get(['/api/health', '/health'], (_req: Request, res: Response) => {
+  app.get(['/api/health', '/health', '/api', '/api/index.ts'], (_req: Request, res: Response) => {
     res.status(200).json({
       status: 'ok',
       service: 'Ecoplay Backend API (Vercel Serverless & Express)',
@@ -54,6 +54,14 @@ export function createApp(): Application {
   app.use('/auth', authRoutes);
   app.use('/api/sessions', sessionRoutes);
   app.use('/sessions', sessionRoutes);
+
+  // 404 Fallback Handler agar request tidak menggantung di Vercel
+  app.use((req: Request, res: Response) => {
+    res.status(404).json({
+      success: false,
+      message: `Rute ${req.method} ${req.url} tidak ditemukan di server API.`,
+    });
+  });
 
   // Penanganan Error Terpusat
   app.use(errorHandler);
