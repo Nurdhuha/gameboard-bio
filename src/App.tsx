@@ -22,6 +22,9 @@ const LeaderboardModal = lazy(() =>
 const TeacherDashboardModal = lazy(() =>
   import('./components/dashboard/TeacherDashboardModal').then((m) => ({ default: m.TeacherDashboardModal }))
 );
+const EndClassConfirmationModal = lazy(() =>
+  import('./components/modals/EndClassConfirmationModal').then((m) => ({ default: m.EndClassConfirmationModal }))
+);
 import { TeacherLoginScreen } from './components/auth/TeacherLoginScreen';
 import { TeacherLobbyScreen } from './components/dashboard/TeacherLobbyScreen';
 import { TeacherSessionCreator } from './components/dashboard/TeacherSessionCreator';
@@ -191,6 +194,8 @@ export const App: React.FC = () => {
   const [showGameRules, setShowGameRules] = useState<boolean>(false);
   const [showLeaderboard, setShowLeaderboard] = useState<boolean>(false);
   const [showTeacherDashboard, setShowTeacherDashboard] = useState<boolean>(false);
+  const [showEndClassModal, setShowEndClassModal] = useState<boolean>(false);
+  const [isEndingClass, setIsEndingClass] = useState<boolean>(false);
 
   const selectedTeam = teams.find((t) => t.id === selectedTeamId) || teams[0];
   const inspectedTile = BOARD_TILES.find((t) => t.id === inspectedTileId) || BOARD_TILES[0];
@@ -775,15 +780,14 @@ export const App: React.FC = () => {
     confetti({ particleCount: 60, spread: 50, origin: { y: 0.6 } });
   };
 
-  // Guru mengakhiri sesi kelas & mereset permainan kembali ke Lobby
-  const handleEndClass = async (skipConfirm = false) => {
-    if (!skipConfirm) {
-      const confirmed = window.confirm(
-        '⚠️ KONFIRMASI AKHIRI KELAS:\n\nApakah Anda yakin ingin mengakhiri sesi kelas ini?\n\nSesi permainan akan selesai, seluruh posisi pion dan data nilai akan direset, dan sistem akan kembali ke Ruang Tunggu (Lobby).'
-      );
-      if (!confirmed) return;
-    }
+  // Buka modal konfirmasi kustom untuk mengakhiri sesi kelas
+  const handleOpenEndClassModal = () => {
+    setShowEndClassModal(true);
+  };
 
+  // Eksekusi pengakhiran sesi kelas setelah disetujui di modal kustom
+  const handleConfirmEndClass = async () => {
+    setIsEndingClass(true);
     const roomCode = activeSession?.roomCode;
 
     // 1. Beritahu socket server agar murid juga kembali ke lobby
@@ -822,11 +826,13 @@ export const App: React.FC = () => {
     setStudentGamePhase('lobby');
     setHasStudentSelectedTeam(false);
     setShowTeacherDashboard(false);
+    setIsEndingClass(false);
+    setShowEndClassModal(false);
   };
 
   // Wrapper untuk dipanggil dari panel dashboard guru
   const handleResetGame = () => {
-    handleEndClass(true);
+    handleOpenEndClassModal();
   };
 
   // Ambil ulang daftar tim terbaru dari server
@@ -975,7 +981,7 @@ export const App: React.FC = () => {
                     <span>Langkah 2: Spin Giliran</span>
                   </div>
                   <button
-                    onClick={() => handleEndClass()}
+                    onClick={handleOpenEndClassModal}
                     className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold flex items-center gap-1 transition shadow-xs active:scale-95"
                     title="Akhiri Sesi dan Kembali ke Ruang Tunggu"
                   >
@@ -1001,7 +1007,7 @@ export const App: React.FC = () => {
                   </button>
 
                   <button
-                    onClick={() => handleEndClass()}
+                    onClick={handleOpenEndClassModal}
                     className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold flex items-center gap-1 transition shadow-xs active:scale-95"
                     title="Akhiri Sesi dan Kembali ke Ruang Tunggu"
                   >
@@ -1624,6 +1630,19 @@ export const App: React.FC = () => {
             onRemoveTeam={handleRemoveTeam}
             onClose={() => setShowTeacherDashboard(false)}
             teamAnswers={teamAnswers}
+          />
+        )}
+
+        {/* 5. Modal Konfirmasi Akhiri Sesi Kelas */}
+        {showEndClassModal && (
+          <EndClassConfirmationModal
+            isOpen={showEndClassModal}
+            onClose={() => {
+              if (!isEndingClass) setShowEndClassModal(false);
+            }}
+            onConfirm={handleConfirmEndClass}
+            roomCode={activeSession?.roomCode}
+            isProcessing={isEndingClass}
           />
         )}
       </Suspense>

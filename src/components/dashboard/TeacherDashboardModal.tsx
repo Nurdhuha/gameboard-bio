@@ -478,14 +478,7 @@ export const TeacherDashboardModal: React.FC<TeacherDashboardModalProps> = ({
                 </p>
 
                 <button
-                  onClick={() => {
-                    const confirmed = window.confirm(
-                      '⚠️ KONFIRMASI AKHIRI KELAS:\n\nApakah Anda yakin ingin mengakhiri sesi kelas ini?\n\nSeluruh progres permainan, posisi pion kelompok, dan jawaban LKPD yang ada di website ini akan dihapus dan dikosongkan kembali.'
-                    );
-                    if (confirmed) {
-                      onResetGame();
-                    }
-                  }}
+                  onClick={onResetGame}
                   className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold flex items-center gap-2 shadow-sm transition active:scale-95"
                 >
                   <RotateCcw className="w-4 h-4" />
