@@ -152,7 +152,20 @@ export const App: React.FC = () => {
   const socketRef = useRef<Socket | null>(null);
 
   // Status tampilan guru di /teachers: 'lobby' (ruang tunggu) | 'spin' (roda putar) | 'board' (papan kelas)
-  const [teacherGamePhase, setTeacherGamePhase] = useState<'lobby' | 'spin' | 'board'>('lobby');
+  const [teacherGamePhase, setTeacherGamePhase] = useState<'lobby' | 'spin' | 'board'>(() => {
+    try {
+      const saved = sessionStorage.getItem('ecoplay_teacher_phase');
+      if (saved === 'spin' || saved === 'board') return saved;
+    } catch {}
+    return 'lobby';
+  });
+
+  const updateTeacherPhase = (phase: 'lobby' | 'spin' | 'board') => {
+    setTeacherGamePhase(phase);
+    try {
+      sessionStorage.setItem('ecoplay_teacher_phase', phase);
+    } catch {}
+  };
 
   // Status tampilan murid di /: 'lobby' (ruang tunggu siswa) | 'board' (papan kelas)
   const [studentGamePhase, setStudentGamePhase] = useState<'lobby' | 'board'>('lobby');
@@ -213,19 +226,25 @@ export const App: React.FC = () => {
 
     socket.on('session:sync_state', ({ session, teams: serverTeams }) => {
       applyServerTeams(serverTeams);
-      if (session?.phase && session.phase !== 'lobby') {
+      if (session?.phase === 'board') {
+        setStudentGamePhase('board');
+      } else if (session?.phase === 'lobby') {
+        setStudentGamePhase('lobby');
+      }
+    });
+
+    // Otomatis buka papan permainan siswa saat fase papan dimulai
+    socket.on('game:started', ({ initialPhase } = {}) => {
+      if (initialPhase === 'board') {
         setStudentGamePhase('board');
       }
     });
 
-    // Otomatis buka papan permainan siswa saat guru menekan Mulai Permainan
-    socket.on('game:started', () => {
-      setStudentGamePhase('board');
-    });
-
     socket.on('phase:updated', ({ phase }) => {
-      if (phase && phase !== 'lobby') {
+      if (phase === 'board') {
         setStudentGamePhase('board');
+      } else if (phase === 'lobby') {
+        setStudentGamePhase('lobby');
       }
     });
 
@@ -243,7 +262,7 @@ export const App: React.FC = () => {
     socket.on('class:ended', ({ message }) => {
       alert(message || 'Sesi kelas telah diakhiri oleh Bapak/Ibu Guru.');
       setStudentGamePhase('lobby');
-      setTeacherGamePhase('lobby');
+      updateTeacherPhase('lobby');
       setHasStudentSelectedTeam(false);
     });
 
@@ -271,11 +290,17 @@ export const App: React.FC = () => {
 
         applyServerTeams(data.teams);
 
-        // Siswa otomatis masuk papan begitu guru memulai permainan
-        if (!isTeacherRoute && data.session?.phase && data.session.phase !== 'lobby' && data.session.phase !== 'ended') {
-          if (studentPhaseRef.current === 'lobby') {
-            setStudentGamePhase('board');
-            confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
+        // Siswa otomatis masuk papan begitu guru menyelesaikan spin dan membuka papan
+        if (!isTeacherRoute && data.session?.phase) {
+          if (data.session.phase === 'board') {
+            if (studentPhaseRef.current === 'lobby') {
+              setStudentGamePhase('board');
+              confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
+            }
+          } else if (data.session.phase === 'lobby' || data.session.phase === 'ended') {
+            if (studentPhaseRef.current === 'board') {
+              setStudentGamePhase('lobby');
+            }
           }
         }
       } catch {
@@ -386,13 +411,17 @@ export const App: React.FC = () => {
     sessionStorage.removeItem('ecoplay_student_session');
   };
 
-  // Handle selesai sesi spin di /teachers
+  // Handle selesai sesi spin di /teachers (Langkah 2 -> Langkah 3)
   const handleSpinComplete = (orderedTeams: Team[]) => {
     setTeams(orderedTeams);
     setSelectedTeamId(orderedTeams[0].id);
-    setTeacherGamePhase('board');
+    updateTeacherPhase('board');
     setStudentGamePhase('board');
     confetti({ particleCount: 100, spread: 80, origin: { y: 0.5 } });
+
+    if (socketRef.current && activeSession?.roomCode) {
+      socketRef.current.emit('phase:updated', { roomCode: activeSession.roomCode, phase: 'board' });
+    }
 
     if (isServerSession(activeSession?.roomCode)) {
       fetch(`${getBackendUrl()}/api/sessions/${encodeURIComponent(activeSession!.roomCode)}/phase`, {
@@ -403,7 +432,7 @@ export const App: React.FC = () => {
     }
   };
 
-  // Guru memulai permainan dari ruang tunggu proyektor
+  // Guru memulai permainan dari ruang tunggu proyektor (Langkah 1 -> Langkah 2)
   const handleTeacherStartGame = async () => {
     if (socketRef.current && activeSession?.roomCode) {
       socketRef.current.emit('game:start', { roomCode: activeSession.roomCode, initialPhase: 'spin' });
@@ -423,8 +452,7 @@ export const App: React.FC = () => {
         console.warn('Backend start session request skipped or failed:', err);
       }
     }
-    setTeacherGamePhase('spin');
-    setStudentGamePhase('board');
+    updateTeacherPhase('spin');
   };
 
   // Guru otomatis mengambil sesi aktif atau membuat sesi baru jika belum ada
@@ -493,7 +521,18 @@ export const App: React.FC = () => {
           // toleransi jika gagal ambil tim
         }
 
-        setTeacherGamePhase('lobby');
+        // Restore fase sesi guru yang sesuai dari server atau storage
+        let targetPhase: 'lobby' | 'spin' | 'board' = 'lobby';
+        const serverPhase = currentSession.phase as 'lobby' | 'spin' | 'board';
+        if (serverPhase === 'board' || serverPhase === 'spin') {
+          targetPhase = serverPhase;
+        } else {
+          try {
+            const saved = sessionStorage.getItem('ecoplay_teacher_phase') as 'lobby' | 'spin' | 'board';
+            if (saved === 'board' || saved === 'spin') targetPhase = saved;
+          } catch {}
+        }
+        updateTeacherPhase(targetPhase);
         setShowSessionCreator(false);
       }
     } catch (err) {
@@ -506,7 +545,7 @@ export const App: React.FC = () => {
         };
         setActiveSession(fallbackSession);
         localStorage.setItem('ecoplay_teacher_active_session', JSON.stringify(fallbackSession));
-        setTeacherGamePhase('lobby');
+        updateTeacherPhase('lobby');
       }
     } finally {
       setIsLoadingSession(false);
@@ -719,8 +758,38 @@ export const App: React.FC = () => {
     confetti({ particleCount: 60, spread: 50, origin: { y: 0.6 } });
   };
 
-  // Guru mereset permainan ke awal / mengakhiri kelas
-  const handleResetGame = () => {
+  // Guru mengakhiri sesi kelas & mereset permainan kembali ke Lobby
+  const handleEndClass = async (skipConfirm = false) => {
+    if (!skipConfirm) {
+      const confirmed = window.confirm(
+        '⚠️ KONFIRMASI AKHIRI KELAS:\n\nApakah Anda yakin ingin mengakhiri sesi kelas ini?\n\nSesi permainan akan selesai, seluruh posisi pion dan data nilai akan direset, dan sistem akan kembali ke Ruang Tunggu (Lobby).'
+      );
+      if (!confirmed) return;
+    }
+
+    const roomCode = activeSession?.roomCode;
+
+    // 1. Beritahu socket server agar murid juga kembali ke lobby
+    if (socketRef.current && roomCode) {
+      socketRef.current.emit('class:end', {
+        roomCode,
+        message: 'Sesi kelas telah diakhiri oleh Bapak/Ibu Guru.',
+      });
+    }
+
+    // 2. Beritahu backend REST API untuk mereset sesi di database
+    if (isServerSession(roomCode)) {
+      try {
+        const backendUrl = getBackendUrl();
+        await fetch(`${backendUrl}/api/sessions/${encodeURIComponent(roomCode!)}/reset`, {
+          method: 'POST',
+        });
+      } catch (err) {
+        console.warn('Backend reset session request failed:', err);
+      }
+    }
+
+    // 3. Reset state lokal
     setTeams(
       INITIAL_TEAMS.map((t) => ({
         ...t,
@@ -732,10 +801,15 @@ export const App: React.FC = () => {
     );
     setTeamAnswers({});
     setCompletedActivities([]);
-    setTeacherGamePhase('lobby');
+    updateTeacherPhase('lobby');
     setStudentGamePhase('lobby');
     setHasStudentSelectedTeam(false);
     setShowTeacherDashboard(false);
+  };
+
+  // Wrapper untuk dipanggil dari panel dashboard guru
+  const handleResetGame = () => {
+    handleEndClass(true);
   };
 
   // Ambil ulang daftar tim terbaru dari server
@@ -874,43 +948,50 @@ export const App: React.FC = () => {
                 /* Di Layar Login / Buat Sesi: navbar minimalis */
                 null
               ) : teacherGamePhase === 'lobby' ? (
-                /* Di Layar Lobby Guru */
+                /* Di Layar Lobby Guru (Langkah 1) */
                 null
-              ) : (
-                /* Di Sesi Papan / Spin Guru */
-                <>
-                  {/* Tombol Balik ke Lobby Kelas */}
+              ) : teacherGamePhase === 'spin' ? (
+                /* Di Sesi Spin Guru (Langkah 2): Hanya indikator langkah & tombol Akhiri Kelas */
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold shadow-xs">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                    <span>Langkah 2: Spin Giliran</span>
+                  </div>
                   <button
-                    onClick={() => setTeacherGamePhase('lobby')}
-                    className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-slate-700 text-xs font-semibold flex items-center gap-1 transition shadow-xs"
-                    title="Kembali ke Ruang Tunggu / Kode Kelas"
+                    onClick={() => handleEndClass()}
+                    className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold flex items-center gap-1 transition shadow-xs active:scale-95"
+                    title="Akhiri Sesi dan Kembali ke Ruang Tunggu"
                   >
-                    <LayoutDashboard className="w-3.5 h-3.5 text-emerald-700" />
-                    <span className="hidden lg:inline">Lobby ({activeSession?.roomCode})</span>
+                    <LogOut className="w-3.5 h-3.5 text-rose-600" />
+                    <span className="hidden sm:inline">Akhiri Kelas</span>
                   </button>
+                </div>
+              ) : (
+                /* Di Sesi Papan Guru (Langkah 3): Panel Penilaian & tombol Akhiri Kelas */
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <div className="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold shadow-xs">
+                    <LayoutDashboard className="w-3.5 h-3.5 text-emerald-700" />
+                    <span>Langkah 3: Papan Permainan</span>
+                  </div>
 
-                  {/* Tombol Panel Guru */}
                   <button
                     onClick={() => setShowTeacherDashboard(true)}
-                    className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold flex items-center gap-1.5 transition shadow-sm"
+                    className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold flex items-center gap-1.5 transition shadow-sm active:scale-95"
                     title="Buka Penilaian Rubrik & Lencana"
                   >
                     <Sliders className="w-3.5 h-3.5" />
                     <span className="hidden sm:inline">Panel Penilaian</span>
                   </button>
 
-                  {/* Tombol ke Papan (Hanya jika sedang di fase Spin, tidak bisa kembali ke Spin jika sudah di Papan) */}
-                  {teacherGamePhase === 'spin' && (
-                    <button
-                      onClick={() => setTeacherGamePhase('board')}
-                      className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-slate-700 text-xs font-semibold flex items-center gap-1 transition shadow-sm"
-                      title="Langsung ke Papan Permainan"
-                    >
-                      <LayoutDashboard className="w-3.5 h-3.5 text-emerald-700" />
-                      <span className="hidden lg:inline">Ke Papan</span>
-                    </button>
-                  )}
-                </>
+                  <button
+                    onClick={() => handleEndClass()}
+                    className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold flex items-center gap-1 transition shadow-xs active:scale-95"
+                    title="Akhiri Sesi dan Kembali ke Ruang Tunggu"
+                  >
+                    <LogOut className="w-3.5 h-3.5 text-rose-600" />
+                    <span className="hidden sm:inline">Akhiri Kelas</span>
+                  </button>
+                </div>
               )}
             </>
           ) : (
