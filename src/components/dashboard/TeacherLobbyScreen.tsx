@@ -184,15 +184,28 @@ export const TeacherLobbyScreen: React.FC<TeacherLobbyScreenProps> = ({
         </div>
 
         {/* Start Game Action Button */}
-        <div className="pt-2 sm:pt-3">
-          <button
-            onClick={onStartGame}
-            className="w-full sm:w-auto min-w-[240px] px-8 py-3 rounded-2xl bg-emerald-700 hover:bg-emerald-800 active:scale-98 text-white font-bold text-sm sm:text-base shadow-md transition-all flex items-center justify-center gap-2 mx-auto"
-          >
-            <Play className="w-4 h-4 fill-white" />
-            <span>Mulai Permainan</span>
-          </button>
-        </div>
+        {(() => {
+          const readyCount = teams.filter((t) => t.isReady).length;
+          const hasReady = readyCount > 0;
+
+          return (
+            <div className="pt-2 sm:pt-3 space-y-2">
+              <button
+                onClick={onStartGame}
+                disabled={!hasReady}
+                className="w-full sm:w-auto min-w-[240px] px-8 py-3 rounded-2xl bg-emerald-700 hover:bg-emerald-800 active:scale-98 text-white font-bold text-sm sm:text-base shadow-md transition-all flex items-center justify-center gap-2 mx-auto disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none"
+              >
+                <Play className="w-4 h-4 fill-white" />
+                <span>Mulai Permainan</span>
+              </button>
+              {!hasReady && (
+                <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200/80 rounded-xl px-4 py-2 max-w-sm mx-auto font-medium">
+                  Permainan belum bisa dimulai karena belum ada kelompok siswa yang terhubung / siap.
+                </p>
+              )}
+            </div>
+          );
+        })()}
       </div>
     </div>
   );

@@ -26,6 +26,7 @@ interface ActivityModalProps {
   onSubmit: (answer: string, reflection?: string) => void;
   isBadgeTile?: boolean;
   previousAnswers?: Record<string, { answer: string; reflection?: string; score?: number }>;
+  isTeacher?: boolean;
 }
 
 interface IA01Row {
@@ -52,6 +53,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
   onSubmit,
   isBadgeTile = false,
   previousAnswers = {},
+  isTeacher = false,
 }) => {
   const cleanCode = activity.code.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
   const isKE01 = cleanCode === 'KE01';
@@ -517,6 +519,13 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
             <div className="mt-2.5 sm:mt-3 flex items-center gap-2 bg-amber-50 border border-amber-200 px-3 py-2 rounded-xl text-amber-800 text-xs sm:text-sm font-semibold">
               <Sparkles className="w-4 h-4 text-amber-600 flex-shrink-0" />
               <span>Petak Lencana! Kelompok tercepat akan memperoleh bonus poin lencana!</span>
+            </div>
+          )}
+
+          {isTeacher && (
+            <div className="mt-2.5 sm:mt-3 flex items-center gap-2 bg-emerald-50 border border-emerald-200 px-3 py-2 rounded-xl text-emerald-900 text-xs sm:text-sm font-semibold">
+              <ShieldCheck className="w-4 h-4 text-emerald-700 flex-shrink-0" />
+              <span>Mode Monitoring Guru (Hanya Baca): Anda sedang meninjau aktivitas tim {team.name}. Lembar ini dikerjakan mandiri oleh siswa.</span>
             </div>
           )}
         </div>
@@ -1385,6 +1394,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
         <div className="p-3.5 sm:p-4 md:p-5 bg-stone-50/80 border-t border-stone-100 flex items-center justify-between flex-shrink-0">
           <div className="text-xs sm:text-sm text-stone-600">
             Tim: <span className="font-bold text-slate-800">{team.name}</span>
+            {isTeacher && <span className="ml-2 text-emerald-700 font-bold">(Monitoring)</span>}
           </div>
 
           <div className="flex gap-2">
@@ -1394,13 +1404,15 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
             >
               Tutup
             </button>
-            <button
-              onClick={handleSubmit}
-              className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-emerald-700 hover:bg-emerald-800 flex items-center gap-1.5 sm:gap-2 shadow-sm transition active:scale-95"
-            >
-              <span>Kirim Jawaban</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
+            {!isTeacher && (
+              <button
+                onClick={handleSubmit}
+                className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-emerald-700 hover:bg-emerald-800 flex items-center gap-1.5 sm:gap-2 shadow-sm transition active:scale-95"
+              >
+                <span>Kirim Jawaban</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            )}
           </div>
         </div>
       </div>

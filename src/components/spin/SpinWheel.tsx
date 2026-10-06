@@ -56,9 +56,13 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
     ].join(' ');
   };
 
+  const isAllDetermined = turnOrder.length === teams.length;
+  const readyTeamsCount = teams.filter((t) => t.isReady).length;
+  const hasReadyTeams = readyTeamsCount > 0;
+
   // Fungsi Spin Roda
   const handleSpin = () => {
-    if (isSpinning || remainingTeams.length === 0) return;
+    if (isSpinning || remainingTeams.length === 0 || !hasReadyTeams) return;
 
     setIsSpinning(true);
     setSelectedWinner(null);
@@ -105,7 +109,7 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
 
   // Acak otomatis semua sekaligus (Fitur Fast-Track untuk Guru)
   const handleQuickShuffle = () => {
-    if (isSpinning) return;
+    if (isSpinning || !hasReadyTeams) return;
     const shuffled = [...teams].sort(() => Math.random() - 0.5);
     setTurnOrder(shuffled);
     setRemainingTeams([]);
@@ -121,10 +125,15 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
     setRotation(0);
   };
 
-  const isAllDetermined = turnOrder.length === teams.length;
-
   return (
-    <div className="w-full max-w-4xl mx-auto flex flex-col items-center justify-center p-4 sm:p-8 animate-in fade-in duration-300">
+    <div className="w-full max-w-4xl mx-auto flex flex-col items-center justify-start pt-4 sm:pt-8 pb-10 px-3 sm:px-6 animate-in fade-in duration-300">
+      {/* Warning jika belum ada kelompok yang siap */}
+      {!hasReadyTeams && (
+        <div className="w-full max-w-lg mb-4 p-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs text-center font-semibold animate-in fade-in">
+          ⚠️ Roda spin belum bisa diputar karena belum ada kelompok siswa yang terhubung/siap di perangkat masing-masing.
+        </div>
+      )}
+
       {/* Title & Introduction */}
       <div className="text-center space-y-2 mb-6 sm:mb-8">
         <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold uppercase tracking-wider shadow-sm">
@@ -257,7 +266,7 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
             {/* Center Hub / Spin Button */}
             <button
               onClick={handleSpin}
-              disabled={isSpinning || isAllDetermined}
+              disabled={isSpinning || isAllDetermined || !hasReadyTeams}
               className="absolute z-10 w-20 h-20 rounded-full bg-white border-4 border-stone-200 shadow-md flex flex-col items-center justify-center text-slate-800 font-bold hover:scale-105 active:scale-95 disabled:opacity-40 disabled:pointer-events-none transition"
             >
               <Play className="w-5 h-5 text-emerald-700 fill-emerald-700 ml-0.5" />
@@ -271,7 +280,7 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
           <div className="flex items-center gap-2 mt-6">
             <button
               onClick={handleSpin}
-              disabled={isSpinning || isAllDetermined}
+              disabled={isSpinning || isAllDetermined || !hasReadyTeams}
               className="px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition active:scale-95 disabled:opacity-40 disabled:pointer-events-none"
             >
               <Play className="w-4 h-4 fill-white" />
@@ -280,8 +289,8 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
 
             <button
               onClick={handleQuickShuffle}
-              disabled={isSpinning || isAllDetermined}
-              className="px-3.5 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-slate-700 font-semibold text-xs flex items-center gap-1.5 transition active:scale-95 disabled:opacity-40"
+              disabled={isSpinning || isAllDetermined || !hasReadyTeams}
+              className="px-3.5 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-slate-700 font-semibold text-xs flex items-center gap-1.5 transition active:scale-95 disabled:opacity-40 disabled:pointer-events-none"
               title="Acak semua sekaligus"
             >
               <Shuffle className="w-4 h-4 text-stone-500" />
