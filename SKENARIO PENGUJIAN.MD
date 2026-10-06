@@ -20,7 +20,7 @@ Dokumen ini memuat panduan komprehensif untuk melakukan pengujian simulasi siste
 ### A. Menjalankan Aplikasi
 Buka terminal dan jalankan server pengembangan:
 ```bash
-# Terminal 1: Frontend Vite (port 5173)
+# Terminal 1: Frontend Vite (port 3000)
 npm run dev
 ```
 *(Opsional jika ingin menguji full database Supabase & WebSocket lokal: jalankan `npm run backend` pada terminal terpisah).*
@@ -28,9 +28,9 @@ npm run dev
 ### B. Menyiapkan Dua Jendela Peramban (Browser)
 Untuk menyimulasikan interaksi dua peran secara bersamaan:
 * **Jendela 1 (Layar Guru / Proyektor):**
-  * Buka peramban utama: `http://localhost:5173/teacher`
+  * Buka peramban utama: `http://localhost:3000/teacher`
 * **Jendela 2 (Layar Siswa / Perangkat Kelompok):**
-  * Buka mode penyamaran (*Incognito*) atau tab terpisah: `http://localhost:5173/`
+  * Buka mode penyamaran (*Incognito*) atau tab terpisah: `http://localhost:3000/`
   *(Catatan: Mode Incognito memastikan `localStorage` siswa terisolasi dari layar guru).*
 
 ---
@@ -66,7 +66,7 @@ flowchart TD
 ### Skenario 1: Autentikasi & Masuk Ruang Tunggu Guru (Langkah 1)
 | No | Langkah Pengujian | Tindakan Penguji | Hasil yang Diharapkan | Status |
 |:--:|:---|:---|:---|:---:|
-| 1.1 | Buka Layar Guru | Akses `http://localhost:5173/teacher` | Tampil halaman login guru atau tombol **"Masuk Mode Simulasi / Coba Cepat"**. Klasemen tidak muncul sebelum guru masuk. | [ ] |
+| 1.1 | Buka Layar Guru | Akses `http://localhost:3000/teacher` | Tampil halaman login guru atau tombol **"Masuk Mode Simulasi / Coba Cepat"**. Klasemen tidak muncul sebelum guru masuk. | [ ] |
 | 1.2 | Masuk ke Sistem | Klik "Mode Simulasi" atau masukkan akun guru | Sistem langsung mengarahkan ke **Langkah 1: Ruang Tunggu (Lobby Guru)**. Muncul Kode Kelas (contoh: `ECO-729`). | [ ] |
 | 1.3 | Validasi Alur | Periksa URL dan tahapan | Guru **TIDAK** langsung melompat ke halaman Spin (Langkah 2). Tetap berada di Lobby. | [ ] |
 | 1.4 | Manajemen Kelompok | Coba tombol `+ Tambah Kelompok` dan tombol hapus kelompok | Daftar kelompok bertambah/berkurang dengan benar (minimal 2 kelompok). | [ ] |
@@ -77,7 +77,7 @@ flowchart TD
 ### Skenario 2: Bergabungnya Siswa & Pembersihan Tampilan (Langkah 1 Siswa)
 | No | Langkah Pengujian | Tindakan Penguji | Hasil yang Diharapkan | Status |
 |:--:|:---|:---|:---|:---:|
-| 2.1 | Buka Layar Siswa | Buka window Incognito: `http://localhost:5173/` | Tampil layar input kode kelas. | [ ] |
+| 2.1 | Buka Layar Siswa | Buka window Incognito: `http://localhost:3000/` | Tampil layar input kode kelas. | [ ] |
 | 2.2 | Masukkan Kode Kelas | Ketik kode kelas yang tertera di layar Guru (misal: `ECO-729`) dan klik **Gabung** | Siswa diarahkan ke layar **Pilih Kelompok**. | [ ] |
 | 2.3 | Verifikasi Label Kelas | Cermati header lencana kode di layar siswa | Keterangan lama *"Kelas X Biologi & Sains"* **sudah tidak ada**. Hanya menampilkan badge bersih `Kode Kelas: ECO-729`. | [ ] |
 | 2.4 | Pilih Kelompok | Pilih **Kelompok 1 (Harimau Sumatera)** | Siswa masuk ke **Ruang Tunggu Siswa** (*StudentWaitingLobby*) dengan animasi status terhubung. | [ ] |
@@ -114,7 +114,7 @@ flowchart TD
 | No | Langkah Pengujian | Tindakan Penguji | Hasil yang Diharapkan | Status |
 |:--:|:---|:---|:---|:---:|
 | 5.1 | Refresh Saat di Papan | Saat siswa berada di Petak #2 atau #3, tekan **F5 / Refresh** di peramban siswa | • Siswa **langsung kembali ke Papan Permainan**.<br>• Posisi pion tetap di petak terakhir.<br>• Jawaban LKPD yang telah dikirim tetap tersimpan.<br>• **TIDAK** kembali meminta kode kelas atau memilih kelompok. | [ ] |
-| 5.2 | Tutup & Buka Ulang Tab | Tutup tab siswa sepenuhnya, buka tab baru, akses `http://localhost:5173/` | Sesi pulih otomatis dari `localStorage` ke posisi papan terakhir. | [ ] |
+| 5.2 | Tutup & Buka Ulang Tab | Tutup tab siswa sepenuhnya, buka tab baru, akses `http://localhost:3000/` | Sesi pulih otomatis dari `localStorage` ke posisi papan terakhir. | [ ] |
 | 5.3 | Pengujian Tombol "Ganti Tim" | Klik tombol identitas kelompok di navbar atas siswa | Siswa kembali ke layar pemilihan tim (kode kelas tetap tersimpan). | [ ] |
 | 5.4 | Pengujian Tombol "Ganti Kode" | Pada layar pemilihan tim, klik tombol "Ganti Kode" | Seluruh cache sesi siswa dibersihkan, siswa kembali ke input kode kelas awal. | [ ] |
 
