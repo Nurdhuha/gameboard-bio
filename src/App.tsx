@@ -152,10 +152,11 @@ export const App: React.FC = () => {
   const socketRef = useRef<Socket | null>(null);
 
   // Status tampilan guru di /teachers: 'lobby' (ruang tunggu) | 'spin' (roda putar) | 'board' (papan kelas)
+  // Selalu default ke 'lobby' agar guru selalu melihat ruang tunggu & kode kelas terlebih dahulu
   const [teacherGamePhase, setTeacherGamePhase] = useState<'lobby' | 'spin' | 'board'>(() => {
     try {
       const saved = sessionStorage.getItem('ecoplay_teacher_phase');
-      if (saved === 'spin' || saved === 'board') return saved;
+      if (saved === 'board') return 'board';
     } catch {}
     return 'lobby';
   });
@@ -456,7 +457,7 @@ export const App: React.FC = () => {
   };
 
   // Guru otomatis mengambil sesi aktif atau membuat sesi baru jika belum ada
-  const fetchOrCreateTeacherSession = async (token?: string | null) => {
+  const fetchOrCreateTeacherSession = async (token?: string | null, isFreshLogin = false) => {
     const authToken = token || localStorage.getItem('ecoplay_teacher_token');
     if (!authToken) return;
 
@@ -521,17 +522,30 @@ export const App: React.FC = () => {
           // toleransi jika gagal ambil tim
         }
 
-        // Restore fase sesi guru yang sesuai dari server atau storage
+        // Tentukan fase sesi guru:
+        // Saat baru login atau sesi belum berlanjut di perangkat ini, WAJIB SELALU masuk ke Ruang Tunggu (Lobby)!
+        // Spin HANYA boleh dimasuki ketika guru secara sadar menekan tombol "Mulai Permainan" di Lobby.
         let targetPhase: 'lobby' | 'spin' | 'board' = 'lobby';
-        const serverPhase = currentSession.phase as 'lobby' | 'spin' | 'board';
-        if (serverPhase === 'board' || serverPhase === 'spin') {
-          targetPhase = serverPhase;
+        const savedPhase = sessionStorage.getItem('ecoplay_teacher_phase');
+
+        if (!isFreshLogin && savedPhase === 'board' && currentSession.phase === 'board') {
+          targetPhase = 'board';
         } else {
+          targetPhase = 'lobby';
           try {
-            const saved = sessionStorage.getItem('ecoplay_teacher_phase') as 'lobby' | 'spin' | 'board';
-            if (saved === 'board' || saved === 'spin') targetPhase = saved;
+            sessionStorage.setItem('ecoplay_teacher_phase', 'lobby');
           } catch {}
+
+          // Jika sesi di database sempat tersangkut di 'spin' dari pengujian sebelumnya, reset kembali ke 'lobby'
+          if (currentSession.phase === 'spin' && isServerSession(formatted.roomCode)) {
+            fetch(`${backendUrl}/api/sessions/${encodeURIComponent(formatted.roomCode)}/phase`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ phase: 'lobby' }),
+            }).catch(() => undefined);
+          }
         }
+
         updateTeacherPhase(targetPhase);
         setShowSessionCreator(false);
       }
@@ -613,11 +627,14 @@ export const App: React.FC = () => {
     setActiveSession(newSession);
     localStorage.setItem('ecoplay_teacher_active_session', JSON.stringify(newSession));
     setShowSessionCreator(false);
-    setTeacherGamePhase('lobby');
+    updateTeacherPhase('lobby');
   };
 
   // Guru keluar dari akun / sesi kelas
   const handleTeacherLogout = () => {
+    try {
+      sessionStorage.removeItem('ecoplay_teacher_phase');
+    } catch {}
     localStorage.removeItem('ecoplay_teacher_token');
     localStorage.removeItem('ecoplay_teacher_profile');
     localStorage.removeItem('ecoplay_teacher_active_session');
@@ -625,7 +642,7 @@ export const App: React.FC = () => {
     setIsTeacherDemoMode(false);
     setActiveSession(null);
     setShowSessionCreator(false);
-    setTeacherGamePhase('lobby');
+    updateTeacherPhase('lobby');
   };
 
   // Gerakkan pion tim aktif
@@ -1048,9 +1065,13 @@ export const App: React.FC = () => {
           <main className="flex-1 overflow-y-auto flex items-center justify-center p-3 sm:p-6">
             <TeacherLoginScreen
               onLoginSuccess={(profile, token) => {
+                try {
+                  sessionStorage.removeItem('ecoplay_teacher_phase');
+                } catch {}
+                updateTeacherPhase('lobby');
                 setTeacherAuth(profile);
                 setIsTeacherDemoMode(false);
-                fetchOrCreateTeacherSession(token);
+                fetchOrCreateTeacherSession(token, true);
               }}
             />
           </main>
