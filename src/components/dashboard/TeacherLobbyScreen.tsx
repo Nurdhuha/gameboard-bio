@@ -10,7 +10,6 @@ import {
   LogOut,
   Monitor,
 } from 'lucide-react';
-import confetti from 'canvas-confetti';
 
 interface TeacherLobbyScreenProps {
   roomCode: string;
@@ -122,10 +121,7 @@ export const TeacherLobbyScreen: React.FC<TeacherLobbyScreenProps> = ({
               </span>
             </div>
             <button
-              onClick={() => {
-                onAddTeam();
-                confetti({ particleCount: 40, spread: 60, origin: { y: 0.8 } });
-              }}
+              onClick={onAddTeam}
               className="px-2.5 sm:px-3 py-1 rounded-xl bg-white border border-stone-200 hover:border-emerald-500 text-emerald-800 text-[11px] sm:text-xs font-bold flex items-center gap-1 transition shadow-xs hover:bg-emerald-50"
             >
               <Plus className="w-3 h-3 text-emerald-600" />
@@ -190,10 +186,7 @@ export const TeacherLobbyScreen: React.FC<TeacherLobbyScreenProps> = ({
         {/* Start Game Action Button */}
         <div className="pt-2 sm:pt-3">
           <button
-            onClick={() => {
-              confetti({ particleCount: 120, spread: 100, origin: { y: 0.6 } });
-              onStartGame();
-            }}
+            onClick={onStartGame}
             className="w-full sm:w-auto min-w-[240px] px-8 py-3 rounded-2xl bg-emerald-700 hover:bg-emerald-800 active:scale-98 text-white font-bold text-sm sm:text-base shadow-md transition-all flex items-center justify-center gap-2 mx-auto"
           >
             <Play className="w-4 h-4 fill-white" />

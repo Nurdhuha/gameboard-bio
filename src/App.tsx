@@ -425,7 +425,6 @@ export const App: React.FC = () => {
     }
     setTeacherGamePhase('spin');
     setStudentGamePhase('board');
-    confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
   };
 
   // Guru otomatis mengambil sesi aktif atau membuat sesi baru jika belum ada
@@ -942,15 +941,17 @@ export const App: React.FC = () => {
             <span className="hidden sm:inline">Aturan</span>
           </button>
 
-          {/* Tombol Klasemen Leaderboard */}
-          <button
-            onClick={() => setShowLeaderboard(true)}
-            className="p-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 hover:bg-amber-100 text-xs font-semibold flex items-center gap-1 transition active:scale-95 shadow-sm"
-            title="Klasemen Leaderboard"
-          >
-            <Trophy className="w-4 h-4 text-amber-600" />
-            <span className="hidden sm:inline">Klasemen</span>
-          </button>
+          {/* Tombol Klasemen Leaderboard (Disembunyikan jika guru belum login) */}
+          {(!isTeacherRoute || teacherAuth || isTeacherDemoMode) && (
+            <button
+              onClick={() => setShowLeaderboard(true)}
+              className="p-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 hover:bg-amber-100 text-xs font-semibold flex items-center gap-1 transition active:scale-95 shadow-sm"
+              title="Klasemen Leaderboard"
+            >
+              <Trophy className="w-4 h-4 text-amber-600" />
+              <span className="hidden sm:inline">Klasemen</span>
+            </button>
+          )}
         </div>
       </header>
 
