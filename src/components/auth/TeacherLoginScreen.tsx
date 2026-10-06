@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LogIn, UserPlus, BookOpen, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { LogIn, UserPlus, BookOpen, ShieldCheck, CheckCircle2, Sparkles } from 'lucide-react';
 import { getBackendUrl } from '../../config/api';
 
 interface TeacherLoginScreenProps {
@@ -215,6 +215,19 @@ export const TeacherLoginScreen: React.FC<TeacherLoginScreenProps> = ({
               </>
             )}
           </button>
+
+          {onContinueDemoMode && (
+            <div className="pt-2 border-t border-stone-100 text-center">
+              <button
+                type="button"
+                onClick={onContinueDemoMode}
+                className="w-full py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-slate-700 font-bold text-xs transition flex items-center justify-center gap-1.5"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                <span>Masuk Mode Simulasi / Coba Cepat</span>
+              </button>
+            </div>
+          )}
         </form>
       </div>
     </div>

@@ -58,7 +58,7 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
 
   const isAllDetermined = turnOrder.length === teams.length;
   const readyTeamsCount = teams.filter((t) => t.isReady).length;
-  const hasReadyTeams = readyTeamsCount > 0;
+  const hasReadyTeams = readyTeamsCount > 0 || !teams.some((t) => t.isReady !== undefined);
 
   // Fungsi Spin Roda
   const handleSpin = () => {

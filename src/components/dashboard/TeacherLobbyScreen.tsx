@@ -186,7 +186,7 @@ export const TeacherLobbyScreen: React.FC<TeacherLobbyScreenProps> = ({
         {/* Start Game Action Button */}
         {(() => {
           const readyCount = teams.filter((t) => t.isReady).length;
-          const hasReady = readyCount > 0;
+          const hasReady = readyCount > 0 || roomCode === 'ECO-DEMO';
 
           return (
             <div className="pt-2 sm:pt-3 space-y-2">

@@ -646,6 +646,7 @@ export const App: React.FC = () => {
       academicYear: '2026/2027',
     };
     setActiveSession(demoSession);
+    updateStudentGamePhase('board');
     try {
       localStorage.setItem('ecoplay_student_session', JSON.stringify(demoSession));
     } catch {}
@@ -1428,6 +1429,17 @@ export const App: React.FC = () => {
                 setTeacherAuth(profile);
                 setIsTeacherDemoMode(false);
                 fetchOrCreateTeacherSession(token, true);
+              }}
+              onContinueDemoMode={() => {
+                setIsTeacherDemoMode(true);
+                setTeacherAuth({ id: 'demo-teacher', name: 'Bapak/Ibu Guru', email: 'guru@ecoplay.local' });
+                const demoSession = {
+                  roomCode: 'ECO-DEMO',
+                  className: 'Kelas Simulasi Guru',
+                  academicYear: '2026/2027',
+                };
+                setActiveSession(demoSession);
+                updateTeacherPhase('lobby');
               }}
             />
           </main>
