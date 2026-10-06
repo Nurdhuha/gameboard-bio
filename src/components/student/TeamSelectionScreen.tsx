@@ -127,14 +127,8 @@ export const TeamSelectionScreen: React.FC<TeamSelectionScreenProps> = ({
           <div className="flex items-center justify-center gap-2 max-w-md mx-auto">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-2xl bg-white border border-stone-200 shadow-xs text-xs font-bold text-slate-700">
               <KeyRound className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Kode:</span>
+              <span>Kode Kelas:</span>
               <span className="font-mono text-emerald-800 tracking-wider font-black">{roomCode}</span>
-              {className && (
-                <>
-                  <span className="text-stone-300">•</span>
-                  <span className="text-stone-600 font-semibold truncate max-w-[140px]">{className}</span>
-                </>
-              )}
             </div>
 
             {onChangeRoomCode && (

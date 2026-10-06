@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
+import React, { useState, useEffect, useRef, useMemo, Suspense, lazy } from 'react';
 import { useLocation } from 'react-router-dom';
 import { io, Socket } from 'socket.io-client';
 import { GameBoard } from './components/board/GameBoard';
@@ -49,6 +49,8 @@ import {
   LogOut,
   LayoutDashboard,
   Loader2,
+  Lock,
+  CheckCircle2,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -111,8 +113,26 @@ export const App: React.FC = () => {
     location.pathname.startsWith('/teacher') ||
     location.hash.startsWith('#/teacher');
 
-  // Status halaman murid: apakah sudah memilih kelompok atau belum
-  const [hasStudentSelectedTeam, setHasStudentSelectedTeam] = useState<boolean>(false);
+  // Status halaman murid: apakah sudah memilih kelompok atau belum (tersimpan di localStorage)
+  const [hasStudentSelectedTeam, setHasStudentSelectedTeam] = useState<boolean>(() => {
+    if (isTeacherRoute) return false;
+    try {
+      return localStorage.getItem('ecoplay_student_has_selected_team') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const updateStudentHasSelectedTeam = (selected: boolean) => {
+    setHasStudentSelectedTeam(selected);
+    try {
+      if (selected) {
+        localStorage.setItem('ecoplay_student_has_selected_team', 'true');
+      } else {
+        localStorage.removeItem('ecoplay_student_has_selected_team');
+      }
+    } catch {}
+  };
 
   // Status Autentikasi Guru (localStorage check)
   const [teacherAuth, setTeacherAuth] = useState<{ id: string; name: string; email: string } | null>(() => {
@@ -127,7 +147,7 @@ export const App: React.FC = () => {
   const [isLoadingSession, setIsLoadingSession] = useState<boolean>(false);
   const [showSessionCreator, setShowSessionCreator] = useState<boolean>(false);
 
-  // Sesi Ruang Kelas Aktif
+  // Sesi Ruang Kelas Aktif (tersimpan di localStorage agar tidak hilang jika browser ditutup/refresh)
   const [activeSession, setActiveSession] = useState<{
     roomCode: string;
     className: string;
@@ -142,7 +162,7 @@ export const App: React.FC = () => {
       }
     }
     try {
-      const saved = sessionStorage.getItem('ecoplay_student_session');
+      const saved = localStorage.getItem('ecoplay_student_session') || sessionStorage.getItem('ecoplay_student_session');
       return saved ? JSON.parse(saved) : null;
     } catch {
       return null;
@@ -172,16 +192,76 @@ export const App: React.FC = () => {
   };
 
   // Status tampilan murid di /: 'lobby' (ruang tunggu siswa) | 'board' (papan kelas)
-  const [studentGamePhase, setStudentGamePhase] = useState<'lobby' | 'board'>('lobby');
+  // Tersimpan di localStorage agar otomatis pulih ke posisi terakhir jika tab ditutup / refresh
+  const [studentGamePhase, setStudentGamePhase] = useState<'lobby' | 'board'>(() => {
+    if (isTeacherRoute) return 'lobby';
+    try {
+      const saved = localStorage.getItem('ecoplay_student_game_phase');
+      if (saved === 'board') return 'board';
+    } catch {}
+    return 'lobby';
+  });
 
-  const [teams, setTeams] = useState<Team[]>(INITIAL_TEAMS);
-  const [selectedTeamId, setSelectedTeamId] = useState<number>(1);
-  const [completedActivities, setCompletedActivities] = useState<string[]>([]);
+  const updateStudentGamePhase = (phase: 'lobby' | 'board') => {
+    setStudentGamePhase(phase);
+    try {
+      localStorage.setItem('ecoplay_student_game_phase', phase);
+    } catch {}
+  };
+
+  const [teams, setTeams] = useState<Team[]>(() => {
+    if (!isTeacherRoute) {
+      try {
+        const saved = localStorage.getItem('ecoplay_student_teams');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch {}
+    }
+    return INITIAL_TEAMS;
+  });
+
+  // ID Tim terpilih murid (tersimpan di localStorage)
+  const [selectedTeamId, setSelectedTeamId] = useState<number>(() => {
+    if (isTeacherRoute) return 1;
+    try {
+      const saved = localStorage.getItem('ecoplay_student_team_id');
+      if (saved) {
+        const id = Number(saved);
+        if (!isNaN(id) && id > 0) return id;
+      }
+    } catch {}
+    return 1;
+  });
+
+  const updateStudentTeamId = (teamId: number) => {
+    setSelectedTeamId(teamId);
+    try {
+      localStorage.setItem('ecoplay_student_team_id', String(teamId));
+    } catch {}
+  };
+
+  const [completedActivities, setCompletedActivities] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('ecoplay_student_completed_activities');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
   // Jawaban LKPD & Refleksi siswa: Record<teamId, Record<activityCode, { answer, reflection, score }>>
   const [teamAnswers, setTeamAnswers] = useState<
     Record<number, Record<string, { answer: string; reflection?: string; score?: number }>>
-  >({});
+  >(() => {
+    try {
+      const saved = localStorage.getItem('ecoplay_student_team_answers');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
 
   // Selected tile for inspection
   const [inspectedTileId, setInspectedTileId] = useState<number>(2); // Default ke KE-01
@@ -201,6 +281,24 @@ export const App: React.FC = () => {
   const inspectedTile = BOARD_TILES.find((t) => t.id === inspectedTileId) || BOARD_TILES[0];
   const inspectedActivity = inspectedTile.activityCode ? ACTIVITIES[inspectedTile.activityCode] : null;
 
+  // Aktivitas pada petak posisi pion tim saat ini:
+  const currentTeamTile = BOARD_TILES.find((t) => t.id === selectedTeam.currentTile);
+  const currentActivityCode = currentTeamTile?.activityCode;
+
+  // Helper mengecek status aktivitas sudah diselesaikan
+  const isActivityCodeDone = (code?: string): boolean => {
+    if (!code) return true;
+    if (teamAnswers[selectedTeamId]?.[code]?.answer?.trim()) return true;
+    if (selectedTeam.completedActivities?.includes(code)) return true;
+    if (completedActivities.includes(code)) return true;
+    return false;
+  };
+
+  // Cek apakah aktivitas pada petak pion tim saat ini sudah diselesaikan (mengirim jawaban)
+  const isCurrentTileActivityDone = useMemo(() => {
+    return isActivityCodeDone(currentActivityCode);
+  }, [currentActivityCode, selectedTeamId, teamAnswers, selectedTeam.completedActivities, completedActivities]);
+
   // Penanda gerakan pion lokal yang belum tersimpan di server (hindari pion "melompat balik" saat polling)
   const pendingMoveRef = useRef<{ teamId: number; until: number } | null>(null);
   const studentPhaseRef = useRef(studentGamePhase);
@@ -210,7 +308,15 @@ export const App: React.FC = () => {
     if (!Array.isArray(serverTeams) || serverTeams.length === 0) return;
     const pending = pendingMoveRef.current;
     const keepTileFor = pending && pending.until > Date.now() ? pending.teamId : null;
-    setTeams((prev) => mergeServerTeams(serverTeams, prev, keepTileFor));
+    setTeams((prev) => {
+      const merged = mergeServerTeams(serverTeams, prev, keepTileFor);
+      if (!isTeacherRoute) {
+        try {
+          localStorage.setItem('ecoplay_student_teams', JSON.stringify(merged));
+        } catch {}
+      }
+      return merged;
+    });
   };
 
   // Real-time WebSocket Synchronization via Socket.io (hanya jika server mendukung, mis. lokal/LAN)
@@ -230,46 +336,130 @@ export const App: React.FC = () => {
       teamId: selectedTeamId ? String(selectedTeamId) : undefined,
     });
 
-    socket.on('session:sync_state', ({ session, teams: serverTeams }) => {
+    socket.on('session:sync_state', ({ session, teams: serverTeams, submissions }) => {
       applyServerTeams(serverTeams);
       if (session?.phase === 'board') {
-        setStudentGamePhase('board');
+        updateStudentGamePhase('board');
       } else if (session?.phase === 'lobby') {
-        setStudentGamePhase('lobby');
+        updateStudentGamePhase('lobby');
+      }
+
+      if (Array.isArray(submissions) && submissions.length > 0) {
+        setTeamAnswers((prev) => {
+          const updated = { ...prev };
+          submissions.forEach((sub: any) => {
+            const teamMatch = serverTeams?.find(
+              (t: any) => t.id === sub.team_id || t.teamNumber === sub.team_number || String(t.id) === String(sub.team_id)
+            );
+            const tId = teamMatch ? (teamMatch.teamNumber || teamMatch.id) : Number(sub.team_id) || 1;
+            if (!updated[tId]) updated[tId] = {};
+            updated[tId][sub.activity_code] = {
+              answer: sub.answer_text,
+              reflection: sub.reflection_text,
+              score: sub.score ?? 3,
+            };
+          });
+          try {
+            localStorage.setItem('ecoplay_student_team_answers', JSON.stringify(updated));
+          } catch {}
+          return updated;
+        });
+
+        const completedForTeam = submissions
+          .filter((sub: any) => {
+            const teamMatch = serverTeams?.find(
+              (t: any) => t.id === sub.team_id || t.teamNumber === sub.team_number || String(t.id) === String(sub.team_id)
+            );
+            const tId = teamMatch ? (teamMatch.teamNumber || teamMatch.id) : Number(sub.team_id) || 1;
+            return String(tId) === String(selectedTeamId);
+          })
+          .map((sub: any) => sub.activity_code);
+
+        if (completedForTeam.length > 0) {
+          setCompletedActivities((prev) => {
+            const updated = [...new Set([...prev, ...completedForTeam])];
+            try {
+              localStorage.setItem('ecoplay_student_completed_activities', JSON.stringify(updated));
+            } catch {}
+            return updated;
+          });
+        }
       }
     });
 
     // Otomatis buka papan permainan siswa saat fase papan dimulai
     socket.on('game:started', ({ initialPhase } = {}) => {
       if (initialPhase === 'board') {
-        setStudentGamePhase('board');
+        updateStudentGamePhase('board');
       }
     });
 
     socket.on('phase:updated', ({ phase }) => {
       if (phase === 'board') {
-        setStudentGamePhase('board');
+        updateStudentGamePhase('board');
       } else if (phase === 'lobby') {
-        setStudentGamePhase('lobby');
+        updateStudentGamePhase('lobby');
       }
     });
 
     socket.on('pawn:moved', ({ teamId, targetTile }) => {
-      setTeams((prev) =>
-        prev.map((t) => {
+      setTeams((prev) => {
+        const updated = prev.map((t) => {
           if (String(t.id) === String(teamId) || String(t.teamNumber) === String(teamId)) {
             return { ...t, currentTile: targetTile };
           }
           return t;
-        })
-      );
+        });
+        if (!isTeacherRoute) {
+          try {
+            localStorage.setItem('ecoplay_student_teams', JSON.stringify(updated));
+          } catch {}
+        }
+        return updated;
+      });
+    });
+
+    socket.on('activity:submitted', ({ teamId, activityCode, submission }: any) => {
+      const numId = Number(teamId);
+      setTeamAnswers((prev) => {
+        const updated = {
+          ...prev,
+          [numId]: {
+            ...(prev[numId] || {}),
+            [activityCode]: {
+              answer: submission?.answer_text || '',
+              reflection: submission?.reflection_text,
+              score: submission?.score ?? 3,
+            },
+          },
+        };
+        try {
+          localStorage.setItem('ecoplay_student_team_answers', JSON.stringify(updated));
+        } catch {}
+        return updated;
+      });
+
+      if (numId === selectedTeamId) {
+        setCompletedActivities((prev) => {
+          const updated = [...new Set([...prev, activityCode])];
+          try {
+            localStorage.setItem('ecoplay_student_completed_activities', JSON.stringify(updated));
+          } catch {}
+          return updated;
+        });
+      }
     });
 
     socket.on('class:ended', ({ message }) => {
       alert(message || 'Sesi kelas telah diakhiri oleh Bapak/Ibu Guru.');
-      setStudentGamePhase('lobby');
+      updateStudentGamePhase('lobby');
       updateTeacherPhase('lobby');
-      setHasStudentSelectedTeam(false);
+      updateStudentHasSelectedTeam(false);
+      try {
+        localStorage.removeItem('ecoplay_student_completed_activities');
+        localStorage.removeItem('ecoplay_student_team_answers');
+        localStorage.removeItem('ecoplay_student_teams');
+      } catch {}
     });
 
     return () => {
@@ -300,13 +490,56 @@ export const App: React.FC = () => {
         if (!isTeacherRoute && data.session?.phase) {
           if (data.session.phase === 'board') {
             if (studentPhaseRef.current === 'lobby') {
-              setStudentGamePhase('board');
+              updateStudentGamePhase('board');
               confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
             }
           } else if (data.session.phase === 'lobby' || data.session.phase === 'ended') {
             if (studentPhaseRef.current === 'board') {
-              setStudentGamePhase('lobby');
+              updateStudentGamePhase('lobby');
             }
+          }
+        }
+
+        // Sinkronisasi submissions LKPD dari database
+        if (Array.isArray(data.submissions) && data.submissions.length > 0) {
+          setTeamAnswers((prev) => {
+            const updated = { ...prev };
+            data.submissions.forEach((sub: any) => {
+              const teamMatch = data.teams?.find(
+                (t: any) => t.id === sub.team_id || t.teamNumber === sub.team_number || String(t.id) === String(sub.team_id)
+              );
+              const tId = teamMatch ? (teamMatch.teamNumber || teamMatch.id) : Number(sub.team_id) || 1;
+              if (!updated[tId]) updated[tId] = {};
+              updated[tId][sub.activity_code] = {
+                answer: sub.answer_text,
+                reflection: sub.reflection_text,
+                score: sub.score ?? 3,
+              };
+            });
+            try {
+              localStorage.setItem('ecoplay_student_team_answers', JSON.stringify(updated));
+            } catch {}
+            return updated;
+          });
+
+          const completedForTeam = data.submissions
+            .filter((sub: any) => {
+              const teamMatch = data.teams?.find(
+                (t: any) => t.id === sub.team_id || t.teamNumber === sub.team_number || String(t.id) === String(sub.team_id)
+              );
+              const tId = teamMatch ? (teamMatch.teamNumber || teamMatch.id) : Number(sub.team_id) || 1;
+              return String(tId) === String(selectedTeamId);
+            })
+            .map((sub: any) => sub.activity_code);
+
+          if (completedForTeam.length > 0) {
+            setCompletedActivities((prev) => {
+              const updated = [...new Set([...prev, ...completedForTeam])];
+              try {
+                localStorage.setItem('ecoplay_student_completed_activities', JSON.stringify(updated));
+              } catch {}
+              return updated;
+            });
           }
         }
       } catch {
@@ -320,7 +553,7 @@ export const App: React.FC = () => {
       cancelled = true;
       clearInterval(interval);
     };
-  }, [isTeacherRoute, isTeacherDemoMode, teacherAuth?.id, activeSession?.roomCode]);
+  }, [isTeacherRoute, isTeacherDemoMode, teacherAuth?.id, activeSession?.roomCode, selectedTeamId]);
 
   // Heartbeat status "Siap" kelompok siswa ke server, agar terlihat real-time di layar guru
   useEffect(() => {
@@ -373,14 +606,21 @@ export const App: React.FC = () => {
           academicYear: data.session.academicYear || data.session.academic_year || '2026/2027',
         };
         setActiveSession(sessionData);
-        sessionStorage.setItem('ecoplay_student_session', JSON.stringify(sessionData));
+        try {
+          localStorage.setItem('ecoplay_student_session', JSON.stringify(sessionData));
+          sessionStorage.setItem('ecoplay_student_session', JSON.stringify(sessionData));
+        } catch {}
         if (data.teams && data.teams.length > 0) {
-          setTeams(mergeServerTeams(data.teams, []));
+          const merged = mergeServerTeams(data.teams, []);
+          setTeams(merged);
+          try {
+            localStorage.setItem('ecoplay_student_teams', JSON.stringify(merged));
+          } catch {}
         }
         if (data.session.phase && data.session.phase !== 'lobby') {
-          setStudentGamePhase('board');
+          updateStudentGamePhase('board');
         } else {
-          setStudentGamePhase('lobby');
+          updateStudentGamePhase('lobby');
         }
         return true;
       } else {
@@ -406,15 +646,27 @@ export const App: React.FC = () => {
       academicYear: '2026/2027',
     };
     setActiveSession(demoSession);
+    try {
+      localStorage.setItem('ecoplay_student_session', JSON.stringify(demoSession));
+    } catch {}
     setJoinRoomError(null);
   };
 
   // Siswa mengganti kode kelas
   const handleChangeRoomCode = () => {
     setActiveSession(null);
-    setHasStudentSelectedTeam(false);
-    setStudentGamePhase('lobby');
-    sessionStorage.removeItem('ecoplay_student_session');
+    updateStudentHasSelectedTeam(false);
+    updateStudentGamePhase('lobby');
+    try {
+      localStorage.removeItem('ecoplay_student_session');
+      localStorage.removeItem('ecoplay_student_has_selected_team');
+      localStorage.removeItem('ecoplay_student_game_phase');
+      localStorage.removeItem('ecoplay_student_team_id');
+      localStorage.removeItem('ecoplay_student_teams');
+      localStorage.removeItem('ecoplay_student_completed_activities');
+      localStorage.removeItem('ecoplay_student_team_answers');
+      sessionStorage.removeItem('ecoplay_student_session');
+    } catch {}
   };
 
   // Handle selesai sesi spin di /teachers (Langkah 2 -> Langkah 3)
@@ -422,7 +674,7 @@ export const App: React.FC = () => {
     setTeams(orderedTeams);
     setSelectedTeamId(orderedTeams[0].id);
     updateTeacherPhase('board');
-    setStudentGamePhase('board');
+    updateStudentGamePhase('board');
     confetti({ particleCount: 100, spread: 80, origin: { y: 0.5 } });
 
     if (socketRef.current && activeSession?.roomCode) {
@@ -654,6 +906,36 @@ export const App: React.FC = () => {
   const handleMovePawn = (delta: number) => {
     const team = teams.find((t) => t.id === selectedTeamId);
     if (!team) return;
+
+    // VALIDASI SISWA: Tidak dapat melewati aktivitas sebelum diselesaikan (kirim jawaban LKPD)
+    if (!isTeacherRoute && delta > 0) {
+      // 1. Cek aktivitas di petak saat ini
+      if (!isCurrentTileActivityDone && currentActivityCode) {
+        if (ACTIVITIES[currentActivityCode]) {
+          setActiveActivity(ACTIVITIES[currentActivityCode]);
+        }
+        alert(
+          `⚠️ Selesaikan Aktivitas ${currentActivityCode} Terlebih Dahulu!\n\nKelompok Anda belum mengirimkan jawaban LKPD untuk petak #${team.currentTile}. Anda harus mengirimkan jawaban terlebih dahulu sebelum melangkah ke petak berikutnya.`
+        );
+        return;
+      }
+
+      // 2. Jika melangkah maju, pastikan tidak melompati petak aktivitas yang belum dikerjakan
+      const targetTile = Math.max(0, Math.min(50, team.currentTile + delta));
+      for (let tileId = team.currentTile; tileId < targetTile; tileId++) {
+        const tile = BOARD_TILES.find((t) => t.id === tileId);
+        if (tile && tile.activityCode && !isActivityCodeDone(tile.activityCode)) {
+          if (ACTIVITIES[tile.activityCode]) {
+            setActiveActivity(ACTIVITIES[tile.activityCode]);
+          }
+          alert(
+            `⚠️ Selesaikan Aktivitas ${tile.activityCode} Terlebih Dahulu!\n\nKelompok Anda harus menyelesaikan petak #${tile.id} (${tile.activityCode}) sebelum dapat melanjutkan langkah lebih jauh.`
+          );
+          return;
+        }
+      }
+    }
+
     const nextTile = Math.max(0, Math.min(50, team.currentTile + delta));
     if (nextTile === team.currentTile) return;
 
@@ -662,9 +944,15 @@ export const App: React.FC = () => {
       confetti({ particleCount: 70, spread: 60, origin: { y: 0.5 } });
     }
 
-    setTeams((prevTeams) =>
-      prevTeams.map((t) => (t.id === selectedTeamId ? { ...t, currentTile: nextTile } : t))
-    );
+    setTeams((prevTeams) => {
+      const updated = prevTeams.map((t) => (t.id === selectedTeamId ? { ...t, currentTile: nextTile } : t));
+      if (!isTeacherRoute) {
+        try {
+          localStorage.setItem('ecoplay_student_teams', JSON.stringify(updated));
+        } catch {}
+      }
+      return updated;
+    });
     setInspectedTileId(nextTile);
 
     const roomCode = activeSession?.roomCode;
@@ -691,6 +979,18 @@ export const App: React.FC = () => {
   // Loncat ke petak aktivitas berikutnya
   const handleJumpToNextActivity = () => {
     const current = selectedTeam.currentTile;
+
+    // Cegah loncat jika aktivitas di petak saat ini belum selesai dikerjakan
+    if (!isTeacherRoute && !isCurrentTileActivityDone && currentActivityCode) {
+      if (ACTIVITIES[currentActivityCode]) {
+        setActiveActivity(ACTIVITIES[currentActivityCode]);
+      }
+      alert(
+        `⚠️ Selesaikan Aktivitas ${currentActivityCode} Terlebih Dahulu!\n\nKelompok Anda belum mengirimkan jawaban LKPD untuk petak #${current}. Selesaikan aktivitas ini terlebih dahulu untuk melanjutkan permainan.`
+      );
+      return;
+    }
+
     const nextActivityTile = BOARD_TILES.find(
       (tile) => tile.id > current && tile.activityCode !== undefined
     );
@@ -711,36 +1011,81 @@ export const App: React.FC = () => {
   const handleActivitySubmit = (answer: string, reflection?: string) => {
     if (!activeActivity) return;
 
-    setCompletedActivities((prev) => [...new Set([...prev, activeActivity.code])]);
+    const code = activeActivity.code;
+    const updatedCompleted = [...new Set([...completedActivities, code])];
+    setCompletedActivities(updatedCompleted);
+    try {
+      localStorage.setItem('ecoplay_student_completed_activities', JSON.stringify(updatedCompleted));
+    } catch {}
 
-    // Simpan data jawaban tim untuk diperiksa guru di /teachers
-    setTeamAnswers((prev) => ({
-      ...prev,
-      [selectedTeamId]: {
-        ...(prev[selectedTeamId] || {}),
-        [activeActivity.code]: {
-          answer,
-          reflection,
-          score: prev[selectedTeamId]?.[activeActivity.code]?.score ?? 3,
+    // Simpan data jawaban tim untuk diperiksa guru di /teachers & tersimpan lokal
+    setTeamAnswers((prev) => {
+      const prevTeam = prev[selectedTeamId] || {};
+      const updated = {
+        ...prev,
+        [selectedTeamId]: {
+          ...prevTeam,
+          [code]: {
+            answer,
+            reflection,
+            score: prevTeam[code]?.score ?? 3,
+          },
         },
-      },
-    }));
+      };
+      try {
+        localStorage.setItem('ecoplay_student_team_answers', JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
 
-    setTeams((prevTeams) =>
-      prevTeams.map((t) => {
+    setTeams((prevTeams) => {
+      const updated = prevTeams.map((t) => {
         if (t.id === selectedTeamId) {
           const isBadge = [10, 22, 38, 50].includes(t.currentTile);
           return {
             ...t,
             lkpdScore: t.lkpdScore + 3,
             badgePoints: isBadge ? t.badgePoints + 3 : t.badgePoints,
-            completedActivities: [...new Set([...t.completedActivities, activeActivity.code])],
+            completedActivities: [...new Set([...t.completedActivities, code])],
           };
         }
         return t;
-      })
-    );
+      });
+      if (!isTeacherRoute) {
+        try {
+          localStorage.setItem('ecoplay_student_teams', JSON.stringify(updated));
+        } catch {}
+      }
+      return updated;
+    });
 
+    // Kirim via Socket.io jika terhubung
+    const roomCode = activeSession?.roomCode;
+    if (socketRef.current && roomCode) {
+      socketRef.current.emit('activity:submit', {
+        roomCode,
+        teamId: String(selectedTeamId),
+        activityCode: code,
+        answerText: answer,
+        reflectionText: reflection,
+      });
+    }
+
+    // Kirim ke REST backend Supabase
+    if (isServerSession(roomCode)) {
+      fetch(`${getBackendUrl()}/api/sessions/${encodeURIComponent(roomCode!)}/submissions/lkpd`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          teamId: selectedTeamId,
+          activityCode: code,
+          answerText: answer,
+          reflectionText: reflection,
+        }),
+      }).catch(() => undefined);
+    }
+
+    confetti({ particleCount: 75, spread: 70, origin: { y: 0.6 } });
     setActiveActivity(null);
   };
 
@@ -823,8 +1168,13 @@ export const App: React.FC = () => {
     setTeamAnswers({});
     setCompletedActivities([]);
     updateTeacherPhase('lobby');
-    setStudentGamePhase('lobby');
-    setHasStudentSelectedTeam(false);
+    updateStudentGamePhase('lobby');
+    updateStudentHasSelectedTeam(false);
+    try {
+      localStorage.removeItem('ecoplay_student_completed_activities');
+      localStorage.removeItem('ecoplay_student_team_answers');
+      localStorage.removeItem('ecoplay_student_teams');
+    } catch {}
     setShowTeacherDashboard(false);
     setIsEndingClass(false);
     setShowEndClassModal(false);
@@ -1024,7 +1374,7 @@ export const App: React.FC = () => {
                 <>
                   {/* Tombol Ganti Kelompok */}
                   <button
-                    onClick={() => setHasStudentSelectedTeam(false)}
+                    onClick={() => updateStudentHasSelectedTeam(false)}
                     className="flex items-center gap-1.5 bg-stone-100/90 hover:bg-stone-200/80 border border-stone-200 px-2.5 py-1 rounded-xl text-xs font-bold text-slate-800 transition"
                     title="Ganti Kelompok"
                   >
@@ -1308,8 +1658,8 @@ export const App: React.FC = () => {
               className={activeSession?.className}
               onJoinRoomCode={handleStudentJoinRoom}
               onSelectTeam={(teamId) => {
-                setSelectedTeamId(teamId);
-                setHasStudentSelectedTeam(true);
+                updateStudentTeamId(teamId);
+                updateStudentHasSelectedTeam(true);
               }}
               onChangeRoomCode={handleChangeRoomCode}
               onUseDemoMode={handleStudentDemoMode}
@@ -1324,7 +1674,7 @@ export const App: React.FC = () => {
               team={selectedTeam}
               roomCode={activeSession?.roomCode || 'ECO-729'}
               className={activeSession?.className || 'Kelas Biologi'}
-              onChangeTeam={() => setHasStudentSelectedTeam(false)}
+              onChangeTeam={() => updateStudentHasSelectedTeam(false)}
             />
           </main>
         ) : (
@@ -1363,12 +1713,50 @@ export const App: React.FC = () => {
 
                   {/* Navigasi Pion Siswa */}
                   <div className="space-y-2 pt-1">
+                    {/* Status Aktivitas Petak Saat Ini */}
+                    {currentActivityCode && (
+                      <div
+                        className={`p-2.5 rounded-xl border text-xs flex items-center justify-between gap-2 ${
+                          isCurrentTileActivityDone
+                            ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                            : 'bg-amber-50 border-amber-200 text-amber-900'
+                        }`}
+                      >
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          {isCurrentTileActivityDone ? (
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                          ) : (
+                            <Lock className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                          )}
+                          <span className="font-semibold truncate">
+                            {isCurrentTileActivityDone
+                              ? `LKPD ${currentActivityCode} Selesai`
+                              : `LKPD ${currentActivityCode} Belum Selesai`}
+                          </span>
+                        </div>
+                        {!isCurrentTileActivityDone && (
+                          <button
+                            onClick={() => {
+                              if (currentActivityCode && ACTIVITIES[currentActivityCode]) {
+                                setActiveActivity(ACTIVITIES[currentActivityCode]);
+                              }
+                            }}
+                            className="px-2 py-0.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-[10px] flex-shrink-0 transition active:scale-95 shadow-xs"
+                          >
+                            Kerjakan
+                          </button>
+                        )}
+                      </div>
+                    )}
+
                     <button
                       onClick={handleJumpToNextActivity}
-                      className="w-full py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition active:scale-95 shadow-sm"
+                      disabled={!isCurrentTileActivityDone}
+                      className="w-full py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 disabled:bg-stone-200 disabled:text-stone-400 disabled:cursor-not-allowed text-white text-xs font-bold flex items-center justify-center gap-1.5 transition active:scale-95 shadow-sm"
+                      title={!isCurrentTileActivityDone ? 'Kirim jawaban LKPD petak saat ini terlebih dahulu' : 'Maju ke Aktivitas Berikutnya'}
                     >
-                      <FastForward className="w-4 h-4" />
-                      <span>Maju ke Aktivitas Berikutnya</span>
+                      {!isCurrentTileActivityDone ? <Lock className="w-4 h-4 text-stone-400" /> : <FastForward className="w-4 h-4" />}
+                      <span>{!isCurrentTileActivityDone ? 'Terkunci (Kirim Jawaban LKPD)' : 'Maju ke Aktivitas Berikutnya'}</span>
                     </button>
 
                     <div className="grid grid-cols-2 gap-2">
@@ -1382,11 +1770,12 @@ export const App: React.FC = () => {
                       </button>
                       <button
                         onClick={() => handleMovePawn(1)}
-                        disabled={selectedTeam.currentTile >= 50}
-                        className="py-1.5 px-3 rounded-xl bg-stone-100 hover:bg-stone-200 text-slate-700 text-xs font-semibold flex items-center justify-center gap-1 disabled:opacity-40 transition"
+                        disabled={selectedTeam.currentTile >= 50 || !isCurrentTileActivityDone}
+                        className="py-1.5 px-3 rounded-xl bg-stone-100 hover:bg-stone-200 disabled:bg-stone-200 disabled:text-stone-400 disabled:cursor-not-allowed text-slate-700 text-xs font-semibold flex items-center justify-center gap-1 transition"
+                        title={!isCurrentTileActivityDone ? 'Kirim jawaban LKPD petak saat ini terlebih dahulu' : '+1 Maju'}
                       >
                         <span>+1 Maju</span>
-                        <ChevronRight className="w-4 h-4" />
+                        {!isCurrentTileActivityDone ? <Lock className="w-3.5 h-3.5 text-stone-400" /> : <ChevronRight className="w-4 h-4" />}
                       </button>
                     </div>
                   </div>
@@ -1515,7 +1904,7 @@ export const App: React.FC = () => {
             ) : (
               /* Murid Mobile Bar: Kontrol Pion & LKPD */
               <>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 sm:gap-2">
                   <button
                     onClick={() => handleMovePawn(-1)}
                     disabled={selectedTeam.currentTile <= 0}
@@ -1526,17 +1915,20 @@ export const App: React.FC = () => {
                   </button>
                   <button
                     onClick={() => handleMovePawn(1)}
-                    disabled={selectedTeam.currentTile >= 50}
-                    className="px-3 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-slate-700 font-bold text-xs sm:text-sm flex items-center gap-1 transition"
+                    disabled={selectedTeam.currentTile >= 50 || !isCurrentTileActivityDone}
+                    className="px-2.5 sm:px-3 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 disabled:bg-stone-200 disabled:text-stone-400 disabled:cursor-not-allowed text-slate-700 font-bold text-xs sm:text-sm flex items-center gap-1 transition"
+                    title={!isCurrentTileActivityDone ? 'Kirim jawaban LKPD terlebih dahulu' : '+1 Maju'}
                   >
                     <span>+1</span>
-                    <ChevronRight className="w-4 h-4" />
+                    {!isCurrentTileActivityDone ? <Lock className="w-3 h-3 text-stone-400" /> : <ChevronRight className="w-4 h-4" />}
                   </button>
                   <button
                     onClick={handleJumpToNextActivity}
-                    className="px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-xs sm:text-sm flex items-center gap-1 transition"
+                    disabled={!isCurrentTileActivityDone}
+                    className="px-2.5 sm:px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 disabled:bg-stone-100 disabled:text-stone-400 disabled:cursor-not-allowed text-emerald-800 font-bold text-xs sm:text-sm flex items-center gap-1 transition"
+                    title={!isCurrentTileActivityDone ? 'Kirim jawaban LKPD terlebih dahulu' : 'Lompat ke aktivitas berikutnya'}
                   >
-                    <FastForward className="w-4 h-4" />
+                    {!isCurrentTileActivityDone ? <Lock className="w-3 h-3 text-stone-400" /> : <FastForward className="w-4 h-4" />}
                     <span>Lompat</span>
                   </button>
                 </div>
@@ -1544,10 +1936,18 @@ export const App: React.FC = () => {
                 {inspectedActivity && (
                   <button
                     onClick={() => setActiveActivity(inspectedActivity)}
-                    className="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-sm active:scale-95 transition"
+                    className={`px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-sm active:scale-95 transition ${
+                      !isCurrentTileActivityDone && inspectedActivity.code === currentActivityCode
+                        ? 'bg-amber-600 hover:bg-amber-700 text-white ring-2 ring-amber-400 animate-pulse'
+                        : 'bg-emerald-700 hover:bg-emerald-800 text-white'
+                    }`}
                   >
                     <BookOpen className="w-4 h-4" />
-                    <span>Buka LKPD</span>
+                    <span>
+                      {!isCurrentTileActivityDone && inspectedActivity.code === currentActivityCode
+                        ? 'Kerjakan LKPD ✍️'
+                        : 'Buka LKPD'}
+                    </span>
                   </button>
                 )}
               </>
@@ -1563,6 +1963,12 @@ export const App: React.FC = () => {
                   </span>
                   <span>Petak #{inspectedTile.id}</span>
                 </span>
+                {!isTeacherRoute && !isCurrentTileActivityDone && inspectedTile.id === selectedTeam.currentTile && (
+                  <span className="text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200 flex items-center gap-1">
+                    <Lock className="w-3 h-3" />
+                    <span>Wajib Diselesaikan</span>
+                  </span>
+                )}
               </div>
 
               {inspectedActivity ? (
@@ -1575,10 +1981,20 @@ export const App: React.FC = () => {
                   </p>
                   <button
                     onClick={() => setActiveActivity(inspectedActivity)}
-                    className="w-full py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs sm:text-sm font-bold rounded-xl flex items-center justify-center gap-2 shadow-sm mt-1.5 active:scale-95 transition"
+                    className={`w-full py-2.5 text-white text-xs sm:text-sm font-bold rounded-xl flex items-center justify-center gap-2 shadow-sm mt-1.5 active:scale-95 transition ${
+                      !isTeacherRoute && !isCurrentTileActivityDone && inspectedActivity.code === currentActivityCode
+                        ? 'bg-amber-600 hover:bg-amber-700 ring-2 ring-amber-400 animate-pulse'
+                        : 'bg-emerald-700 hover:bg-emerald-800'
+                    }`}
                   >
                     <BookOpen className="w-4 h-4" />
-                    <span>{isTeacherRoute ? 'Lihat Soal LKPD (Monitoring)' : 'Buka Lembar Pengerjaan (LKPD) Lengkap'}</span>
+                    <span>
+                      {isTeacherRoute
+                        ? 'Lihat Soal LKPD (Monitoring)'
+                        : !isCurrentTileActivityDone && inspectedActivity.code === currentActivityCode
+                        ? 'Kerjakan LKPD Sekarang (Wajib Dikirim ✍️)'
+                        : 'Buka Lembar Pengerjaan (LKPD) Lengkap'}
+                    </span>
                   </button>
                 </>
               ) : (
