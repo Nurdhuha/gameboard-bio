@@ -689,21 +689,21 @@ export const App: React.FC = () => {
   return (
     <div className="fixed inset-0 w-full h-full h-[100dvh] bg-[#f8faf9] text-slate-800 flex flex-col font-sans select-none antialiased overflow-hidden">
       {/* 1. TOP NAVBAR (CALMING, MINIMALIST & CLEAN) */}
-      <header className="sticky top-0 w-full h-14 sm:h-16 border-b border-stone-200/80 bg-white/95 backdrop-blur-md px-3 sm:px-6 flex items-center justify-between flex-shrink-0 z-40 select-none">
+      <header className="sticky top-0 w-full h-13 sm:h-16 border-b border-stone-200/80 bg-white/95 backdrop-blur-md px-3 sm:px-6 flex items-center justify-between flex-shrink-0 z-40 select-none">
         {/* Brand */}
-        <div className="flex items-center gap-2">
-          <h1 className="text-base sm:text-lg font-extrabold tracking-tight text-emerald-800">
+        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+          <h1 className="text-sm sm:text-lg font-extrabold tracking-tight text-emerald-800 flex-shrink-0">
             Ecoplay
           </h1>
           {isTeacherRoute && (
-            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 truncate max-w-[120px] sm:max-w-none">
               Guru {activeSession ? `• ${activeSession.roomCode}` : ''}
             </span>
           )}
         </div>
 
         {/* RIGHT ACTIONS BERDASARKAN ROUTE */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
           {isTeacherRoute ? (
             /* --- KONTROL NAVIGASI GURU (/teachers) --- */
             <>
@@ -712,16 +712,7 @@ export const App: React.FC = () => {
                 null
               ) : teacherGamePhase === 'lobby' ? (
                 /* Di Layar Lobby Guru */
-                <>
-                  <button
-                    onClick={handleTeacherLogout}
-                    className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-stone-100 hover:bg-rose-50 hover:text-rose-700 text-stone-600 text-xs font-semibold flex items-center gap-1 transition shadow-xs"
-                    title="Keluar dari akun/sesi"
-                  >
-                    <LogOut className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">Keluar</span>
-                  </button>
-                </>
+                null
               ) : (
                 /* Di Sesi Papan / Spin Guru */
                 <>
@@ -1184,21 +1175,23 @@ export const App: React.FC = () => {
             </div>
           </button>
 
-          <div className="px-4 py-2.5 flex items-center justify-between border-b border-stone-100">
+          <div className="px-3 sm:px-4 py-2.5 flex items-center justify-between border-b border-stone-100">
             {isTeacherRoute ? (
               /* Guru Mobile Bar: Monitoring Only */
-              <div className="flex items-center justify-between w-full">
-                <span className="text-xs sm:text-sm font-bold text-slate-800 flex items-center gap-1.5">
-                  <span>{selectedTeam.avatarIcon}</span>
-                  <span>{selectedTeam.name}</span>
-                  <span className="text-emerald-700 font-bold ml-1">(Petak #{selectedTeam.currentTile})</span>
+              <div className="flex items-center justify-between w-full gap-2">
+                <span className="text-xs sm:text-sm font-bold text-slate-800 flex items-center gap-1.5 min-w-0 flex-1">
+                  <span className="flex-shrink-0">{selectedTeam.avatarIcon}</span>
+                  <span className="truncate max-w-[130px] xs:max-w-[180px] sm:max-w-none">{selectedTeam.name}</span>
+                  <span className="text-emerald-700 font-bold ml-0.5 flex-shrink-0 text-[11px] sm:text-xs">
+                    (#{selectedTeam.currentTile})
+                  </span>
                 </span>
                 <button
                   onClick={() => setShowTeacherDashboard(true)}
-                  className="px-3.5 py-2 rounded-xl bg-slate-900 text-white font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-sm"
+                  className="px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-slate-900 text-white font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-sm flex-shrink-0"
                 >
-                  <Sliders className="w-4 h-4 text-emerald-400" />
-                  <span>Panel Penilaian</span>
+                  <Sliders className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" />
+                  <span>Panel Nilai</span>
                 </button>
               </div>
             ) : (

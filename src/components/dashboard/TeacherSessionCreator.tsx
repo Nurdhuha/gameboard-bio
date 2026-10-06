@@ -32,8 +32,8 @@ export const TeacherSessionCreator: React.FC<TeacherSessionCreatorProps> = ({
             <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-800 flex items-center justify-center border border-emerald-100">
               <GraduationCap className="w-5 h-5 text-emerald-700" />
             </div>
-            <div>
-              <h2 className="text-base sm:text-lg font-bold text-slate-900">
+            <div className="min-w-0 flex-1">
+              <h2 className="text-sm sm:text-lg font-bold text-slate-900 truncate max-w-[160px] xs:max-w-[200px] sm:max-w-none">
                 {teacherName || 'Pendidik'}
               </h2>
               <p className="text-xs text-stone-500">Pendidik</p>

@@ -1,22 +1,20 @@
-// api/index.ts
+// api/index.js
 import "pg";
-
-// backend/src/app.ts
 import express from "express";
 import cors from "cors";
 import path2 from "path";
-
-// backend/src/routes/authRoutes.ts
 import { Router } from "express";
-
-// backend/src/controllers/authController.ts
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-
-// backend/src/config/database.ts
 import "pg";
 import knex from "knex";
 import dotenv from "dotenv";
+import jwt2 from "jsonwebtoken";
+import { Router as Router2 } from "express";
+import ExcelJS from "exceljs";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
 dotenv.config();
 var connectionString = process.env.DATABASE_URL;
 var knexConfig = {
@@ -38,8 +36,6 @@ var knexConfig = {
   }
 };
 var db = knex(knexConfig);
-
-// backend/src/controllers/authController.ts
 async function register(req, res) {
   try {
     const { name, email, password } = req.body;
@@ -130,9 +126,6 @@ async function getMe(req, res) {
     res.status(500).json({ success: false, message: error.message || "Gagal mengambil data profil." });
   }
 }
-
-// backend/src/middlewares/authMiddleware.ts
-import jwt2 from "jsonwebtoken";
 function authMiddleware(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -149,18 +142,11 @@ function authMiddleware(req, res, next) {
     res.status(403).json({ success: false, message: "Akses ditolak: Token tidak valid atau telah kedaluwarsa." });
   }
 }
-
-// backend/src/routes/authRoutes.ts
 var router = Router();
 router.post("/register", register);
 router.post("/login", login);
 router.get("/me", authMiddleware, getMe);
 var authRoutes_default = router;
-
-// backend/src/routes/sessionRoutes.ts
-import { Router as Router2 } from "express";
-
-// backend/src/controllers/sessionController.ts
 function generateRoomCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let result = "ECO";
@@ -373,8 +359,6 @@ async function getTeacherSessions(req, res) {
     res.status(500).json({ success: false, message: error.message || "Gagal mengambil riwayat sesi kelas." });
   }
 }
-
-// backend/src/controllers/teamController.ts
 var UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 var EXTRA_PRESETS = [
   { name: "Badak", avatar_icon: "\u{1F98F}", color_hex: "#8b5cf6", badge_color: "bg-purple-500" },
@@ -463,9 +447,6 @@ async function updatePawn(req, res) {
     res.status(500).json({ success: false, message: error.message || "Gagal memperbarui posisi pion." });
   }
 }
-
-// backend/src/services/exportService.ts
-import ExcelJS from "exceljs";
 async function generateExcelReport(session, teams, submissions) {
   const workbook = new ExcelJS.Workbook();
   workbook.creator = "Platform Pembelajaran Ecoplay";
@@ -594,8 +575,6 @@ async function generateExcelReport(session, teams, submissions) {
   const buffer = await workbook.xlsx.writeBuffer();
   return Buffer.from(buffer);
 }
-
-// backend/src/controllers/submissionController.ts
 var UUID_REGEX2 = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 async function getSubmissions(req, res) {
   try {
@@ -734,11 +713,6 @@ async function exportExcel(req, res) {
     res.status(500).json({ success: false, message: error.message || "Gagal mengekspor laporan Excel." });
   }
 }
-
-// backend/src/config/storage.ts
-import multer from "multer";
-import path from "path";
-import fs from "fs";
 var uploadDir = process.env.VERCEL ? path.join("/tmp", "uploads") : path.resolve(process.cwd(), "uploads");
 try {
   if (!fs.existsSync(uploadDir)) {
@@ -773,8 +747,6 @@ var upload = multer({
     }
   }
 });
-
-// backend/src/routes/sessionRoutes.ts
 var router2 = Router2();
 router2.post("/", authMiddleware, createSession);
 router2.post("/create", authMiddleware, createSession);
@@ -793,8 +765,6 @@ router2.patch("/submissions/:id/grade", gradeSubmission);
 router2.post("/:roomCode/upload", upload.single("photo"), uploadPhoto);
 router2.get("/:roomCode/export/excel", exportExcel);
 var sessionRoutes_default = router2;
-
-// backend/src/middlewares/errorHandler.ts
 function errorHandler(err, _req, res, _next) {
   console.error("\u274C Server Error:", err);
   const statusCode = err.statusCode || 500;
@@ -805,8 +775,6 @@ function errorHandler(err, _req, res, _next) {
     stack: process.env.NODE_ENV === "development" ? err.stack : void 0
   });
 }
-
-// backend/src/app.ts
 function createApp() {
   const app = express();
   const allowedOrigins = [
@@ -853,8 +821,6 @@ function createApp() {
   app.use(errorHandler);
   return app;
 }
-
-// api/index.ts
 var cachedApp = null;
 var initError = null;
 function getApp() {

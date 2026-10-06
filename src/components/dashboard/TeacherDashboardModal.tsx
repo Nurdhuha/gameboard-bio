@@ -56,70 +56,74 @@ export const TeacherDashboardModal: React.FC<TeacherDashboardModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/60 backdrop-blur-sm animate-fade-in font-sans">
       <div className="bg-white border border-stone-200/90 rounded-3xl w-full max-w-4xl h-[90vh] flex flex-col shadow-2xl overflow-hidden">
         {/* MODAL HEADER */}
-        <div className="px-6 py-4 bg-slate-900 text-white flex items-center justify-between flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-2xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-400">
-              <Sliders className="w-5 h-5" />
+        <div className="px-4 py-3 sm:px-6 sm:py-4 bg-slate-900 text-white flex items-center justify-between flex-shrink-0 gap-3">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-400 flex-shrink-0">
+              <Sliders className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <div>
+            <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-white tracking-tight">
-                  Dashboard Guru (Fasilitator & Penilai)
+                <h2 className="text-sm sm:text-base font-bold text-white tracking-tight truncate">
+                  Panel Penilaian Guru
                 </h2>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-semibold">
+                <span className="hidden sm:inline text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-semibold flex-shrink-0">
                   Mode Pendidik
                 </span>
               </div>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Penilaian Rubrik LKPD (Bagian H) & Pencatatan Lencana Kecepatan (Bagian C)
+              <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5 truncate">
+                Penilaian Rubrik LKPD & Pencatatan Lencana Kecepatan
               </p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-white transition"
+            className="p-1.5 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-white transition flex-shrink-0"
+            title="Tutup"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* TABS NAVIGATION */}
-        <div className="flex border-b border-stone-200 bg-stone-50 px-6 gap-3 flex-shrink-0 text-xs font-bold">
+        <div className="flex border-b border-stone-200 bg-stone-50 px-3 sm:px-6 gap-1 sm:gap-3 flex-shrink-0 text-xs font-bold overflow-x-auto no-scrollbar">
           <button
             onClick={() => setActiveTab('rubric')}
-            className={`flex items-center gap-2 py-3 border-b-2 transition ${
+            className={`flex items-center gap-1.5 sm:gap-2 py-2.5 sm:py-3 border-b-2 transition flex-shrink-0 whitespace-nowrap ${
               activeTab === 'rubric'
                 ? 'border-emerald-700 text-emerald-800 bg-white px-3 -mb-[1px] rounded-t-xl'
                 : 'border-transparent text-stone-500 hover:text-slate-800 px-2'
             }`}
           >
-            <ClipboardList className="w-4 h-4" />
-            <span>1. Penilaian Rubrik LKPD (0–3 Poin)</span>
+            <ClipboardList className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span className="sm:hidden">1. Rubrik LKPD</span>
+            <span className="hidden sm:inline">1. Penilaian Rubrik LKPD (0–3 Poin)</span>
           </button>
 
           <button
             onClick={() => setActiveTab('badges')}
-            className={`flex items-center gap-2 py-3 border-b-2 transition ${
+            className={`flex items-center gap-1.5 sm:gap-2 py-2.5 sm:py-3 border-b-2 transition flex-shrink-0 whitespace-nowrap ${
               activeTab === 'badges'
                 ? 'border-amber-600 text-amber-800 bg-white px-3 -mb-[1px] rounded-t-xl'
                 : 'border-transparent text-stone-500 hover:text-slate-800 px-2'
             }`}
           >
-            <Award className="w-4 h-4" />
-            <span>2. Pencatatan Lencana Kecepatan Zona</span>
+            <Award className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span className="sm:hidden">2. Lencana</span>
+            <span className="hidden sm:inline">2. Pencatatan Lencana Kecepatan Zona</span>
           </button>
 
           <button
             onClick={() => setActiveTab('session')}
-            className={`flex items-center gap-2 py-3 border-b-2 transition ${
+            className={`flex items-center gap-1.5 sm:gap-2 py-2.5 sm:py-3 border-b-2 transition flex-shrink-0 whitespace-nowrap ${
               activeTab === 'session'
                 ? 'border-indigo-600 text-indigo-800 bg-white px-3 -mb-[1px] rounded-t-xl'
                 : 'border-transparent text-stone-500 hover:text-slate-800 px-2'
             }`}
           >
-            <Users className="w-4 h-4" />
-            <span>3. Manajemen Tim & Reset</span>
+            <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span className="sm:hidden">3. Tim & Reset</span>
+            <span className="hidden sm:inline">3. Manajemen Tim & Reset</span>
           </button>
         </div>
 
