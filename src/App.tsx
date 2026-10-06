@@ -26,7 +26,7 @@ import { TeacherLoginScreen } from './components/auth/TeacherLoginScreen';
 import { TeacherLobbyScreen } from './components/dashboard/TeacherLobbyScreen';
 import { TeacherSessionCreator } from './components/dashboard/TeacherSessionCreator';
 import { StudentWaitingLobby } from './components/student/StudentWaitingLobby';
-import { getBackendUrl } from './config/api';
+import { getBackendUrl, supportsRealtimeSocket } from './config/api';
 import {
   Trophy,
   ChevronRight,
@@ -57,6 +57,47 @@ const getActivityTitle = (activity: ActivityData) => {
   return activity.cardType === 'Challenge'
     ? `Tantangan Lapangan - Petak #${activity.tileNumber}`
     : `Teka-Teki Analisis - Petak #${activity.tileNumber}`;
+};
+
+// Sesi yang tersimpan di server (bukan mode simulasi lokal)
+const isServerSession = (roomCode?: string | null) => !!roomCode && roomCode !== 'ECO-DEMO';
+
+const SYNC_INTERVAL_MS = 3000;
+const PRESENCE_INTERVAL_MS = 5000;
+
+/**
+ * Normalisasi data tim dari server (id UUID, kolom snake_case) menjadi Team frontend
+ * dengan id numerik = nomor kelompok, agar konsisten di guru & siswa.
+ * Urutan giliran lokal (hasil roda putar) dan skor lokal dipertahankan.
+ */
+const mergeServerTeams = (serverTeams: any[], prev: Team[], keepTileForTeamId?: number | null): Team[] => {
+  const merged: Team[] = serverTeams.map((st, idx) => {
+    const num = Number(st.teamNumber ?? st.team_number) || idx + 1;
+    const local = prev.find((p) => p.id === num);
+    const serverTile = Number(st.currentTile ?? st.current_tile ?? 0);
+    return {
+      ...(local || {}),
+      id: num,
+      teamNumber: num,
+      uuid: st.uuid || (typeof st.id === 'string' ? st.id : local?.uuid),
+      name: st.name || local?.name || `Kelompok ${num}`,
+      color: st.color || st.color_hex || local?.color || '#10b981',
+      badgeColor: st.badgeColor || st.badge_color || local?.badgeColor || 'bg-emerald-500',
+      avatarIcon: st.avatarIcon || st.avatar_icon || local?.avatarIcon || '🐾',
+      currentTile: keepTileForTeamId === num && local ? local.currentTile : serverTile,
+      completedActivities: local?.completedActivities ?? [],
+      badgePoints: local ? local.badgePoints : Number(st.badgePoints ?? st.badge_points ?? 0),
+      lkpdScore: local ? local.lkpdScore : Number(st.lkpdScore ?? st.total_lkpd_score ?? 0),
+      isReady: Boolean(st.isReady),
+    };
+  });
+
+  // Pertahankan urutan lokal (mis. urutan giliran hasil spin), tim baru di akhir
+  const orderOf = (t: Team) => {
+    const i = prev.findIndex((p) => p.id === t.id);
+    return i === -1 ? Number.MAX_SAFE_INTEGER : i;
+  };
+  return merged.sort((a, b) => orderOf(a) - orderOf(b) || a.id - b.id);
 };
 
 export const App: React.FC = () => {
@@ -141,9 +182,21 @@ export const App: React.FC = () => {
   const inspectedTile = BOARD_TILES.find((t) => t.id === inspectedTileId) || BOARD_TILES[0];
   const inspectedActivity = inspectedTile.activityCode ? ACTIVITIES[inspectedTile.activityCode] : null;
 
-  // Real-time WebSocket Synchronization via Socket.io
+  // Penanda gerakan pion lokal yang belum tersimpan di server (hindari pion "melompat balik" saat polling)
+  const pendingMoveRef = useRef<{ teamId: number; until: number } | null>(null);
+  const studentPhaseRef = useRef(studentGamePhase);
+  studentPhaseRef.current = studentGamePhase;
+
+  const applyServerTeams = (serverTeams: any[]) => {
+    if (!Array.isArray(serverTeams) || serverTeams.length === 0) return;
+    const pending = pendingMoveRef.current;
+    const keepTileFor = pending && pending.until > Date.now() ? pending.teamId : null;
+    setTeams((prev) => mergeServerTeams(serverTeams, prev, keepTileFor));
+  };
+
+  // Real-time WebSocket Synchronization via Socket.io (hanya jika server mendukung, mis. lokal/LAN)
   useEffect(() => {
-    if (!activeSession?.roomCode) return;
+    if (!activeSession?.roomCode || !supportsRealtimeSocket()) return;
 
     const backendUrl = getBackendUrl();
     const socket: Socket = io(backendUrl, {
@@ -159,27 +212,21 @@ export const App: React.FC = () => {
     });
 
     socket.on('session:sync_state', ({ session, teams: serverTeams }) => {
-      if (serverTeams && serverTeams.length > 0) {
-        setTeams(serverTeams);
-      }
+      applyServerTeams(serverTeams);
       if (session?.phase && session.phase !== 'lobby') {
         setStudentGamePhase('board');
-        setTeacherGamePhase(session.phase as any);
       }
     });
 
     // Otomatis buka papan permainan siswa saat guru menekan Mulai Permainan
-    socket.on('game:started', ({ phase }) => {
+    socket.on('game:started', () => {
       setStudentGamePhase('board');
-      setTeacherGamePhase((phase as any) || 'spin');
-      confetti({ particleCount: 90, spread: 80, origin: { y: 0.5 } });
     });
 
     socket.on('phase:updated', ({ phase }) => {
       if (phase && phase !== 'lobby') {
         setStudentGamePhase('board');
       }
-      setTeacherGamePhase(phase as any);
     });
 
     socket.on('pawn:moved', ({ teamId, targetTile }) => {
@@ -206,32 +253,78 @@ export const App: React.FC = () => {
     };
   }, [activeSession?.roomCode, isTeacherRoute, selectedTeamId]);
 
-  // Polling Fallback: Memastikan siswa otomatis masuk ke papan meskipun WebSocket terputus
+  // Sinkronisasi HTTP berkala (sumber kebenaran: database) — bekerja di Vercel Serverless
   useEffect(() => {
-    if (isTeacherRoute || !activeSession?.roomCode || studentGamePhase !== 'lobby') return;
+    const roomCode = activeSession?.roomCode;
+    if (!isServerSession(roomCode)) return;
+    if (isTeacherRoute && (isTeacherDemoMode || !teacherAuth)) return;
+
     const backendUrl = getBackendUrl();
-    const interval = setInterval(async () => {
+    let cancelled = false;
+
+    const tick = async () => {
       try {
-        const res = await fetch(`${backendUrl}/api/sessions/${encodeURIComponent(activeSession.roomCode)}`);
-        if (res.ok) {
-          const data = await res.json();
-          if (data.success && data.session) {
-            if (data.session.phase && data.session.phase !== 'lobby') {
-              setStudentGamePhase('board');
-              confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
-            }
-            if (data.teams && data.teams.length > 0) {
-              setTeams(data.teams);
-            }
+        const res = await fetch(`${backendUrl}/api/sessions/${encodeURIComponent(roomCode!)}`, { cache: 'no-store' });
+        if (!res.ok || cancelled) return;
+        const data = await res.json();
+        if (cancelled || !data.success) return;
+
+        applyServerTeams(data.teams);
+
+        // Siswa otomatis masuk papan begitu guru memulai permainan
+        if (!isTeacherRoute && data.session?.phase && data.session.phase !== 'lobby' && data.session.phase !== 'ended') {
+          if (studentPhaseRef.current === 'lobby') {
+            setStudentGamePhase('board');
+            confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
           }
         }
       } catch {
-        // silent fallback
+        // toleransi jaringan: coba lagi di interval berikutnya
       }
-    }, 2500);
+    };
 
-    return () => clearInterval(interval);
-  }, [isTeacherRoute, activeSession?.roomCode, studentGamePhase]);
+    tick();
+    const interval = setInterval(tick, SYNC_INTERVAL_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [isTeacherRoute, isTeacherDemoMode, teacherAuth?.id, activeSession?.roomCode]);
+
+  // Heartbeat status "Siap" kelompok siswa ke server, agar terlihat real-time di layar guru
+  useEffect(() => {
+    const roomCode = activeSession?.roomCode;
+    if (isTeacherRoute || !hasStudentSelectedTeam || !isServerSession(roomCode)) return;
+
+    const backendUrl = getBackendUrl();
+    const teamNumber = selectedTeamId;
+    const url = `${backendUrl}/api/sessions/${encodeURIComponent(roomCode!)}/teams/${teamNumber}/presence`;
+
+    const sendPresence = (ready: boolean) =>
+      fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ready }),
+        keepalive: true,
+      }).catch(() => undefined);
+
+    const sendLeaveBeacon = () => {
+      const payload = new Blob([JSON.stringify({ ready: false })], { type: 'application/json' });
+      if (!navigator.sendBeacon?.(url, payload)) {
+        sendPresence(false);
+      }
+    };
+
+    sendPresence(true);
+    const interval = setInterval(() => sendPresence(true), PRESENCE_INTERVAL_MS);
+    window.addEventListener('pagehide', sendLeaveBeacon);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('pagehide', sendLeaveBeacon);
+      sendPresence(false);
+    };
+  }, [isTeacherRoute, hasStudentSelectedTeam, selectedTeamId, activeSession?.roomCode]);
 
   // Siswa memasukkan kode kelas dan memvalidasi ke server backend
   const handleStudentJoinRoom = async (code: string) => {
@@ -251,7 +344,7 @@ export const App: React.FC = () => {
         setActiveSession(sessionData);
         sessionStorage.setItem('ecoplay_student_session', JSON.stringify(sessionData));
         if (data.teams && data.teams.length > 0) {
-          setTeams(data.teams);
+          setTeams(mergeServerTeams(data.teams, []));
         }
         if (data.session.phase && data.session.phase !== 'lobby') {
           setStudentGamePhase('board');
@@ -300,6 +393,14 @@ export const App: React.FC = () => {
     setTeacherGamePhase('board');
     setStudentGamePhase('board');
     confetti({ particleCount: 100, spread: 80, origin: { y: 0.5 } });
+
+    if (isServerSession(activeSession?.roomCode)) {
+      fetch(`${getBackendUrl()}/api/sessions/${encodeURIComponent(activeSession!.roomCode)}/phase`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phase: 'board' }),
+      }).catch(() => undefined);
+    }
   };
 
   // Guru memulai permainan dari ruang tunggu proyektor
@@ -367,7 +468,7 @@ export const App: React.FC = () => {
         if (createRes.ok && createData.success && createData.session) {
           currentSession = createData.session;
           if (createData.teams && createData.teams.length > 0) {
-            setTeams(createData.teams);
+            setTeams(mergeServerTeams(createData.teams, []));
           }
         }
       }
@@ -387,7 +488,7 @@ export const App: React.FC = () => {
           const teamsRes = await fetch(`${backendUrl}/api/sessions/${encodeURIComponent(formatted.roomCode)}/teams`);
           const teamsData = await teamsRes.json();
           if (teamsRes.ok && teamsData.success && Array.isArray(teamsData.teams)) {
-            setTeams(teamsData.teams);
+            setTeams(mergeServerTeams(teamsData.teams, []));
           }
         } catch {
           // toleransi jika gagal ambil tim
@@ -459,7 +560,7 @@ export const App: React.FC = () => {
         if (res.ok && data.success && (data.session?.roomCode || data.session?.room_code)) {
           roomCode = data.session.roomCode || data.session.room_code;
           if (data.teams && data.teams.length > 0) {
-            setTeams(data.teams);
+            setTeams(mergeServerTeams(data.teams, []));
           }
         }
       } catch (err) {
@@ -491,31 +592,40 @@ export const App: React.FC = () => {
 
   // Gerakkan pion tim aktif
   const handleMovePawn = (delta: number) => {
+    const team = teams.find((t) => t.id === selectedTeamId);
+    if (!team) return;
+    const nextTile = Math.max(0, Math.min(50, team.currentTile + delta));
+    if (nextTile === team.currentTile) return;
+
+    // Cek jika tiba di petak lencana
+    if ([10, 22, 38, 50].includes(nextTile)) {
+      confetti({ particleCount: 70, spread: 60, origin: { y: 0.5 } });
+    }
+
     setTeams((prevTeams) =>
-      prevTeams.map((team) => {
-        if (team.id === selectedTeamId) {
-          const nextTile = Math.max(0, Math.min(50, team.currentTile + delta));
-
-          // Cek jika tiba di petak lencana
-          if ([10, 22, 38, 50].includes(nextTile) && nextTile !== team.currentTile) {
-            confetti({ particleCount: 70, spread: 60, origin: { y: 0.5 } });
-          }
-
-          if (socketRef.current && activeSession?.roomCode) {
-            socketRef.current.emit('pawn:move', {
-              roomCode: activeSession.roomCode,
-              teamId: String(selectedTeamId),
-              targetTile: nextTile,
-              delta,
-            });
-          }
-
-          setInspectedTileId(nextTile);
-          return { ...team, currentTile: nextTile };
-        }
-        return team;
-      })
+      prevTeams.map((t) => (t.id === selectedTeamId ? { ...t, currentTile: nextTile } : t))
     );
+    setInspectedTileId(nextTile);
+
+    const roomCode = activeSession?.roomCode;
+    if (socketRef.current && roomCode) {
+      socketRef.current.emit('pawn:move', {
+        roomCode,
+        teamId: String(selectedTeamId),
+        targetTile: nextTile,
+        delta,
+      });
+    }
+
+    // Simpan posisi pion ke server agar layar guru & perangkat lain ikut bergerak
+    if (isServerSession(roomCode)) {
+      pendingMoveRef.current = { teamId: selectedTeamId, until: Date.now() + 5000 };
+      fetch(`${getBackendUrl()}/api/sessions/${encodeURIComponent(roomCode!)}/teams/${selectedTeamId}/pawn`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetTile: nextTile }),
+      }).catch(() => undefined);
+    }
   };
 
   // Loncat ke petak aktivitas berikutnya
@@ -629,10 +739,37 @@ export const App: React.FC = () => {
     setShowTeacherDashboard(false);
   };
 
+  // Ambil ulang daftar tim terbaru dari server
+  const refreshServerTeams = async (roomCode: string) => {
+    try {
+      const res = await fetch(`${getBackendUrl()}/api/sessions/${encodeURIComponent(roomCode)}/teams`, { cache: 'no-store' });
+      const data = await res.json();
+      if (res.ok && data.success) applyServerTeams(data.teams);
+    } catch {
+      // abaikan, polling berikutnya akan menyinkronkan
+    }
+  };
+
   // Guru menambah kelompok baru
-  const handleAddTeam = () => {
+  const handleAddTeam = async () => {
+    const roomCode = activeSession?.roomCode;
+    if (isTeacherRoute && isServerSession(roomCode) && !isTeacherDemoMode) {
+      try {
+        const res = await fetch(`${getBackendUrl()}/api/sessions/${encodeURIComponent(roomCode!)}/teams`, {
+          method: 'POST',
+        });
+        if (res.ok) {
+          confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
+          await refreshServerTeams(roomCode!);
+          return;
+        }
+      } catch {
+        // fallback ke mode lokal di bawah
+      }
+    }
+
     setTeams((prev) => {
-      const nextId = prev.length + 1;
+      const nextId = prev.reduce((max, t) => Math.max(max, t.id), 0) + 1;
       const preset = TEAM_PRESETS[(nextId - 1) % TEAM_PRESETS.length];
       const newTeam: Team = {
         id: nextId,
@@ -645,28 +782,55 @@ export const App: React.FC = () => {
         lkpdScore: 0,
         avatarIcon: preset.icon,
       };
-      confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
       return [...prev, newTeam];
     });
+    confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
   };
 
   // Guru menghapus kelompok
-  const handleRemoveTeam = (id: number) => {
-    setTeams((prev) => {
-      if (prev.length <= 2) {
-        alert('Minimal harus ada 2 kelompok dalam permainan.');
-        return prev;
+  const handleRemoveTeam = async (id: number) => {
+    if (teams.length <= 2) {
+      alert('Minimal harus ada 2 kelompok dalam permainan.');
+      return;
+    }
+
+    const remaining = teams.filter((t) => t.id !== id);
+    setTeams(remaining);
+    if (selectedTeamId === id && remaining[0]) {
+      setSelectedTeamId(remaining[0].id);
+    }
+
+    const roomCode = activeSession?.roomCode;
+    if (isTeacherRoute && isServerSession(roomCode) && !isTeacherDemoMode) {
+      try {
+        const res = await fetch(`${getBackendUrl()}/api/sessions/${encodeURIComponent(roomCode!)}/teams/${id}`, {
+          method: 'DELETE',
+        });
+        const data = await res.json();
+        if (res.ok && data.success) applyServerTeams(data.teams);
+      } catch {
+        // polling berikutnya akan menyinkronkan
       }
-      const updated = prev.filter((t) => t.id !== id);
-      if (selectedTeamId === id) {
-        setSelectedTeamId(updated[0].id);
-      }
-      return updated;
-    });
+    }
   };
 
   // Guru mereset kelompok ke 3 kelompok default
-  const handleResetToDefaultTeams = () => {
+  const handleResetToDefaultTeams = async () => {
+    const roomCode = activeSession?.roomCode;
+    if (isTeacherRoute && isServerSession(roomCode) && !isTeacherDemoMode) {
+      const extras = teams.filter((t) => t.id > 3);
+      setTeams((prev) => prev.filter((t) => t.id <= 3));
+      setSelectedTeamId(1);
+      for (const t of extras) {
+        try {
+          await fetch(`${getBackendUrl()}/api/sessions/${encodeURIComponent(roomCode!)}/teams/${t.id}`, { method: 'DELETE' });
+        } catch {
+          // lanjutkan
+        }
+      }
+      await refreshServerTeams(roomCode!);
+      return;
+    }
     setTeams(INITIAL_TEAMS);
     setSelectedTeamId(INITIAL_TEAMS[0].id);
   };
@@ -689,21 +853,21 @@ export const App: React.FC = () => {
   return (
     <div className="fixed inset-0 w-full h-full h-[100dvh] bg-[#f8faf9] text-slate-800 flex flex-col font-sans select-none antialiased overflow-hidden">
       {/* 1. TOP NAVBAR (CALMING, MINIMALIST & CLEAN) */}
-      <header className="sticky top-0 w-full h-13 sm:h-16 border-b border-stone-200/80 bg-white/95 backdrop-blur-md px-3 sm:px-6 flex items-center justify-between flex-shrink-0 z-40 select-none">
+      <header className="w-full h-14 sm:h-16 border-b border-stone-200/80 bg-white/95 backdrop-blur-md px-3 sm:px-6 flex items-center justify-between gap-2 flex-shrink-0 z-40 select-none">
         {/* Brand */}
-        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-          <h1 className="text-sm sm:text-lg font-extrabold tracking-tight text-emerald-800 flex-shrink-0">
+        <div className="flex items-center gap-2 min-w-0">
+          <h1 className="text-base sm:text-lg font-extrabold tracking-tight text-emerald-800 flex-shrink-0">
             Ecoplay
           </h1>
           {isTeacherRoute && (
-            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 truncate max-w-[120px] sm:max-w-none">
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 truncate">
               Guru {activeSession ? `• ${activeSession.roomCode}` : ''}
             </span>
           )}
         </div>
 
         {/* RIGHT ACTIONS BERDASARKAN ROUTE */}
-        <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+        <div className="flex items-center gap-2 flex-shrink-0">
           {isTeacherRoute ? (
             /* --- KONTROL NAVIGASI GURU (/teachers) --- */
             <>
@@ -887,7 +1051,7 @@ export const App: React.FC = () => {
                       title="Tambah Kelompok Baru"
                     >
                       <UserPlus className="w-3 h-3" />
-                      <span>+ Tim</span>
+                      <span>Tim</span>
                     </button>
                   </div>
 

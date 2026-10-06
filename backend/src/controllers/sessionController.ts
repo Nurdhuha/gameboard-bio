@@ -32,10 +32,15 @@ export function formatSession(s: any) {
   };
 }
 
+export const PRESENCE_TTL_MS = 15000;
+
 export function formatTeam(t: any) {
   if (!t) return t;
+  const lastSeen = t.last_seen_at ? new Date(t.last_seen_at).getTime() : 0;
+  const isOnline = lastSeen > 0 && Date.now() - lastSeen < PRESENCE_TTL_MS;
   return {
     ...t,
+    uuid: t.id,
     avatarIcon: t.avatar_icon,
     color: t.color_hex,
     badgeColor: t.badge_color,
@@ -43,6 +48,8 @@ export function formatTeam(t: any) {
     badgePoints: t.badge_points,
     lkpdScore: t.total_lkpd_score,
     teamNumber: t.team_number,
+    completedActivities: [],
+    isReady: Boolean(t.is_ready) && isOnline,
   };
 }
 

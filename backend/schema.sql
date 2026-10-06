@@ -41,6 +41,8 @@ CREATE TABLE IF NOT EXISTS teams (
     current_tile INT DEFAULT 0 CHECK (current_tile >= 0 AND current_tile <= 50),
     badge_points INT DEFAULT 0,
     total_lkpd_score INT DEFAULT 0,
+    is_ready BOOLEAN DEFAULT FALSE,
+    last_seen_at TIMESTAMP WITH TIME ZONE,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT unique_team_per_session UNIQUE(session_id, team_number)
 );

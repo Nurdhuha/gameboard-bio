@@ -8,7 +8,7 @@ import {
   endSession,
   getTeacherSessions,
 } from '../controllers/sessionController';
-import { getTeams, addTeam, updatePawn } from '../controllers/teamController';
+import { getTeams, addTeam, updatePawn, updateTeamPresence, removeTeam } from '../controllers/teamController';
 import {
   getSubmissions,
   submitLkpd,
@@ -34,6 +34,8 @@ router.post('/:roomCode/end', endSession);
 // Tim & Pion
 router.get('/:roomCode/teams', getTeams);
 router.post('/:roomCode/teams', addTeam);
+router.post('/:roomCode/teams/:teamNumber/presence', updateTeamPresence);
+router.delete('/:roomCode/teams/:teamNumber', removeTeam);
 router.patch('/:roomCode/teams/:teamId/pawn', updatePawn);
 
 // LKPD & Penilaian

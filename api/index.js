@@ -174,18 +174,79 @@ function formatSession(s) {
     endedAt: s.ended_at
   };
 }
+var PRESENCE_TTL_MS = 15e3;
 function formatTeam(t) {
   if (!t) return t;
+  const lastSeen = t.last_seen_at ? new Date(t.last_seen_at).getTime() : 0;
+  const isOnline = lastSeen > 0 && Date.now() - lastSeen < PRESENCE_TTL_MS;
   return {
     ...t,
+    uuid: t.id,
     avatarIcon: t.avatar_icon,
     color: t.color_hex,
     badgeColor: t.badge_color,
     currentTile: t.current_tile,
     badgePoints: t.badge_points,
     lkpdScore: t.total_lkpd_score,
-    teamNumber: t.team_number
+    teamNumber: t.team_number,
+    completedActivities: [],
+    isReady: Boolean(t.is_ready) && isOnline
   };
+}
+var presenceColumnsPromise = null;
+function ensureTeamPresenceColumns() {
+  if (!presenceColumnsPromise) {
+    presenceColumnsPromise = db.raw(
+      "ALTER TABLE teams ADD COLUMN IF NOT EXISTS is_ready BOOLEAN DEFAULT FALSE, ADD COLUMN IF NOT EXISTS last_seen_at TIMESTAMP WITH TIME ZONE"
+    ).catch((err) => {
+      presenceColumnsPromise = null;
+      throw err;
+    });
+  }
+  return presenceColumnsPromise;
+}
+async function findSessionByCode(roomCode) {
+  const rawCode = String(roomCode || "").toUpperCase().trim();
+  const strippedCode = rawCode.replace(/[^A-Z0-9]/g, "");
+  return db("game_sessions").where({ room_code: rawCode }).orWhereRaw("UPPER(REPLACE(room_code, '-', '')) = ?", [strippedCode]).first();
+}
+async function updateTeamPresence(req, res) {
+  try {
+    await ensureTeamPresenceColumns();
+    const session = await findSessionByCode(req.params.roomCode);
+    if (!session) {
+      res.status(404).json({ success: false, message: "Sesi kelas tidak ditemukan." });
+      return;
+    }
+    const ready = req.body?.ready !== false;
+    const [team] = await db("teams").where({ session_id: session.id, team_number: Number(req.params.teamNumber) }).update({ is_ready: ready, last_seen_at: /* @__PURE__ */ new Date() }).returning("*");
+    if (!team) {
+      res.status(404).json({ success: false, message: "Kelompok tidak ditemukan." });
+      return;
+    }
+    res.json({ success: true, team: formatTeam(team) });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message || "Gagal memperbarui status kelompok." });
+  }
+}
+async function removeTeam(req, res) {
+  try {
+    const session = await findSessionByCode(req.params.roomCode);
+    if (!session) {
+      res.status(404).json({ success: false, message: "Sesi kelas tidak ditemukan." });
+      return;
+    }
+    const count = await db("teams").where({ session_id: session.id }).count("id as c").first();
+    if (Number(count?.c || 0) <= 2) {
+      res.status(400).json({ success: false, message: "Minimal harus ada 2 kelompok dalam permainan." });
+      return;
+    }
+    await db("teams").where({ session_id: session.id, team_number: Number(req.params.teamNumber) }).delete();
+    const teams = await db("teams").where({ session_id: session.id }).orderBy("team_number", "asc");
+    res.json({ success: true, teams: teams.map(formatTeam) });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message || "Gagal menghapus kelompok." });
+  }
 }
 async function createSession(req, res) {
   try {
@@ -392,7 +453,7 @@ async function addTeam(req, res) {
       return;
     }
     const currentTeams = await db("teams").where({ session_id: session.id });
-    const nextNumber = currentTeams.length + 1;
+    const nextNumber = currentTeams.reduce((max, t) => Math.max(max, Number(t.team_number) || 0), 0) + 1;
     const presetIdx = (nextNumber - 4) % EXTRA_PRESETS.length;
     const preset = nextNumber <= 3 ? { name: `Tim ${nextNumber}`, avatar_icon: "\u{1F43E}", color_hex: "#6366f1", badge_color: "bg-indigo-500" } : EXTRA_PRESETS[presetIdx >= 0 ? presetIdx : 0];
     const [newTeam] = await db("teams").insert({
@@ -758,6 +819,8 @@ router2.post("/:roomCode/reset", resetSession);
 router2.post("/:roomCode/end", endSession);
 router2.get("/:roomCode/teams", getTeams);
 router2.post("/:roomCode/teams", addTeam);
+router2.post("/:roomCode/teams/:teamNumber/presence", updateTeamPresence);
+router2.delete("/:roomCode/teams/:teamNumber", removeTeam);
 router2.patch("/:roomCode/teams/:teamId/pawn", updatePawn);
 router2.get("/:roomCode/submissions", getSubmissions);
 router2.post("/:roomCode/submissions/lkpd", submitLkpd);

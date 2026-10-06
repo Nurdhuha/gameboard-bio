@@ -50,7 +50,7 @@ export async function addTeam(req: Request, res: Response): Promise<void> {
     }
 
     const currentTeams = await db('teams').where({ session_id: session.id });
-    const nextNumber = currentTeams.length + 1;
+    const nextNumber = currentTeams.reduce((max: number, t: any) => Math.max(max, Number(t.team_number) || 0), 0) + 1;
 
     const presetIdx = (nextNumber - 4) % EXTRA_PRESETS.length;
     const preset = nextNumber <= 3
@@ -121,5 +121,73 @@ export async function updatePawn(req: Request, res: Response): Promise<void> {
     res.json({ success: true, message: 'Posisi pion berhasil diperbarui.', team: formatTeam(updatedTeam) });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message || 'Gagal memperbarui posisi pion.' });
+  }
+}
+
+let presenceColumnsPromise: Promise<unknown> | null = null;
+function ensureTeamPresenceColumns() {
+  if (!presenceColumnsPromise) {
+    presenceColumnsPromise = db
+      .raw(
+        'ALTER TABLE teams ADD COLUMN IF NOT EXISTS is_ready BOOLEAN DEFAULT FALSE, ADD COLUMN IF NOT EXISTS last_seen_at TIMESTAMP WITH TIME ZONE'
+      )
+      .catch((err) => {
+        presenceColumnsPromise = null;
+        throw err;
+      });
+  }
+  return presenceColumnsPromise;
+}
+
+async function findSessionByCode(roomCode: unknown) {
+  const rawCode = String(roomCode || '').toUpperCase().trim();
+  const strippedCode = rawCode.replace(/[^A-Z0-9]/g, '');
+  return db('game_sessions')
+    .where({ room_code: rawCode })
+    .orWhereRaw("UPPER(REPLACE(room_code, '-', '')) = ?", [strippedCode])
+    .first();
+}
+
+// Heartbeat status kelompok siswa (siap / tidak) — berbasis HTTP agar bekerja di serverless
+export async function updateTeamPresence(req: Request, res: Response): Promise<void> {
+  try {
+    await ensureTeamPresenceColumns();
+    const session = await findSessionByCode(req.params.roomCode);
+    if (!session) {
+      res.status(404).json({ success: false, message: 'Sesi kelas tidak ditemukan.' });
+      return;
+    }
+    const ready = req.body?.ready !== false;
+    const [team] = await db('teams')
+      .where({ session_id: session.id, team_number: Number(req.params.teamNumber) })
+      .update({ is_ready: ready, last_seen_at: new Date() })
+      .returning('*');
+    if (!team) {
+      res.status(404).json({ success: false, message: 'Kelompok tidak ditemukan.' });
+      return;
+    }
+    res.json({ success: true, team: formatTeam(team) });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message || 'Gagal memperbarui status kelompok.' });
+  }
+}
+
+export async function removeTeam(req: Request, res: Response): Promise<void> {
+  try {
+    const session = await findSessionByCode(req.params.roomCode);
+    if (!session) {
+      res.status(404).json({ success: false, message: 'Sesi kelas tidak ditemukan.' });
+      return;
+    }
+    const count: any = await db('teams').where({ session_id: session.id }).count('id as c').first();
+    if (Number(count?.c || 0) <= 2) {
+      res.status(400).json({ success: false, message: 'Minimal harus ada 2 kelompok dalam permainan.' });
+      return;
+    }
+    await db('teams').where({ session_id: session.id, team_number: Number(req.params.teamNumber) }).delete();
+    const teams = await db('teams').where({ session_id: session.id }).orderBy('team_number', 'asc');
+    res.json({ success: true, teams: teams.map(formatTeam) });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message || 'Gagal menghapus kelompok.' });
   }
 }

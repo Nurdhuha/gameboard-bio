@@ -26,3 +26,16 @@ export const getBackendUrl = (): string => {
 
   return 'http://localhost:5000';
 };
+
+/**
+ * Vercel Serverless tidak mendukung koneksi WebSocket (Socket.io) yang persisten.
+ * Pada deployment tersebut sinkronisasi guru ↔ siswa sepenuhnya memakai HTTP polling.
+ */
+export const supportsRealtimeSocket = (): boolean => {
+  if (import.meta.env.VITE_BACKEND_URL) return true;
+  if (typeof window === 'undefined') return true;
+  const { hostname } = window.location;
+  const isLocal =
+    hostname.includes('localhost') || hostname.includes('127.0.0.1') || hostname.startsWith('192.168.');
+  return isLocal;
+};

@@ -45,39 +45,37 @@ export const TeacherLobbyScreen: React.FC<TeacherLobbyScreenProps> = ({
 
   return (
     <div className="min-h-full w-full flex-1 flex flex-col justify-start p-3 sm:p-6 lg:p-8 bg-biology-pattern text-slate-800 space-y-4 sm:space-y-6">
-      {/* Top Header Bar: Bersih, hanya nama guru dan aksi */}
-      <div className="w-full max-w-4xl mx-auto flex items-center justify-between border-b border-stone-200/80 pb-3 gap-3">
-        <div className="flex items-center gap-2.5 min-w-0 flex-1">
-          <div className="p-2 bg-emerald-700 text-white rounded-xl shadow-xs flex-shrink-0">
-            <Monitor className="w-4 h-4 sm:w-5 sm:h-5" />
+      {/* Sub-Header Ringkas: Identitas Guru & Aksi Cepat (Terintegrasi rapi dengan Navbar Utama) */}
+      <div className="w-full max-w-3xl mx-auto flex items-center justify-between px-1 gap-2 pt-1">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="p-1.5 bg-emerald-700 text-white rounded-lg shadow-xs flex-shrink-0">
+            <Monitor className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </div>
-          <div className="min-w-0 flex-1">
-            <h1 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight truncate">
-              {teacherName || 'Ruang Tunggu Guru'}
-            </h1>
-          </div>
+          <span className="text-xs sm:text-sm font-semibold text-stone-600 truncate">
+            Ruang Kelas: <strong className="text-slate-900 font-bold">{teacherName || 'Bapak/Ibu Guru'}</strong>
+          </span>
         </div>
 
-        {/* Action Buttons */}
+        {/* Action Buttons Cepat */}
         <div className="flex items-center gap-2 flex-shrink-0">
           {onNewSession && (
             <button
               onClick={onNewSession}
               className="px-2.5 sm:px-3 py-1.5 rounded-xl border border-stone-200 bg-white hover:bg-emerald-50 text-emerald-800 text-xs font-semibold flex items-center gap-1.5 transition shadow-xs"
-              title="Buat sesi baru"
+              title="Buat sesi ruang kelas baru"
             >
               <Plus className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Sesi Baru</span>
+              <span className="hidden sm:inline">Sesi Baru</span>
             </button>
           )}
 
           <button
             onClick={onLogout}
             className="px-2.5 sm:px-3 py-1.5 rounded-xl border border-stone-200 bg-white hover:bg-rose-50 text-stone-600 hover:text-rose-600 text-xs font-semibold flex items-center gap-1.5 transition shadow-xs"
-            title="Keluar"
+            title="Keluar dari akun guru"
           >
             <LogOut className="w-3.5 h-3.5" />
-            <span>Keluar</span>
+            <span className="hidden sm:inline">Keluar</span>
           </button>
         </div>
       </div>
@@ -119,7 +117,9 @@ export const TeacherLobbyScreen: React.FC<TeacherLobbyScreenProps> = ({
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-1.5 text-xs sm:text-sm font-extrabold text-slate-800">
               <Users className="w-3.5 h-3.5 text-emerald-700" />
-              <span>Kelompok Terhubung ({teams.length})</span>
+              <span>
+                Kelompok Terhubung ({teams.filter((t) => t.isReady).length}/{teams.length} Siap)
+              </span>
             </div>
             <button
               onClick={() => {
@@ -134,37 +134,56 @@ export const TeacherLobbyScreen: React.FC<TeacherLobbyScreenProps> = ({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
-            {teams.map((team) => (
-              <div
-                key={team.id}
-                className="bg-white/95 border border-stone-200/90 rounded-xl sm:rounded-2xl p-3 shadow-xs flex items-center justify-between text-left transition hover:shadow-sm"
-              >
-                <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                  <div className="w-9 h-9 rounded-xl bg-stone-50 border border-stone-100 flex items-center justify-center text-xl shadow-inner flex-shrink-0">
-                    {team.avatarIcon}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h4 className="text-xs sm:text-sm font-bold text-slate-900 truncate">
-                      {team.name}
-                    </h4>
-                    <div className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700 mt-0.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
-                      <span>Siap</span>
+            {teams.map((team, idx) => {
+              const teamNum = Number(team.teamNumber) || (typeof team.id === 'number' ? team.id : idx + 1);
+              const isReady = Boolean(team.isReady);
+
+              return (
+                <div
+                  key={team.id || `lobby-team-${teamNum}`}
+                  className={`bg-white/95 border rounded-xl sm:rounded-2xl p-3 shadow-xs flex items-center justify-between text-left transition hover:shadow-sm ${
+                    isReady ? 'border-emerald-400/90 ring-1 ring-emerald-200/80' : 'border-stone-200/90'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                    <div className="w-9 h-9 rounded-xl bg-stone-50 border border-stone-100 flex items-center justify-center text-xl shadow-inner flex-shrink-0">
+                      {team.avatarIcon || '🐾'}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h4 className="text-xs sm:text-sm font-bold text-slate-900 truncate">
+                        {team.name}
+                      </h4>
+                      <div className="flex items-center gap-1.5 text-[11px] font-semibold mt-0.5">
+                        {isReady ? (
+                          <>
+                            <span className="relative flex h-2 w-2">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                            </span>
+                            <span className="text-emerald-700 font-bold">Siap</span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="w-2 h-2 rounded-full bg-stone-300 inline-block" />
+                            <span className="text-stone-400 font-medium">Menunggu Siswa</span>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {teams.length > 3 && (
-                  <button
-                    onClick={() => onRemoveTeam(team.id)}
-                    className="p-1.5 text-stone-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition ml-2 flex-shrink-0"
-                    title="Hapus kelompok"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </div>
-            ))}
+                  {teams.length > 3 && (
+                    <button
+                      onClick={() => onRemoveTeam(team.id)}
+                      className="p-1.5 text-stone-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition ml-2 flex-shrink-0"
+                      title="Hapus kelompok"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
 

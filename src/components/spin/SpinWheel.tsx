@@ -93,7 +93,13 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
 
       // Update urutan giliran & tim yang tersisa
       setTurnOrder((prev) => [...prev, winningTeam]);
-      setRemainingTeams((prev) => prev.filter((t) => t.id !== winningTeam.id));
+      setRemainingTeams((prev) =>
+        prev.filter((t) =>
+          t.teamNumber && winningTeam.teamNumber
+            ? t.teamNumber !== winningTeam.teamNumber
+            : t.id !== winningTeam.id
+        )
+      );
     }, 4100);
   };
 
@@ -160,56 +166,80 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
                     const midA = startA + sliceAngle / 2;
                     const textPos = polarToCartesian(200, 200, 120, midA);
 
-                    // Warna pastel calming untuk juring roda
-                    const colors = [
-                      '#fef2f2', // Soft Rose
-                      '#eff6ff', // Soft Blue
-                      '#f0fdf4', // Soft Emerald
-                      '#fffbeb', // Soft Amber
-                      '#faf5ff', // Soft Purple
-                      '#ecfeff', // Soft Cyan
+                    // Warna pastel cerah & solid untuk setiap kelompok (tidak akan pernah hitam)
+                    const sliceColors = [
+                      '#fee2e2', // Soft Red (Harimau)
+                      '#dbeafe', // Soft Blue (Elang)
+                      '#dcfce7', // Soft Emerald (Komodo)
+                      '#fef3c7', // Soft Amber
+                      '#f3e8ff', // Soft Purple
+                      '#cffafe', // Soft Cyan
+                      '#ffedd5', // Soft Orange
+                      '#fce7f3', // Soft Pink
                     ];
-                    const borderColors = [
-                      '#fca5a5',
-                      '#93c5fd',
-                      '#86efac',
-                      '#fde047',
-                      '#d8b4fe',
-                      '#a5f3fc',
+                    const sliceBorders = [
+                      '#f87171',
+                      '#60a5fa',
+                      '#4ade80',
+                      '#fbbf24',
+                      '#c084fc',
+                      '#22d3ee',
+                      '#fb923c',
+                      '#f472b6',
                     ];
 
+                    const teamNum = Number(team.teamNumber) || (typeof team.id === 'number' ? team.id : idx + 1);
+                    const colorIdx = Math.abs((teamNum - 1) % sliceColors.length);
+                    const fillColor = sliceColors[colorIdx] || '#dcfce7';
+                    const strokeColor = sliceBorders[colorIdx] || '#4ade80';
+                    const animalName = team.name?.match(/\(([^)]+)\)/)?.[1] || '';
+
                     return (
-                      <g key={team.id}>
+                      <g key={team.id || `wheel-team-${teamNum}`}>
                         {/* Slice */}
                         <path
                           d={createPieSlice(200, 200, 195, startA, endA)}
-                          fill={colors[team.id % colors.length]}
-                          stroke={borderColors[team.id % borderColors.length]}
-                          strokeWidth="2"
+                          fill={fillColor}
+                          stroke={strokeColor}
+                          strokeWidth="2.5"
                         />
                         {/* Team Avatar & Name in Slice */}
                         <g transform={`translate(${textPos.x}, ${textPos.y}) rotate(${midA})`}>
                           <text
                             x="0"
-                            y="-6"
+                            y="-8"
                             textAnchor="middle"
-                            fontSize="20"
+                            fontSize="22"
                             className="pointer-events-none"
                           >
-                            {team.avatarIcon}
+                            {team.avatarIcon || '🐾'}
                           </text>
                           <text
                             x="0"
-                            y="14"
+                            y="11"
                             textAnchor="middle"
-                            fill="#1e293b"
+                            fill="#0f172a"
                             fontSize="11"
-                            fontWeight="700"
+                            fontWeight="800"
                             fontFamily="Lexend, sans-serif"
                             className="pointer-events-none"
                           >
-                            Kel. {team.id}
+                            Kel. {teamNum}
                           </text>
+                          {animalName && (
+                            <text
+                              x="0"
+                              y="23"
+                              textAnchor="middle"
+                              fill="#475569"
+                              fontSize="9"
+                              fontWeight="700"
+                              fontFamily="Lexend, sans-serif"
+                              className="pointer-events-none"
+                            >
+                              {animalName}
+                            </text>
+                          )}
                         </g>
                       </g>
                     );
@@ -309,7 +339,12 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
           <div className="space-y-2">
             {teams.map((t, idx) => {
               const team = turnOrder[idx];
-              const isCurrentNew = selectedWinner?.id === team?.id;
+              const isCurrentNew =
+                team &&
+                selectedWinner &&
+                (team.teamNumber && selectedWinner.teamNumber
+                  ? team.teamNumber === selectedWinner.teamNumber
+                  : team.id === selectedWinner.id);
 
               return (
                 <div

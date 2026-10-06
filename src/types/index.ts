@@ -55,6 +55,8 @@ export interface Team {
   lkpdScore: number;       // from rubric 0-3
   avatarIcon: string;
   teamNumber?: number;
+  uuid?: string;           // id baris tim di database server
+  isReady?: boolean;       // status siap dari perangkat siswa (sinkron server)
   hasFinishedPreTest?: boolean;
   hasFinishedPostTest?: boolean;
 }
