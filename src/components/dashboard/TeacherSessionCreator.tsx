@@ -36,7 +36,6 @@ export const TeacherSessionCreator: React.FC<TeacherSessionCreatorProps> = ({
               <h2 className="text-sm sm:text-lg font-bold text-slate-900 truncate max-w-[160px] xs:max-w-[200px] sm:max-w-none">
                 {teacherName || 'Pendidik'}
               </h2>
-              <p className="text-xs text-stone-500">Pendidik</p>
             </div>
           </div>
 

@@ -34,8 +34,7 @@ export const StudentWaitingLobby: React.FC<StudentWaitingLobbyProps> = ({
       {/* Top Header Badge */}
       <div className="w-full max-w-md flex items-center justify-between pt-2">
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-900 font-semibold text-xs">
-          <span>{className}</span>
-          <span className="text-emerald-400">•</span>
+          <span>Kode Kelas:</span>
           <span className="font-mono font-bold tracking-wider">{roomCode}</span>
         </div>
 

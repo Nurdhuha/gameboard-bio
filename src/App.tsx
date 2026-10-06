@@ -359,8 +359,8 @@ export const App: React.FC = () => {
             Authorization: `Bearer ${authToken}`,
           },
           body: JSON.stringify({
-            className: 'Kelas X Biologi & Sains',
-            academicYear: '2026/2027',
+            className: 'Ecoplay',
+            academicYear: '',
           }),
         });
         const createData = await createRes.json();
@@ -376,8 +376,8 @@ export const App: React.FC = () => {
       if (currentSession) {
         const formatted = {
           roomCode: currentSession.roomCode || currentSession.room_code,
-          className: currentSession.className || currentSession.class_name || 'Kelas X Biologi & Sains',
-          academicYear: currentSession.academicYear || currentSession.academic_year || '2026/2027',
+          className: currentSession.className || currentSession.class_name || 'Ecoplay',
+          academicYear: currentSession.academicYear || currentSession.academic_year || '',
         };
         setActiveSession(formatted);
         localStorage.setItem('ecoplay_teacher_active_session', JSON.stringify(formatted));
@@ -401,8 +401,8 @@ export const App: React.FC = () => {
       if (!activeSession) {
         const fallbackSession = {
           roomCode: `ECO-${Math.floor(100 + Math.random() * 900)}`,
-          className: 'Kelas X Biologi',
-          academicYear: '2026/2027',
+          className: 'Ecoplay',
+          academicYear: '',
         };
         setActiveSession(fallbackSession);
         localStorage.setItem('ecoplay_teacher_active_session', JSON.stringify(fallbackSession));
