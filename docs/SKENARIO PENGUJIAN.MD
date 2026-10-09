@@ -116,7 +116,7 @@ flowchart TD
 | 5.1 | Refresh Saat di Papan | Saat siswa berada di Petak #2 atau #3, tekan **F5 / Refresh** di peramban siswa | • Siswa **langsung kembali ke Papan Permainan**.<br>• Posisi pion tetap di petak terakhir.<br>• Jawaban LKPD yang telah dikirim tetap tersimpan.<br>• **TIDAK** kembali meminta kode kelas atau memilih kelompok. | [x] Lolos |
 | 5.2 | Tutup & Buka Ulang Tab | Tutup tab siswa sepenuhnya, buka tab baru, akses `http://localhost:3000/` | Sesi pulih otomatis dari `localStorage` ke posisi papan terakhir. | [x] Lolos |
 | 5.3 | Pengujian Tombol "Ganti Tim" | Klik tombol identitas kelompok di navbar atas siswa | Siswa kembali ke layar pemilihan tim (kode kelas tetap tersimpan). | [x] Lolos |
-| 5.4 | Pengujian Tombol "Ganti Kode" | Pada layar pemilihan tim, klik tombol "Ganti Kode" | Seluruh cache sesi siswa dibersihkan, siswa kembali ke input kode kelas awal. | [x] Lolos |
+| 5.4 | Pengujian Proteksi Kode Kelas & Mode Simulasi | Pada sesi kelas nyata, periksa layar pemilihan tim; pada mode simulasi, periksa tombol navigasi | • Pada kelas nyata: Tombol "Ganti Kode" ditiadakan/dikunci sehingga siswa fokus menyelesaikan 1 sesi kelas.<br>• Pada mode simulasi (`ECO-DEMO`): Tombol **"Halaman Awal"** aktif (baik di layar tim maupun navbar) untuk kembali ke halaman input kode awal. | [x] Lolos |
 
 ---
 

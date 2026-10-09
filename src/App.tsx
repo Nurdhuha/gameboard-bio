@@ -1695,7 +1695,7 @@ export const App: React.FC = () => {
                 updateStudentTeamId(teamId);
                 updateStudentHasSelectedTeam(true);
               }}
-              onChangeRoomCode={handleChangeRoomCode}
+              onChangeRoomCode={activeSession?.roomCode === 'ECO-DEMO' ? handleChangeRoomCode : undefined}
               onUseDemoMode={handleStudentDemoMode}
               isLoading={isJoiningRoom}
               error={joinRoomError}

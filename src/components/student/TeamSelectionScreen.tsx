@@ -50,9 +50,20 @@ export const TeamSelectionScreen: React.FC<TeamSelectionScreenProps> = ({
 
           {/* Error Message */}
           {error && (
-            <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-start gap-2.5 animate-in fade-in">
-              <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0 mt-0.5" />
-              <span className="leading-relaxed">{error}</span>
+            <div className="p-3.5 sm:p-4 rounded-2xl bg-rose-50/80 border border-rose-200/90 shadow-xs flex items-start gap-3 text-left animate-in fade-in slide-in-from-top-1 duration-200">
+              <div className="w-8 h-8 rounded-xl bg-white border border-rose-200/80 text-rose-600 flex items-center justify-center flex-shrink-0 shadow-2xs mt-0.5">
+                <AlertCircle className="w-4 h-4" />
+              </div>
+              <div className="flex-1 min-w-0 space-y-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-rose-100/90 border border-rose-200 text-rose-800 text-[10px] font-extrabold uppercase tracking-wider">
+                    Pemberitahuan
+                  </span>
+                </div>
+                <p className="text-xs text-rose-900 leading-relaxed font-medium">
+                  {error}
+                </p>
+              </div>
             </div>
           )}
 
@@ -131,15 +142,15 @@ export const TeamSelectionScreen: React.FC<TeamSelectionScreenProps> = ({
               <span className="font-mono text-emerald-800 tracking-wider font-black">{roomCode}</span>
             </div>
 
-            {onChangeRoomCode && (
+            {roomCode === 'ECO-DEMO' && onChangeRoomCode && (
               <button
                 type="button"
                 onClick={onChangeRoomCode}
                 className="px-3 py-1.5 rounded-2xl bg-stone-100 hover:bg-stone-200 text-stone-600 hover:text-slate-900 text-xs font-bold transition shadow-2xs flex items-center gap-1"
-                title={roomCode === 'ECO-DEMO' ? 'Kembali ke halaman awal' : 'Ganti kode kelas'}
+                title="Kembali ke halaman awal"
               >
                 <ArrowLeft className="w-3 h-3" />
-                <span>{roomCode === 'ECO-DEMO' ? 'Halaman Awal' : 'Ganti Kode'}</span>
+                <span>Halaman Awal</span>
               </button>
             )}
           </div>
