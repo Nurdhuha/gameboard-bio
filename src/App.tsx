@@ -51,6 +51,7 @@ import {
   Loader2,
   Lock,
   CheckCircle2,
+  Home,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -1306,15 +1307,32 @@ export const App: React.FC = () => {
           <h1 className="text-base sm:text-lg font-extrabold tracking-tight text-emerald-800 flex-shrink-0">
             Ecoplay
           </h1>
-          {isTeacherRoute && (
+          {isTeacherRoute ? (
             <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 truncate">
-              Guru {activeSession ? `• ${activeSession.roomCode}` : ''}
+              Guru {isTeacherDemoMode ? '• Simulasi' : activeSession ? `• ${activeSession.roomCode}` : ''}
             </span>
-          )}
+          ) : activeSession?.roomCode === 'ECO-DEMO' ? (
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-200 truncate">
+              Mode Simulasi
+            </span>
+          ) : null}
         </div>
 
         {/* RIGHT ACTIONS BERDASARKAN ROUTE */}
         <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Tombol Kembali ke Halaman Awal (Khusus Mode Simulasi Guru & Siswa) */}
+          {((!isTeacherRoute && activeSession?.roomCode === 'ECO-DEMO') ||
+            (isTeacherRoute && isTeacherDemoMode)) && (
+            <button
+              onClick={isTeacherRoute ? handleTeacherLogout : handleChangeRoomCode}
+              className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200/90 text-amber-900 text-xs font-bold flex items-center gap-1.5 transition active:scale-95 shadow-xs"
+              title="Kembali ke Halaman Awal (Keluar Mode Simulasi)"
+            >
+              <Home className="w-3.5 h-3.5 text-amber-700" />
+              <span className="hidden sm:inline">Halaman Awal</span>
+            </button>
+          )}
+
           {isTeacherRoute ? (
             /* --- KONTROL NAVIGASI GURU (/teachers) --- */
             <>

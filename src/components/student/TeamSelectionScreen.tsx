@@ -136,10 +136,10 @@ export const TeamSelectionScreen: React.FC<TeamSelectionScreenProps> = ({
                 type="button"
                 onClick={onChangeRoomCode}
                 className="px-3 py-1.5 rounded-2xl bg-stone-100 hover:bg-stone-200 text-stone-600 hover:text-slate-900 text-xs font-bold transition shadow-2xs flex items-center gap-1"
-                title="Ganti kode kelas"
+                title={roomCode === 'ECO-DEMO' ? 'Kembali ke halaman awal' : 'Ganti kode kelas'}
               >
                 <ArrowLeft className="w-3 h-3" />
-                <span>Ganti Kode</span>
+                <span>{roomCode === 'ECO-DEMO' ? 'Halaman Awal' : 'Ganti Kode'}</span>
               </button>
             )}
           </div>
