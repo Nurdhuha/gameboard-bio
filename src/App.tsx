@@ -1333,10 +1333,10 @@ export const App: React.FC = () => {
   return (
     <div className="fixed inset-0 w-full h-full h-[100dvh] bg-[#f8faf9] text-slate-800 flex flex-col font-sans select-none antialiased overflow-hidden">
       {/* 1. TOP NAVBAR (CALMING, MINIMALIST & CLEAN) */}
-      <header className="w-full h-14 sm:h-16 border-b border-stone-200/80 bg-white/95 backdrop-blur-md px-3 sm:px-6 flex items-center justify-between gap-2 flex-shrink-0 z-40 select-none">
+      <header className="w-full h-14 lg:h-16 border-b border-stone-200/80 bg-white/95 backdrop-blur-md px-3 sm:px-4 lg:px-6 flex items-center justify-between gap-2 flex-shrink-0 z-40 select-none">
         {/* Brand */}
         <div className="flex items-center gap-2 min-w-0">
-          <h1 className="text-base sm:text-lg font-extrabold tracking-tight text-emerald-800 flex-shrink-0">
+          <h1 className="text-base lg:text-lg font-extrabold tracking-tight text-emerald-800 flex-shrink-0">
             Ecoplay
           </h1>
           {isTeacherRoute ? (
@@ -1351,17 +1351,17 @@ export const App: React.FC = () => {
         </div>
 
         {/* RIGHT ACTIONS BERDASARKAN ROUTE */}
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
           {/* Tombol Kembali ke Halaman Awal (Khusus Mode Simulasi Guru & Siswa) */}
           {((!isTeacherRoute && activeSession?.roomCode === 'ECO-DEMO') ||
             (isTeacherRoute && isTeacherDemoMode)) && (
             <button
               onClick={isTeacherRoute ? handleTeacherLogout : handleChangeRoomCode}
-              className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200/90 text-amber-900 text-xs font-bold flex items-center gap-1.5 transition active:scale-95 shadow-xs"
+              className="p-1.5 lg:px-2.5 lg:py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200/90 text-amber-900 text-xs font-bold flex items-center gap-1.5 transition active:scale-95 shadow-xs"
               title="Kembali ke Halaman Awal (Keluar Mode Simulasi)"
             >
               <Home className="w-3.5 h-3.5 text-amber-700" />
-              <span className="hidden sm:inline">Halaman Awal</span>
+              <span className="hidden lg:inline">Halaman Awal</span>
             </button>
           )}
 
@@ -1377,17 +1377,17 @@ export const App: React.FC = () => {
               ) : teacherGamePhase === 'spin' ? (
                 /* Di Sesi Spin Guru (Langkah 2): Hanya indikator langkah & tombol Akhiri Kelas */
                 <div className="flex items-center gap-1.5 sm:gap-2">
-                  <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold shadow-xs">
+                  <div className="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold shadow-xs">
                     <Sparkles className="w-3.5 h-3.5 text-amber-600" />
                     <span>Langkah 2: Spin Giliran</span>
                   </div>
                   <button
                     onClick={handleOpenEndClassModal}
-                    className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold flex items-center gap-1 transition shadow-xs active:scale-95"
+                    className="p-1.5 lg:px-2.5 lg:py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold flex items-center gap-1 transition shadow-xs active:scale-95"
                     title="Akhiri Sesi dan Kembali ke Ruang Tunggu"
                   >
                     <LogOut className="w-3.5 h-3.5 text-rose-600" />
-                    <span className="hidden sm:inline">Akhiri Kelas</span>
+                    <span className="hidden lg:inline">Akhiri Kelas</span>
                   </button>
                 </div>
               ) : (
@@ -1400,20 +1400,20 @@ export const App: React.FC = () => {
 
                   <button
                     onClick={() => setShowTeacherDashboard(true)}
-                    className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold flex items-center gap-1.5 transition shadow-sm active:scale-95"
+                    className="p-1.5 lg:px-3 lg:py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold flex items-center gap-1.5 transition shadow-sm active:scale-95"
                     title="Buka Penilaian Rubrik & Lencana"
                   >
                     <Sliders className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">Panel Penilaian</span>
+                    <span className="hidden lg:inline">Panel Penilaian</span>
                   </button>
 
                   <button
                     onClick={handleOpenEndClassModal}
-                    className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold flex items-center gap-1 transition shadow-xs active:scale-95"
+                    className="p-1.5 lg:px-2.5 lg:py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold flex items-center gap-1 transition shadow-xs active:scale-95"
                     title="Akhiri Sesi dan Kembali ke Ruang Tunggu"
                   >
                     <LogOut className="w-3.5 h-3.5 text-rose-600" />
-                    <span className="hidden sm:inline">Akhiri Kelas</span>
+                    <span className="hidden lg:inline">Akhiri Kelas</span>
                   </button>
                 </div>
               )}
@@ -1430,7 +1430,7 @@ export const App: React.FC = () => {
                     title="Ganti Kelompok"
                   >
                     <span>{selectedTeam.avatarIcon}</span>
-                    <span className="hidden sm:inline">{selectedTeam.name}</span>
+                    <span className="hidden lg:inline">{selectedTeam.name}</span>
                     <RefreshCw className="w-3 h-3 text-stone-400 ml-0.5" />
                   </button>
                 </>
@@ -1441,22 +1441,22 @@ export const App: React.FC = () => {
           {/* Tombol Materi Belajar (Tersedia untuk Siswa & Guru) */}
           <button
             onClick={() => navigate('/materi')}
-            className="p-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-teal-50 border border-teal-200 text-teal-800 hover:bg-teal-100 text-xs font-semibold flex items-center gap-1 transition active:scale-95 shadow-sm"
+            className="p-1.5 lg:px-3 lg:py-1.5 rounded-xl bg-teal-50 border border-teal-200 text-teal-800 hover:bg-teal-100 text-xs font-semibold flex items-center gap-1 transition active:scale-95 shadow-sm"
             title="Buka Halaman Materi Ekosistem"
           >
             <GraduationCap className="w-4 h-4 text-teal-700" />
-            <span className="hidden sm:inline">Materi</span>
+            <span className="hidden lg:inline">Materi</span>
           </button>
 
           {/* Tombol Aturan Permainan (Hanya untuk Siswa, Disembunyikan di Halaman Guru) */}
           {!isTeacherRoute && (
             <button
               onClick={() => setShowGameRules(true)}
-              className="p-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 hover:bg-emerald-100 text-xs font-semibold flex items-center gap-1 transition active:scale-95 shadow-sm"
+              className="p-1.5 lg:px-3 lg:py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 hover:bg-emerald-100 text-xs font-semibold flex items-center gap-1 transition active:scale-95 shadow-sm"
               title="Aturan Permainan"
             >
               <BookOpen className="w-4 h-4 text-emerald-700" />
-              <span className="hidden sm:inline">Aturan</span>
+              <span className="hidden lg:inline">Aturan</span>
             </button>
           )}
 
@@ -1468,11 +1468,11 @@ export const App: React.FC = () => {
             : (hasStudentSelectedTeam && studentGamePhase === 'board')) && (
             <button
               onClick={() => setShowLeaderboard(true)}
-              className="p-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 hover:bg-amber-100 text-xs font-semibold flex items-center gap-1 transition active:scale-95 shadow-sm"
+              className="p-1.5 lg:px-3 lg:py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 hover:bg-amber-100 text-xs font-semibold flex items-center gap-1 transition active:scale-95 shadow-sm"
               title="Klasemen Leaderboard"
             >
               <Trophy className="w-4 h-4 text-amber-600" />
-              <span className="hidden sm:inline">Klasemen</span>
+              <span className="hidden lg:inline">Klasemen</span>
             </button>
           )}
         </div>

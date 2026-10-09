@@ -219,28 +219,28 @@ export const EcosystemMaterialPage: React.FC<EcosystemMaterialPageProps> = ({ on
   return (
     <div className="h-full h-[100dvh] w-full overflow-y-auto bg-[#f8faf9] text-slate-800 flex flex-col font-sans antialiased">
       {/* ================= 1. HEADER UTAMA HALAMAN MATERI ================= */}
-      <header className="sticky top-0 z-40 w-full h-14 sm:h-16 border-b border-stone-200/90 bg-white/95 backdrop-blur-md px-3 sm:px-6 flex items-center justify-between gap-3 shadow-xs flex-shrink-0">
-        <div className="flex items-center gap-3 min-w-0">
+      <header className="sticky top-0 z-40 w-full h-14 lg:h-16 border-b border-stone-200/90 bg-white/95 backdrop-blur-md px-3 sm:px-4 lg:px-6 flex items-center justify-between gap-3 shadow-xs flex-shrink-0">
+        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
           <button
             onClick={onBack}
-            className="p-1.5 sm:px-3 sm:py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold transition flex items-center gap-1.5 shadow-2xs active:scale-95 flex-shrink-0"
+            className="p-1.5 lg:px-3 lg:py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold transition flex items-center gap-1.5 shadow-2xs active:scale-95 flex-shrink-0"
             title="Kembali ke Halaman Sebelumnya"
           >
             <ArrowLeft className="w-4 h-4 text-stone-700" />
-            <span className="hidden sm:inline">Kembali</span>
+            <span className="hidden lg:inline">Kembali</span>
           </button>
 
-          <div className="h-6 w-px bg-stone-200 hidden sm:block" />
+          <div className="h-6 w-px bg-stone-200 hidden lg:block" />
 
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center justify-center flex-shrink-0 shadow-2xs">
-              <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
+            <div className="w-8 h-8 lg:w-9 lg:h-9 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center justify-center flex-shrink-0 shadow-2xs">
+              <BookOpen className="w-4 h-4 lg:w-5 lg:h-5 text-emerald-600" />
             </div>
             <div className="min-w-0">
-              <h1 className="text-sm sm:text-base font-black text-slate-900 truncate">
+              <h1 className="text-sm lg:text-base font-black text-slate-900 truncate">
                 Ensiklopedia Materi Ekosistem
               </h1>
-              <p className="text-[11px] text-stone-500 hidden sm:block truncate">
+              <p className="text-[11px] text-stone-500 hidden lg:block truncate">
                 Bahan bacaan & rujukan konsep Biologi terpadu Ecoplay
               </p>
             </div>
@@ -249,8 +249,8 @@ export const EcosystemMaterialPage: React.FC<EcosystemMaterialPageProps> = ({ on
       </header>
 
       {/* ================= 2. SUB-HEADER / TAB NAVIGASI & PENCARIAN ================= */}
-      <div className="sticky top-14 sm:top-16 z-30 w-full px-3 sm:px-6 py-2 bg-white/90 backdrop-blur-md border-b border-stone-200 shadow-2xs flex-shrink-0">
-        <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5">
+      <div className="sticky top-14 lg:top-16 z-30 w-full px-3 sm:px-4 lg:px-6 py-2 bg-white/90 backdrop-blur-md border-b border-stone-200 shadow-2xs flex-shrink-0">
+        <div className="max-w-5xl mx-auto flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2.5">
           {/* Navigasi Tab Bab (A - E) dengan Efek Fading Edges & Mouse Drag/Scroll */}
           <div className="relative flex-1 min-w-0 flex items-center group">
             {/* Tombol Geser Kiri (Desktop / Mouse) */}
@@ -325,7 +325,7 @@ export const EcosystemMaterialPage: React.FC<EcosystemMaterialPageProps> = ({ on
           </div>
 
           {/* Kolom Pencarian Kata Kunci */}
-          <div className="relative w-full md:w-72 flex-shrink-0">
+          <div className="relative w-full lg:w-72 flex-shrink-0">
             <Search className="w-3.5 h-3.5 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
