@@ -104,7 +104,7 @@ export const TeamSelectionScreen: React.FC<TeamSelectionScreenProps> = ({
                 onClick={onUseDemoMode}
                 className="text-xs text-stone-400 hover:text-stone-600 font-medium hover:underline transition"
               >
-                Atau gunakan Mode Simulasi Standalone (Tanpa Server)
+                Masuk Mode Simulasi
               </button>
             </div>
           )}
