@@ -48,6 +48,41 @@
   background: #94a3b8;
 }
 
+/* Compact Soft Scrollbar for tab list */
+.scrollbar-compact::-webkit-scrollbar {
+  width: 3px;
+  height: 3px;
+}
+
+.scrollbar-compact::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-compact::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+.scrollbar-compact::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.scrollbar-compact {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+/* Sembunyikan scrollbar sepenuhnya */
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+.no-scrollbar {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
 /* Subtle gentle pulse for active node */
 @keyframes calmPulse {
   0%, 100% {

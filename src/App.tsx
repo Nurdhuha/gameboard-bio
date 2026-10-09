@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, Suspense, lazy } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { io, Socket } from 'socket.io-client';
 import { GameBoard } from './components/board/GameBoard';
 import { TeamSelectionScreen } from './components/student/TeamSelectionScreen';
@@ -24,6 +24,9 @@ const TeacherDashboardModal = lazy(() =>
 );
 const EndClassConfirmationModal = lazy(() =>
   import('./components/modals/EndClassConfirmationModal').then((m) => ({ default: m.EndClassConfirmationModal }))
+);
+const EcosystemMaterialPage = lazy(() =>
+  import('./components/materi/EcosystemMaterialPage').then((m) => ({ default: m.EcosystemMaterialPage }))
 );
 import { TeacherLoginScreen } from './components/auth/TeacherLoginScreen';
 import { TeacherLobbyScreen } from './components/dashboard/TeacherLobbyScreen';
@@ -52,6 +55,7 @@ import {
   Lock,
   CheckCircle2,
   Home,
+  GraduationCap,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -108,11 +112,16 @@ const mergeServerTeams = (serverTeams: any[], prev: Team[], keepTileForTeamId?: 
 
 export const App: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Deteksi role berdasarkan route URL: /teachers atau /teacher -> Guru, selain itu -> Murid
   const isTeacherRoute =
     location.pathname.startsWith('/teacher') ||
     location.hash.startsWith('#/teacher');
+
+  const isMateriRoute =
+    location.pathname.startsWith('/materi') ||
+    location.hash.startsWith('#/materi');
 
   // Status halaman murid: apakah sudah memilih kelompok atau belum (tersimpan di localStorage)
   const [hasStudentSelectedTeam, setHasStudentSelectedTeam] = useState<boolean>(() => {
@@ -1298,6 +1307,29 @@ export const App: React.FC = () => {
     };
   }, []);
 
+  // Jika rute adalah /materi, tampilkan halaman khusus materi (bukan modal)
+  if (isMateriRoute) {
+    return (
+      <Suspense
+        fallback={
+          <div className="min-h-screen w-full flex items-center justify-center bg-[#f8faf9] text-stone-600">
+            <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+          </div>
+        }
+      >
+        <EcosystemMaterialPage
+          onBack={() => {
+            if (window.history.length > 1) {
+              navigate(-1);
+            } else {
+              navigate('/');
+            }
+          }}
+        />
+      </Suspense>
+    );
+  }
+
   return (
     <div className="fixed inset-0 w-full h-full h-[100dvh] bg-[#f8faf9] text-slate-800 flex flex-col font-sans select-none antialiased overflow-hidden">
       {/* 1. TOP NAVBAR (CALMING, MINIMALIST & CLEAN) */}
@@ -1405,6 +1437,16 @@ export const App: React.FC = () => {
               )}
             </>
           )}
+
+          {/* Tombol Materi Belajar (Tersedia untuk Siswa & Guru) */}
+          <button
+            onClick={() => navigate('/materi')}
+            className="p-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-teal-50 border border-teal-200 text-teal-800 hover:bg-teal-100 text-xs font-semibold flex items-center gap-1 transition active:scale-95 shadow-sm"
+            title="Buka Halaman Materi Ekosistem"
+          >
+            <GraduationCap className="w-4 h-4 text-teal-700" />
+            <span className="hidden sm:inline">Materi</span>
+          </button>
 
           {/* Tombol Aturan Permainan (Hanya untuk Siswa, Disembunyikan di Halaman Guru) */}
           {!isTeacherRoute && (
