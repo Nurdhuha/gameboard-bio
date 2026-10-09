@@ -1400,8 +1400,12 @@ export const App: React.FC = () => {
             </button>
           )}
 
-          {/* Tombol Klasemen Leaderboard (Disembunyikan jika guru belum login) */}
-          {(!isTeacherRoute || teacherAuth || isTeacherDemoMode) && (
+          {/* Tombol Klasemen Leaderboard:
+              - Guru: Tampil setelah login / masuk mode simulasi
+              - Siswa: Disembunyikan saat input kode & pilih kelompok, hanya muncul ketika sudah memasuki permainan (papan) */}
+          {(isTeacherRoute
+            ? (teacherAuth || isTeacherDemoMode)
+            : (hasStudentSelectedTeam && studentGamePhase === 'board')) && (
             <button
               onClick={() => setShowLeaderboard(true)}
               className="p-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 hover:bg-amber-100 text-xs font-semibold flex items-center gap-1 transition active:scale-95 shadow-sm"
@@ -1945,7 +1949,7 @@ export const App: React.FC = () => {
                   </button>
                 </div>
 
-                {inspectedActivity && (
+                {inspectedActivity && !isMobileSheetExpanded && (
                   <button
                     onClick={() => setActiveActivity(inspectedActivity)}
                     className={`px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-sm active:scale-95 transition ${
@@ -1958,7 +1962,7 @@ export const App: React.FC = () => {
                     <span>
                       {!isCurrentTileActivityDone && inspectedActivity.code === currentActivityCode
                         ? 'Kerjakan LKPD ✍️'
-                        : 'Buka LKPD'}
+                        : 'Buka Jawaban'}
                     </span>
                   </button>
                 )}
@@ -2005,7 +2009,7 @@ export const App: React.FC = () => {
                         ? 'Lihat Soal LKPD (Monitoring)'
                         : !isCurrentTileActivityDone && inspectedActivity.code === currentActivityCode
                         ? 'Kerjakan LKPD Sekarang (Wajib Dikirim ✍️)'
-                        : 'Buka Lembar Pengerjaan (LKPD) Lengkap'}
+                        : 'Buka Jawaban'}
                     </span>
                   </button>
                 </>
