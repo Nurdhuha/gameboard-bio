@@ -164,7 +164,7 @@ export const SECTION_D_DATA = {
       title: 'Rantai Makanan',
       image: '/materi/rantai-makanan.jpg',
       imageAlt: 'Diagram Rantai Makanan',
-      imageCaption: 'Gambar 1: Rantai Makanan — Alur makan dan dimakan berurutan di dalam ekosistem',
+      imageCaption: 'Gambar 1. Rantai Makanan',
       text: 'Rantai makanan adalah proses perpindahan energi melalui peristiwa makan dan dimakan secara berurutan antar-makhluk hidup di dalam suatu ekosistem. Komponen utama dalam rantai makanan yaitu produsen, konsumen, dan dekomposer.',
     },
     {
@@ -172,7 +172,7 @@ export const SECTION_D_DATA = {
       title: 'Jaring-jaring Makanan',
       image: '/materi/jaring-makanan.jpg',
       imageAlt: 'Diagram Jaring-jaring Makanan',
-      imageCaption: 'Gambar 2: Jaring-jaring Makanan — Hubungan kompleks saling terkait antarberbagai rantai makanan',
+      imageCaption: 'Gambar 2. Jaring-jaring Makanan',
       text: 'Makhluk hidup membutuhkan energi untuk hidup dari makanan yang mereka makan (Sinaga, 2023). Jaring makanan memiliki implikasi pada tingkat populasi, komunitas, ekosistem, dan evolusi (Layman et al., 2015). Proses makan dan dimakan antorganisme untuk memperoleh energi dalam ekosistem merupakan bagian dari aliran energi yang berlangsung melalui rantai makanan dan jaring-jaring makanan (Priyanto, 2020). Perubahan satu populasi dapat memengaruhi beberapa jalur makan, tetapi besarnya dampak bergantung pada kondisi ekosistem.',
     },
     {
@@ -180,7 +180,7 @@ export const SECTION_D_DATA = {
       title: 'Perpindahan Energi',
       image: '/materi/piramida-trofik.jpg',
       imageAlt: 'Diagram Aliran Energi dan Tingkat Trofik',
-      imageCaption: 'Gambar 3: Perpindahan Energi — Aliran energi satu arah bermula dari matahari melintasi tingkat trofik',
+      imageCaption: 'Gambar 3. Perpindahan Energi',
       text: 'Perpindahan energi (aliran energi) dalam ekosistem adalah proses berpindahnya energi dari satu makhluk hidup ke makhluk hidup lain secara satu arah, yang bermula dari matahari. Urutan tingkat trofik aliran energi dibagi sebagai berikut:',
       trophicLevels: [
         {
