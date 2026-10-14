@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Team } from '../../types';
-import { Play, RotateCcw, ArrowRight, Trophy, Sparkles, Shuffle, CheckCircle2, UserPlus, Trash2 } from 'lucide-react';
+import { Play, RotateCcw, ArrowRight, Trophy, Sparkles, Shuffle, CheckCircle2, UserPlus, Trash2, AlertTriangle } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 interface SpinWheelProps {
@@ -18,18 +18,31 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
   onRemoveTeam,
   onResetDefaultTeams,
 }) => {
-  const [remainingTeams, setRemainingTeams] = useState<Team[]>([...teams]);
+  // Hanya kelompok yang berstatus 'siap' yang berhak mendapatkan giliran pada putaran roda
+  const eligibleTeams = useMemo(() => {
+    const ready = teams.filter((t) => Boolean(t.isReady));
+    return ready.length >= 2 ? ready : ready.length > 0 ? ready : teams;
+  }, [teams]);
+
+  const unreadyTeams = useMemo(() => {
+    return teams.filter((t) => !eligibleTeams.some((et) => et.id === t.id));
+  }, [teams, eligibleTeams]);
+
+  const [remainingTeams, setRemainingTeams] = useState<Team[]>(() => {
+    const ready = teams.filter((t) => Boolean(t.isReady));
+    return ready.length >= 2 ? ready : ready.length > 0 ? ready : teams;
+  });
   const [turnOrder, setTurnOrder] = useState<Team[]>([]);
   const [isSpinning, setIsSpinning] = useState<boolean>(false);
   const [rotation, setRotation] = useState<number>(0);
   const [selectedWinner, setSelectedWinner] = useState<Team | null>(null);
 
-  // Sinkronisasi saat jumlah kelompok berubah dari luar
+  // Sinkronisasi saat kelompok yang berhak berubah dari luar
   useEffect(() => {
     if (turnOrder.length === 0) {
-      setRemainingTeams([...teams]);
+      setRemainingTeams([...eligibleTeams]);
     }
-  }, [teams, turnOrder.length]);
+  }, [eligibleTeams, turnOrder.length]);
 
   const numSlices = remainingTeams.length;
   const sliceAngle = numSlices > 0 ? 360 / numSlices : 360;
@@ -56,9 +69,9 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
     ].join(' ');
   };
 
-  const isAllDetermined = turnOrder.length === teams.length;
-  const readyTeamsCount = teams.filter((t) => t.isReady).length;
-  const hasReadyTeams = readyTeamsCount > 0 || !teams.some((t) => t.isReady !== undefined);
+  const isAllDetermined = turnOrder.length === eligibleTeams.length && eligibleTeams.length > 0;
+  const readyTeamsCount = teams.filter((t) => Boolean(t.isReady)).length;
+  const hasReadyTeams = readyTeamsCount >= 2;
 
   // Fungsi Spin Roda
   const handleSpin = () => {
@@ -110,7 +123,7 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
   // Acak otomatis semua sekaligus (Fitur Fast-Track untuk Guru)
   const handleQuickShuffle = () => {
     if (isSpinning || !hasReadyTeams) return;
-    const shuffled = [...teams].sort(() => Math.random() - 0.5);
+    const shuffled = [...eligibleTeams].sort(() => Math.random() - 0.5);
     setTurnOrder(shuffled);
     setRemainingTeams([]);
     setSelectedWinner(shuffled[shuffled.length - 1]);
@@ -119,7 +132,7 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
 
   // Reset sesi spin
   const handleReset = () => {
-    setRemainingTeams([...teams]);
+    setRemainingTeams([...eligibleTeams]);
     setTurnOrder([]);
     setSelectedWinner(null);
     setRotation(0);
@@ -127,10 +140,15 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
 
   return (
     <div className="w-full max-w-4xl mx-auto flex flex-col items-center justify-start pt-4 sm:pt-8 pb-10 px-3 sm:px-6 animate-in fade-in duration-300">
-      {/* Warning jika belum ada kelompok yang siap */}
+      {/* Warning jika kelompok yang siap belum mencukupi (minimal 2) */}
       {!hasReadyTeams && (
-        <div className="w-full max-w-lg mb-4 p-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs text-center font-semibold animate-in fade-in">
-          ⚠️ Roda spin belum bisa diputar karena belum ada kelompok siswa yang terhubung/siap di perangkat masing-masing.
+        <div className="w-full max-w-lg mb-4 p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs text-center font-semibold animate-in fade-in flex items-center justify-center gap-2">
+          <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+          <span>
+            {readyTeamsCount === 0
+              ? 'Roda spin belum bisa diputar karena belum ada kelompok siswa yang siap. Minimal 2 kelompok harus siap.'
+              : `Baru 1 kelompok yang siap (${teams.find((t) => t.isReady)?.name || 'Kelompok'}). Minimal 2 kelompok harus dalam status siap untuk memutar roda spin.`}
+          </span>
         </div>
       )}
 
@@ -344,9 +362,9 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
             </div>
           </div>
 
-          {/* Turn Slots Dinamis berdasarkan teams.length */}
+          {/* Turn Slots Dinamis berdasarkan kelompok yang siap (eligibleTeams) */}
           <div className="space-y-2">
-            {teams.map((t, idx) => {
+            {eligibleTeams.map((t, idx) => {
               const team = turnOrder[idx];
               const isCurrentNew =
                 team &&
@@ -418,6 +436,30 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
               );
             })}
           </div>
+
+          {/* Info Kelompok yang Belum Siap (Jika Ada) */}
+          {unreadyTeams.length > 0 && (
+            <div className="pt-2">
+              <div className="p-3 rounded-2xl bg-stone-50 border border-stone-200 text-xs text-stone-500 space-y-1.5">
+                <div className="font-bold text-stone-700 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-stone-400" />
+                  <span>Kelompok Belum Siap (Tidak Ikut Putaran Giliran):</span>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {unreadyTeams.map((ut) => (
+                    <span
+                      key={ut.id}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-white border border-stone-200 text-stone-600 text-[11px] font-semibold shadow-2xs"
+                    >
+                      <span>{ut.avatarIcon}</span>
+                      <span>{ut.name}</span>
+                      <span className="text-stone-400 font-normal italic">(Belum Siap)</span>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Final Action Button: Enter the Board */}
           {isAllDetermined ? (

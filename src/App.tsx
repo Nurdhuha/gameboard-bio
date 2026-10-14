@@ -32,6 +32,7 @@ const EcosystemMaterialPage = lazy(() =>
   import('./components/materi/EcosystemMaterialPage').then((m) => ({ default: m.EcosystemMaterialPage }))
 );
 import type { SessionItem } from './components/dashboard/TeacherSessionsModal';
+import { CustomAlertModal, AlertType } from './components/modals/CustomAlertModal';
 import { TeacherLoginScreen } from './components/auth/TeacherLoginScreen';
 import { TeacherLobbyScreen } from './components/dashboard/TeacherLobbyScreen';
 import { TeacherSessionCreator } from './components/dashboard/TeacherSessionCreator';
@@ -162,6 +163,46 @@ export const App: React.FC = () => {
   const [isTeacherDemoMode, setIsTeacherDemoMode] = useState<boolean>(false);
   const [isLoadingSession, setIsLoadingSession] = useState<boolean>(false);
   const [showSessionCreator, setShowSessionCreator] = useState<boolean>(false);
+
+  // State untuk Alert Notifikasi Kustom bergaya visual website
+  const [appAlert, setAppAlert] = useState<{
+    isOpen: boolean;
+    type?: AlertType;
+    title: string;
+    badge?: string;
+    message: string;
+    highlightText?: string;
+    subMessage?: string;
+    confirmText?: string;
+  }>({
+    isOpen: false,
+    type: 'warning',
+    title: '',
+    message: '',
+  });
+
+  const showAppAlert = (
+    title: string,
+    message: string,
+    options?: {
+      type?: AlertType;
+      badge?: string;
+      highlightText?: string;
+      subMessage?: string;
+      confirmText?: string;
+    }
+  ) => {
+    setAppAlert({
+      isOpen: true,
+      title,
+      message,
+      type: options?.type || 'warning',
+      badge: options?.badge,
+      highlightText: options?.highlightText,
+      subMessage: options?.subMessage,
+      confirmText: options?.confirmText || 'Mengerti',
+    });
+  };
 
   // Sesi Ruang Kelas Aktif (tersimpan di localStorage agar tidak hilang jika browser ditutup/refresh)
   const [activeSession, setActiveSession] = useState<{
@@ -738,7 +779,11 @@ export const App: React.FC = () => {
 
   // Handle selesai sesi spin di /teachers (Langkah 2 -> Langkah 3)
   const handleSpinComplete = (orderedTeams: Team[]) => {
-    setTeams(orderedTeams);
+    // Susun kelompok: tim yang siap dan telah diundi ditempatkan di depan sesuai hasil giliran
+    // Kelompok yang belum siap (jika ada) tetap disimpan di bagian belakang daftar
+    const unreadyTeams = teams.filter((t) => !orderedTeams.some((ot) => ot.id === t.id));
+    const allTeams = [...orderedTeams, ...unreadyTeams];
+    setTeams(allTeams);
     setSelectedTeamId(orderedTeams[0].id);
     updateTeacherPhase('board');
     updateStudentGamePhase('board');
@@ -759,6 +804,24 @@ export const App: React.FC = () => {
 
   // Guru memulai permainan dari ruang tunggu proyektor (Langkah 1 -> Langkah 2)
   const handleTeacherStartGame = async () => {
+    const readyCount = teams.filter((t) => Boolean(t.isReady)).length;
+    if (readyCount < 2) {
+      showAppAlert(
+        'Belum Bisa Memulai Permainan',
+        'Permainan belum dapat dimulai karena minimal harus ada 2 kelompok siswa dalam status "Siap".',
+        {
+          type: 'warning',
+          badge: 'MINIMAL 2 TIM SIAP',
+          subMessage:
+            readyCount === 0
+              ? 'Belum ada kelompok siswa yang terhubung dan siap di perangkat masing-masing.'
+              : `Saat ini baru ada 1 kelompok (${teams.find((t) => t.isReady)?.name || 'Kelompok'}) yang siap. Pastikan minimal 1 kelompok lainnya bergabung dan siap.`,
+          confirmText: 'Mengerti',
+        }
+      );
+      return;
+    }
+
     if (socketRef.current && activeSession?.roomCode) {
       socketRef.current.emit('game:start', { roomCode: activeSession.roomCode, initialPhase: 'spin' });
     }
@@ -1030,8 +1093,16 @@ export const App: React.FC = () => {
         if (ACTIVITIES[currentActivityCode]) {
           setActiveActivity(ACTIVITIES[currentActivityCode]);
         }
-        alert(
-          `⚠️ Selesaikan Aktivitas ${currentActivityCode} Terlebih Dahulu!\n\nKelompok Anda belum mengirimkan jawaban LKPD untuk petak #${team.currentTile}. Anda harus mengirimkan jawaban terlebih dahulu sebelum melangkah ke petak berikutnya.`
+        showAppAlert(
+          `Selesaikan Aktivitas ${currentActivityCode} Terlebih Dahulu!`,
+          `Kelompok Anda belum mengirimkan jawaban LKPD untuk petak #${team.currentTile}.`,
+          {
+            type: 'warning',
+            badge: 'LKPD BELUM SELESAI',
+            highlightText: `Petak #${team.currentTile} (${currentActivityCode})`,
+            subMessage: 'Anda harus menyelesaikan dan mengirimkan jawaban LKPD pada petak ini terlebih dahulu sebelum melangkah ke petak berikutnya.',
+            confirmText: 'Buka LKPD',
+          }
         );
         return;
       }
@@ -1044,8 +1115,16 @@ export const App: React.FC = () => {
           if (ACTIVITIES[tile.activityCode]) {
             setActiveActivity(ACTIVITIES[tile.activityCode]);
           }
-          alert(
-            `⚠️ Selesaikan Aktivitas ${tile.activityCode} Terlebih Dahulu!\n\nKelompok Anda harus menyelesaikan petak #${tile.id} (${tile.activityCode}) sebelum dapat melanjutkan langkah lebih jauh.`
+          showAppAlert(
+            `Selesaikan Aktivitas ${tile.activityCode} Terlebih Dahulu!`,
+            `Kelompok Anda harus menyelesaikan petak #${tile.id} (${tile.activityCode}) sebelum dapat melanjutkan langkah lebih jauh.`,
+            {
+              type: 'warning',
+              badge: 'LEMBAR KERJA WAJIB',
+              highlightText: `Petak #${tile.id}: ${tile.activityCode}`,
+              subMessage: 'Setiap kelompok wajib menyelesaikan aktivitas petak yang dilewati secara berurutan.',
+              confirmText: 'Buka LKPD',
+            }
           );
           return;
         }
@@ -1101,8 +1180,16 @@ export const App: React.FC = () => {
       if (ACTIVITIES[currentActivityCode]) {
         setActiveActivity(ACTIVITIES[currentActivityCode]);
       }
-      alert(
-        `⚠️ Selesaikan Aktivitas ${currentActivityCode} Terlebih Dahulu!\n\nKelompok Anda belum mengirimkan jawaban LKPD untuk petak #${current}. Selesaikan aktivitas ini terlebih dahulu untuk melanjutkan permainan.`
+      showAppAlert(
+        `Selesaikan Aktivitas ${currentActivityCode} Terlebih Dahulu!`,
+        `Kelompok Anda belum mengirimkan jawaban LKPD untuk petak #${current}.`,
+        {
+          type: 'warning',
+          badge: 'LKPD BELUM SELESAI',
+          highlightText: `Petak #${current}: ${currentActivityCode}`,
+          subMessage: 'Selesaikan aktivitas ini terlebih dahulu untuk melanjutkan permainan atau melompat ke petak berikutnya.',
+          confirmText: 'Buka LKPD',
+        }
       );
       return;
     }
@@ -1346,7 +1433,16 @@ export const App: React.FC = () => {
   // Guru menghapus kelompok
   const handleRemoveTeam = async (id: number) => {
     if (teams.length <= 2) {
-      alert('Minimal harus ada 2 kelompok dalam permainan.');
+      showAppAlert(
+        'Batas Minimal Kelompok',
+        'Permainan membutuhkan minimal 2 kelompok agar dinamika belajar dan kompetisi tetap berjalan.',
+        {
+          type: 'warning',
+          badge: 'BATAS MINIMAL',
+          subMessage: 'Anda tidak dapat menghapus kelompok ini karena saat ini hanya tersisa 2 kelompok.',
+          confirmText: 'Mengerti',
+        }
+      );
       return;
     }
 
@@ -2278,6 +2374,19 @@ export const App: React.FC = () => {
             isDemoMode={isTeacherDemoMode}
           />
         )}
+
+        {/* 7. Modal Dialog Alert / Notifikasi Kustom Bergaya Ecoplay */}
+        <CustomAlertModal
+          isOpen={appAlert.isOpen}
+          onClose={() => setAppAlert((prev) => ({ ...prev, isOpen: false }))}
+          type={appAlert.type}
+          title={appAlert.title}
+          badge={appAlert.badge}
+          message={appAlert.message}
+          highlightText={appAlert.highlightText}
+          subMessage={appAlert.subMessage}
+          confirmText={appAlert.confirmText}
+        />
       </Suspense>
     </div>
   );

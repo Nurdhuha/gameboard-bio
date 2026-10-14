@@ -16,6 +16,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { getBackendUrl } from '../../config/api';
+import { CustomAlertModal, AlertType } from '../modals/CustomAlertModal';
 
 export interface SessionItem {
   id?: string | number;
@@ -63,6 +64,24 @@ export const TeacherSessionsModal: React.FC<TeacherSessionsModalProps> = ({
   // State untuk konfirmasi hapus sesi
   const [sessionToDelete, setSessionToDelete] = useState<SessionItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // State untuk alert notifikasi kustom bergaya website
+  const [alertConfig, setAlertConfig] = useState<{
+    isOpen: boolean;
+    type: AlertType;
+    title: string;
+    badge?: string;
+    message: string;
+    highlightText?: string;
+    subMessage?: string;
+    confirmText?: string;
+    onConfirm?: () => void;
+  }>({
+    isOpen: false,
+    type: 'info',
+    title: '',
+    message: '',
+  });
 
   const fetchSessions = async () => {
     setIsLoading(true);
@@ -203,36 +222,53 @@ export const TeacherSessionsModal: React.FC<TeacherSessionsModalProps> = ({
         // Perbarui sesi aktif di localStorage
         localStorage.setItem('ecoplay_teacher_active_session', JSON.stringify(formattedLatest));
 
-        // Tampilkan konfirmasi alert sukses penghapusan sesi
-        alert(
-          `✅ Sesi Kelas Berhasil Dihapus!\n\n` +
-          `Sesi kelas "${sessionClassName}" dengan kode [${cleanCode}] telah berhasil dihapus permanen dari sistem.\n\n` +
-          `Sistem secara otomatis membuka sesi kelas terbaru yang tersisa: "${formattedLatest.className || 'Kelas Biologi'}" (${formattedLatest.roomCode}).`
-        );
-
-        onSelectSession(formattedLatest);
+        // Tampilkan konfirmasi alert sukses bergaya visual website
+        setAlertConfig({
+          isOpen: true,
+          type: 'success',
+          title: 'Sesi Kelas Berhasil Dihapus',
+          badge: 'BERHASIL DIHAPUS',
+          message: `Sesi kelas "${sessionClassName}" telah berhasil dihapus permanen dari sistem.`,
+          highlightText: `Kode Sesi: ${cleanCode}`,
+          subMessage: `Sistem secara otomatis membuka sesi kelas terbaru yang tersisa: "${formattedLatest.className || 'Kelas Biologi'}" (${formattedLatest.roomCode}).`,
+          confirmText: 'Buka Sesi Terbaru',
+          onConfirm: () => {
+            onSelectSession(formattedLatest);
+          },
+        });
       } else {
         // Jika seluruh sesi telah dihapus dan tidak ada sesi tersisa
         localStorage.removeItem('ecoplay_teacher_active_session');
 
-        // Tampilkan konfirmasi alert sukses penghapusan sesi
-        alert(
-          `✅ Sesi Kelas Berhasil Dihapus!\n\n` +
-          `Sesi kelas "${sessionClassName}" dengan kode [${cleanCode}] telah berhasil dihapus permanen dari sistem.\n\n` +
-          `Seluruh sesi kelas Anda telah dibersihkan. Silakan buat sesi kelas baru untuk memulai aktivitas pembelajaran.`
-        );
-
-        if (onDeleteActiveSession) {
-          onDeleteActiveSession();
-        }
+        // Tampilkan konfirmasi alert sukses bergaya visual website
+        setAlertConfig({
+          isOpen: true,
+          type: 'success',
+          title: 'Sesi Kelas Berhasil Dihapus',
+          badge: 'BERHASIL DIHAPUS',
+          message: `Sesi kelas "${sessionClassName}" telah berhasil dihapus permanen dari sistem.`,
+          highlightText: `Kode Sesi: ${cleanCode}`,
+          subMessage: 'Seluruh sesi kelas Anda telah dibersihkan. Silakan buat sesi kelas baru untuk memulai aktivitas pembelajaran.',
+          confirmText: 'Buat Sesi Baru',
+          onConfirm: () => {
+            if (onDeleteActiveSession) {
+              onDeleteActiveSession();
+            }
+          },
+        });
       }
     } catch (err: any) {
       console.error('Gagal menghapus sesi:', err);
-      alert(
-        `❌ Gagal Menghapus Sesi Kelas [${cleanCode}]:\n\n` +
-        `${err.message || 'Terjadi gangguan jaringan atau server saat mencoba menghapus sesi.'}\n\n` +
-        `Data sesi tidak dihapus agar tidak terjadi inkonsistensi.`
-      );
+      setAlertConfig({
+        isOpen: true,
+        type: 'error',
+        title: 'Gagal Menghapus Sesi',
+        badge: 'TERJADI KESALAHAN',
+        message: `Terjadi kendala saat mencoba menghapus sesi kelas "${sessionClassName}".`,
+        highlightText: `Kode Sesi: ${cleanCode}`,
+        subMessage: err.message || 'Terjadi gangguan jaringan atau server saat mencoba menghapus sesi. Data sesi tidak dihapus agar konsistensi sistem tetap terjaga.',
+        confirmText: 'Mengerti',
+      });
     } finally {
       setIsDeleting(false);
     }
@@ -568,6 +604,20 @@ export const TeacherSessionsModal: React.FC<TeacherSessionsModalProps> = ({
             </div>
           </div>
         )}
+
+        {/* MODAL ALERT NOTIFIKASI BERGAYA ECOPLAY */}
+        <CustomAlertModal
+          isOpen={alertConfig.isOpen}
+          onClose={() => setAlertConfig((prev) => ({ ...prev, isOpen: false }))}
+          type={alertConfig.type}
+          title={alertConfig.title}
+          badge={alertConfig.badge}
+          message={alertConfig.message}
+          highlightText={alertConfig.highlightText}
+          subMessage={alertConfig.subMessage}
+          confirmText={alertConfig.confirmText}
+          onConfirm={alertConfig.onConfirm}
+        />
       </div>
     </div>
   );

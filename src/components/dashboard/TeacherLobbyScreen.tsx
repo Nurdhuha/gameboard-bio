@@ -199,22 +199,24 @@ export const TeacherLobbyScreen: React.FC<TeacherLobbyScreenProps> = ({
 
         {/* Start Game Action Button */}
         {(() => {
-          const readyCount = teams.filter((t) => t.isReady).length;
-          const hasReady = readyCount > 0 || roomCode === 'ECO-DEMO';
+          const readyCount = teams.filter((t) => Boolean(t.isReady)).length;
+          const hasEnoughReady = readyCount >= 2;
 
           return (
             <div className="pt-2 sm:pt-3 space-y-2">
               <button
                 onClick={onStartGame}
-                disabled={!hasReady}
+                disabled={!hasEnoughReady}
                 className="w-full sm:w-auto min-w-[240px] px-8 py-3 rounded-2xl bg-emerald-700 hover:bg-emerald-800 active:scale-98 text-white font-bold text-sm sm:text-base shadow-md transition-all flex items-center justify-center gap-2 mx-auto disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none"
               >
                 <Play className="w-4 h-4 fill-white" />
                 <span>Mulai Permainan</span>
               </button>
-              {!hasReady && (
-                <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200/80 rounded-xl px-4 py-2 max-w-sm mx-auto font-medium">
-                  Permainan belum bisa dimulai karena belum ada kelompok siswa yang terhubung / siap.
+              {!hasEnoughReady && (
+                <p className="text-xs text-amber-900 bg-amber-50 border border-amber-200/90 rounded-2xl px-4 py-2.5 max-w-md mx-auto font-medium leading-relaxed text-center">
+                  {readyCount === 0
+                    ? 'Permainan belum bisa dimulai karena belum ada kelompok siswa yang siap. Minimal 2 kelompok harus dalam status siap.'
+                    : `Permainan belum bisa dimulai. Baru 1 kelompok yang siap (${teams.find((t) => t.isReady)?.name || 'Kelompok'}), minimal 2 kelompok harus dalam status siap.`}
                 </p>
               )}
             </div>
