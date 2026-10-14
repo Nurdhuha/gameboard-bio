@@ -420,6 +420,46 @@ async function getTeacherSessions(req, res) {
     res.status(500).json({ success: false, message: error.message || "Gagal mengambil riwayat sesi kelas." });
   }
 }
+async function deleteSession(req, res) {
+  try {
+    const rawCode = String(req.params.roomCode || "").toUpperCase().trim();
+    const strippedCode = rawCode.replace(/[^A-Z0-9]/g, "");
+
+    const session = await db("game_sessions")
+      .where({ room_code: rawCode })
+      .orWhere({ room_code: strippedCode })
+      .orWhereRaw("UPPER(REPLACE(room_code, '-', '')) = ?", [strippedCode])
+      .first();
+
+    if (!session) {
+      res.status(404).json({ success: false, message: "Sesi kelas tidak ditemukan." });
+      return;
+    }
+
+    if (req.teacher?.id && session.teacher_id && String(session.teacher_id).toLowerCase() !== String(req.teacher.id).toLowerCase()) {
+      res.status(403).json({ success: false, message: "Anda tidak memiliki izin untuk menghapus sesi ini." });
+      return;
+    }
+
+    await db.transaction(async (trx) => {
+      // 1. Hapus klaim lencana
+      await trx("badge_claims").where({ session_id: session.id }).delete();
+      // 2. Hapus jawaban LKPD
+      await trx("lkpd_submissions").where({ session_id: session.id }).delete();
+      // 3. Hapus kelompok
+      await trx("teams").where({ session_id: session.id }).delete();
+      // 4. Hapus sesi kelas
+      await trx("game_sessions").where({ id: session.id }).delete();
+    });
+
+    res.json({
+      success: true,
+      message: `Sesi kelas ${session.room_code} berhasil dihapus permanen.`
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message || "Gagal menghapus sesi kelas." });
+  }
+}
 var UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 var EXTRA_PRESETS = [
   { name: "Badak", avatar_icon: "\u{1F98F}", color_hex: "#8b5cf6", badge_color: "bg-purple-500" },
@@ -817,6 +857,7 @@ router2.post("/:roomCode/start", startSession);
 router2.patch("/:roomCode/phase", updatePhase);
 router2.post("/:roomCode/reset", resetSession);
 router2.post("/:roomCode/end", endSession);
+router2.delete("/:roomCode", authMiddleware, deleteSession);
 router2.get("/:roomCode/teams", getTeams);
 router2.post("/:roomCode/teams", addTeam);
 router2.post("/:roomCode/teams/:teamNumber/presence", updateTeamPresence);

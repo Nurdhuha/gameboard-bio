@@ -160,22 +160,30 @@ export const TeacherSessionsModal: React.FC<TeacherSessionsModalProps> = ({
   const handleDeleteSession = async (session: SessionItem) => {
     setIsDeleting(true);
     const cleanCode = String(session.roomCode).replace(/-/g, '');
+    const sessionClassName = session.className || 'Kelas Biologi';
     const token = localStorage.getItem('ecoplay_teacher_token');
 
     try {
       if (token && !isDemoMode) {
         const backendUrl = getBackendUrl();
-        await fetch(`${backendUrl}/api/sessions/${encodeURIComponent(cleanCode)}`, {
+        const res = await fetch(`${backendUrl}/api/sessions/${encodeURIComponent(cleanCode)}`, {
           method: 'DELETE',
           headers: {
             Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
           },
         });
+
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || data.success === false) {
+          throw new Error(data.message || `Server gagal memproses penghapusan sesi (Status HTTP ${res.status}).`);
+        }
       }
 
       // Hapus dari state daftar sesi
       const remainingSessions = sessions.filter((s) => String(s.roomCode).replace(/-/g, '') !== cleanCode);
       setSessions(remainingSessions);
+      setSessionToDelete(null);
 
       // Jika menghapus sesi maka akan otomatis membuka sesi yang terakhir dibuat
       if (remainingSessions.length > 0) {
@@ -187,20 +195,44 @@ export const TeacherSessionsModal: React.FC<TeacherSessionsModalProps> = ({
         });
 
         const latestSession = sortedRemaining[0];
-        onSelectSession({
+        const formattedLatest = {
           ...latestSession,
           roomCode: String(latestSession.roomCode).replace(/-/g, ''),
-        });
+        };
+
+        // Perbarui sesi aktif di localStorage
+        localStorage.setItem('ecoplay_teacher_active_session', JSON.stringify(formattedLatest));
+
+        // Tampilkan konfirmasi alert sukses penghapusan sesi
+        alert(
+          `✅ Sesi Kelas Berhasil Dihapus!\n\n` +
+          `Sesi kelas "${sessionClassName}" dengan kode [${cleanCode}] telah berhasil dihapus permanen dari sistem.\n\n` +
+          `Sistem secara otomatis membuka sesi kelas terbaru yang tersisa: "${formattedLatest.className || 'Kelas Biologi'}" (${formattedLatest.roomCode}).`
+        );
+
+        onSelectSession(formattedLatest);
       } else {
         // Jika seluruh sesi telah dihapus dan tidak ada sesi tersisa
+        localStorage.removeItem('ecoplay_teacher_active_session');
+
+        // Tampilkan konfirmasi alert sukses penghapusan sesi
+        alert(
+          `✅ Sesi Kelas Berhasil Dihapus!\n\n` +
+          `Sesi kelas "${sessionClassName}" dengan kode [${cleanCode}] telah berhasil dihapus permanen dari sistem.\n\n` +
+          `Seluruh sesi kelas Anda telah dibersihkan. Silakan buat sesi kelas baru untuk memulai aktivitas pembelajaran.`
+        );
+
         if (onDeleteActiveSession) {
           onDeleteActiveSession();
         }
       }
-
-      setSessionToDelete(null);
-    } catch (err) {
-      console.warn('Gagal menghapus sesi:', err);
+    } catch (err: any) {
+      console.error('Gagal menghapus sesi:', err);
+      alert(
+        `❌ Gagal Menghapus Sesi Kelas [${cleanCode}]:\n\n` +
+        `${err.message || 'Terjadi gangguan jaringan atau server saat mencoba menghapus sesi.'}\n\n` +
+        `Data sesi tidak dihapus agar tidak terjadi inkonsistensi.`
+      );
     } finally {
       setIsDeleting(false);
     }

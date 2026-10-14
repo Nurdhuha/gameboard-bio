@@ -312,6 +312,7 @@ export async function deleteSession(req: AuthRequest, res: Response): Promise<vo
 
     const session = await db('game_sessions')
       .where({ room_code: rawCode })
+      .orWhere({ room_code: strippedCode })
       .orWhereRaw("UPPER(REPLACE(room_code, '-', '')) = ?", [strippedCode])
       .first();
 
@@ -321,7 +322,7 @@ export async function deleteSession(req: AuthRequest, res: Response): Promise<vo
     }
 
     // Pastikan jika ada autentikasi guru, sesi milik guru tersebut
-    if (req.teacher?.id && session.teacher_id && session.teacher_id !== req.teacher.id) {
+    if (req.teacher?.id && session.teacher_id && String(session.teacher_id).toLowerCase() !== String(req.teacher.id).toLowerCase()) {
       res.status(403).json({ success: false, message: 'Anda tidak memiliki izin untuk menghapus sesi ini.' });
       return;
     }
