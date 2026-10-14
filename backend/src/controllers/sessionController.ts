@@ -3,12 +3,8 @@ import { db } from '../config/database';
 import { AuthRequest } from '../middlewares/authMiddleware';
 
 function generateRoomCode(): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let result = 'ECO';
-  for (let i = 0; i < 3; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
+  const num = Math.floor(100 + Math.random() * 900);
+  return `ECO${num}`;
 }
 
 export const INITIAL_TEAM_PRESETS = [

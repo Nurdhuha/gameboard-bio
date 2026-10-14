@@ -171,14 +171,34 @@ export const App: React.FC = () => {
     if (isTeacherRoute) {
       try {
         const saved = localStorage.getItem('ecoplay_teacher_active_session');
-        return saved ? JSON.parse(saved) : null;
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && parsed.roomCode) {
+            return {
+              ...parsed,
+              roomCode: String(parsed.roomCode).replace(/-/g, ''),
+            };
+          }
+          return parsed;
+        }
+        return null;
       } catch {
         return null;
       }
     }
     try {
       const saved = localStorage.getItem('ecoplay_student_session') || sessionStorage.getItem('ecoplay_student_session');
-      return saved ? JSON.parse(saved) : null;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.roomCode) {
+          return {
+            ...parsed,
+            roomCode: String(parsed.roomCode).replace(/-/g, ''),
+          };
+        }
+        return parsed;
+      }
+      return null;
     } catch {
       return null;
     }
@@ -612,12 +632,12 @@ export const App: React.FC = () => {
     setIsJoiningRoom(true);
     try {
       const backendUrl = getBackendUrl();
-      const cleanCode = code.trim().toUpperCase();
+      const cleanCode = code.trim().toUpperCase().replace(/[\s-]/g, '');
       const res = await fetch(`${backendUrl}/api/sessions/${encodeURIComponent(cleanCode)}`);
       const data = await res.json();
       if (res.ok && data.success && data.session) {
         const sessionData = {
-          roomCode: data.session.roomCode || data.session.room_code || cleanCode,
+          roomCode: String(data.session.roomCode || data.session.room_code || cleanCode).replace(/-/g, ''),
           className: data.session.className || data.session.class_name || 'Kelas Ecoplay',
           academicYear: data.session.academicYear || data.session.academic_year || '2026/2027',
         };
@@ -778,7 +798,7 @@ export const App: React.FC = () => {
       // 3. Pasang sesi aktif ke state dan simpan agar siswa bisa bergabung
       if (currentSession) {
         const formatted = {
-          roomCode: currentSession.roomCode || currentSession.room_code,
+          roomCode: String(currentSession.roomCode || currentSession.room_code).replace(/-/g, ''),
           className: currentSession.className || currentSession.class_name || 'Ecoplay',
           academicYear: currentSession.academicYear || currentSession.academic_year || '',
         };
@@ -827,7 +847,7 @@ export const App: React.FC = () => {
       console.warn('Gagal memuat sesi aktif dari server:', err);
       if (!activeSession) {
         const fallbackSession = {
-          roomCode: `ECO-${Math.floor(100 + Math.random() * 900)}`,
+          roomCode: `ECO${Math.floor(100 + Math.random() * 900)}`,
           className: 'Ecoplay',
           academicYear: '',
         };
@@ -869,7 +889,7 @@ export const App: React.FC = () => {
 
   // Guru membuat sesi kelas baru secara eksplisit
   const handleCreateSession = async (className: string, academicYear: string) => {
-    let roomCode = `ECO-${Math.floor(100 + Math.random() * 900)}`;
+    let roomCode = `ECO${Math.floor(100 + Math.random() * 900)}`;
     const token = localStorage.getItem('ecoplay_teacher_token');
     if (token) {
       try {
@@ -884,7 +904,8 @@ export const App: React.FC = () => {
         });
         const data = await res.json();
         if (res.ok && data.success && (data.session?.roomCode || data.session?.room_code)) {
-          roomCode = data.session.roomCode || data.session.room_code;
+          const rawCode = data.session.roomCode || data.session.room_code;
+          roomCode = String(rawCode).replace(/-/g, '');
           if (data.teams && data.teams.length > 0) {
             setTeams(mergeServerTeams(data.teams, []));
           }
@@ -907,7 +928,7 @@ export const App: React.FC = () => {
   // Guru beralih ke sesi kelas tertentu dari daftar semua sesi
   const handleSwitchSession = async (session: SessionItem) => {
     const formatted = {
-      roomCode: session.roomCode,
+      roomCode: String(session.roomCode).replace(/-/g, ''),
       className: session.className || 'Kelas Biologi',
       academicYear: session.academicYear || '',
     };
@@ -1806,7 +1827,7 @@ export const App: React.FC = () => {
           <main className="flex-1 overflow-y-auto flex flex-col">
             <StudentWaitingLobby
               team={selectedTeam}
-              roomCode={activeSession?.roomCode || 'ECO-729'}
+              roomCode={activeSession?.roomCode || 'ECO729'}
               className={activeSession?.className || 'Kelas Biologi'}
               onChangeTeam={() => updateStudentHasSelectedTeam(false)}
             />
@@ -2207,6 +2228,7 @@ export const App: React.FC = () => {
               setShowSessionHistory(false);
               setShowSessionCreator(true);
             }}
+            onReLogin={handleTeacherLogout}
             teacherName={teacherAuth?.name}
             isDemoMode={isTeacherDemoMode}
           />

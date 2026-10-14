@@ -30,7 +30,8 @@ export const TeamSelectionScreen: React.FC<TeamSelectionScreenProps> = ({
   const handleApplyCode = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputCode.trim()) return;
-    await onJoinRoomCode(inputCode.trim().toUpperCase());
+    const sanitized = inputCode.trim().toUpperCase().replace(/[\s-]/g, '');
+    await onJoinRoomCode(sanitized);
   };
 
   // 1. TAMPILAN JIKA BELUM MEMASUKKAN KODE KELAS
@@ -79,7 +80,7 @@ export const TeamSelectionScreen: React.FC<TeamSelectionScreenProps> = ({
                   required
                   value={inputCode}
                   onChange={(e) => setInputCode(e.target.value.toUpperCase())}
-                  placeholder="Contoh: ECO-729"
+                  placeholder="Contoh: ECO897"
                   maxLength={12}
                   className="w-full py-3.5 px-4 rounded-2xl border-2 border-stone-300 text-center font-mono font-black text-xl sm:text-2xl tracking-widest uppercase focus:outline-none focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100 transition shadow-inner placeholder:text-stone-300 placeholder:font-normal placeholder:text-base placeholder:tracking-normal"
                   autoFocus

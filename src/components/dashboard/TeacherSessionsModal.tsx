@@ -10,10 +10,9 @@ import {
   ChevronRight,
   GraduationCap,
   Calendar,
-  Clock,
-  Sparkles,
   AlertCircle,
   FolderOpen,
+  LogIn,
 } from 'lucide-react';
 import { getBackendUrl } from '../../config/api';
 
@@ -37,6 +36,7 @@ interface TeacherSessionsModalProps {
   currentRoomCode?: string;
   onSelectSession: (session: SessionItem) => void;
   onNewSession: () => void;
+  onReLogin?: () => void;
   teacherName?: string;
   isDemoMode?: boolean;
 }
@@ -47,6 +47,7 @@ export const TeacherSessionsModal: React.FC<TeacherSessionsModalProps> = ({
   currentRoomCode,
   onSelectSession,
   onNewSession,
+  onReLogin,
   teacherName,
   isDemoMode = false,
 }) => {
@@ -60,62 +61,49 @@ export const TeacherSessionsModal: React.FC<TeacherSessionsModalProps> = ({
     setIsLoading(true);
     setError(null);
 
-    // Jika mode demo / simulasi tanpa token backend
-    if (isDemoMode) {
-      const savedSessionRaw = localStorage.getItem('ecoplay_teacher_active_session');
-      let fallbackSessions: SessionItem[] = [];
-      if (savedSessionRaw) {
-        try {
-          const parsed = JSON.parse(savedSessionRaw);
-          fallbackSessions.push({
-            id: 'demo-1',
-            roomCode: parsed.roomCode || 'ECO-DEMO',
-            className: parsed.className || 'Kelas Simulasi Biologi',
-            academicYear: parsed.academicYear || '2026/2027',
-            phase: 'lobby',
-            isActive: true,
-            createdAt: new Date().toISOString(),
-          });
-        } catch {}
-      }
-      if (fallbackSessions.length === 0) {
-        fallbackSessions = [
-          {
-            id: 'demo-1',
-            roomCode: currentRoomCode || 'ECO-DEMO',
-            className: 'Kelas Simulasi Biologi',
-            academicYear: '2026/2027',
-            phase: 'lobby',
-            isActive: true,
-            createdAt: new Date().toISOString(),
-          },
-        ];
-      }
-      setSessions(fallbackSessions);
-      setIsLoading(false);
-      return;
-    }
-
-    const token = localStorage.getItem('ecoplay_teacher_token');
-    if (!token) {
-      // Fallback dari session lokal jika tidak ada token
+    // Ambil sesi lokal yang tersimpan sebagai fallback instan
+    const getLocalFallback = (): SessionItem[] => {
       const savedSessionRaw = localStorage.getItem('ecoplay_teacher_active_session');
       if (savedSessionRaw) {
         try {
           const parsed = JSON.parse(savedSessionRaw);
-          setSessions([
+          return [
             {
               id: 'local-1',
-              roomCode: parsed.roomCode,
+              roomCode: parsed.roomCode ? String(parsed.roomCode).replace(/-/g, '') : 'ECO897',
               className: parsed.className || 'Kelas Biologi',
               academicYear: parsed.academicYear || '2026/2027',
               phase: 'lobby',
               isActive: true,
               createdAt: new Date().toISOString(),
             },
-          ]);
+          ];
         } catch {}
       }
+      return [
+        {
+          id: 'demo-1',
+          roomCode: currentRoomCode ? String(currentRoomCode).replace(/-/g, '') : 'ECODEMO',
+          className: 'Kelas Simulasi Biologi',
+          academicYear: '2026/2027',
+          phase: 'lobby',
+          isActive: true,
+          createdAt: new Date().toISOString(),
+        },
+      ];
+    };
+
+    // Jika mode demo / simulasi tanpa token backend
+    if (isDemoMode) {
+      setSessions(getLocalFallback());
+      setIsLoading(false);
+      return;
+    }
+
+    const token = localStorage.getItem('ecoplay_teacher_token');
+    if (!token) {
+      // Tidak ada token JWT, tampilkan sesi lokal
+      setSessions(getLocalFallback());
       setIsLoading(false);
       return;
     }
@@ -131,27 +119,18 @@ export const TeacherSessionsModal: React.FC<TeacherSessionsModalProps> = ({
       if (res.ok && data.success && Array.isArray(data.sessions)) {
         setSessions(data.sessions);
       } else {
-        setError(data.message || 'Gagal mengambil riwayat sesi kelas.');
+        if (res.status === 401 || res.status === 403) {
+          setError('Sesi autentikasi telah berakhir. Silakan login kembali untuk menyinkronkan data.');
+        } else {
+          setError(data.message || 'Gagal mengambil riwayat sesi kelas.');
+        }
+        // Tetap tampilkan sesi aktif lokal agar guru tidak terhalang
+        setSessions(getLocalFallback());
       }
     } catch (err: any) {
       console.warn('Gagal memuat sesi dari backend:', err);
       setError('Koneksi ke server terputus. Menampilkan data lokal.');
-      const savedSessionRaw = localStorage.getItem('ecoplay_teacher_active_session');
-      if (savedSessionRaw) {
-        try {
-          const parsed = JSON.parse(savedSessionRaw);
-          setSessions([
-            {
-              id: 'local-1',
-              roomCode: parsed.roomCode,
-              className: parsed.className || 'Kelas Biologi',
-              academicYear: parsed.academicYear || '2026/2027',
-              phase: 'lobby',
-              isActive: true,
-            },
-          ]);
-        } catch {}
-      }
+      setSessions(getLocalFallback());
     } finally {
       setIsLoading(false);
     }
@@ -167,8 +146,9 @@ export const TeacherSessionsModal: React.FC<TeacherSessionsModalProps> = ({
 
   const handleCopy = (code: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    navigator.clipboard.writeText(code);
-    setCopiedCode(code);
+    const cleanCode = String(code).replace(/-/g, '');
+    navigator.clipboard.writeText(cleanCode);
+    setCopiedCode(cleanCode);
     setTimeout(() => setCopiedCode(null), 1500);
   };
 
@@ -270,25 +250,34 @@ export const TeacherSessionsModal: React.FC<TeacherSessionsModalProps> = ({
           </div>
         </div>
 
+        {/* NOTIFIKASI ERROR / LOGIN ULANG JIKA KEDALUWARSA */}
+        {error && (
+          <div className="px-5 py-2.5 bg-amber-50 border-b border-amber-200 flex items-center justify-between gap-3 text-xs text-amber-900">
+            <div className="flex items-center gap-2 min-w-0">
+              <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+              <span className="truncate">{error}</span>
+            </div>
+            {onReLogin && (
+              <button
+                onClick={() => {
+                  onClose();
+                  onReLogin();
+                }}
+                className="px-2.5 py-1 rounded-lg bg-amber-700 hover:bg-amber-800 text-white font-bold text-[11px] flex items-center gap-1 flex-shrink-0 transition shadow-2xs"
+              >
+                <LogIn className="w-3 h-3" />
+                <span>Login Ulang</span>
+              </button>
+            )}
+          </div>
+        )}
+
         {/* SESSIONS LIST CONTENT */}
         <div className="flex-1 overflow-y-auto p-3 sm:p-5 space-y-3 bg-[#fcfdfd]">
           {isLoading && sessions.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center space-y-3">
               <RefreshCw className="w-8 h-8 text-emerald-600 animate-spin" />
               <p className="text-sm font-semibold text-stone-600">Memuat riwayat sesi kelas...</p>
-            </div>
-          ) : error && sessions.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center space-y-3 px-4">
-              <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center border border-rose-100">
-                <AlertCircle className="w-6 h-6" />
-              </div>
-              <p className="text-sm font-semibold text-slate-800">{error}</p>
-              <button
-                onClick={fetchSessions}
-                className="px-4 py-2 rounded-xl bg-emerald-700 text-white text-xs font-bold hover:bg-emerald-800 transition shadow-xs"
-              >
-                Coba Lagi
-              </button>
             </div>
           ) : filteredSessions.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center space-y-3 px-4">
@@ -307,7 +296,9 @@ export const TeacherSessionsModal: React.FC<TeacherSessionsModalProps> = ({
           ) : (
             <div className="grid grid-cols-1 gap-3">
               {filteredSessions.map((session, idx) => {
-                const isCurrent = session.roomCode === currentRoomCode;
+                const cleanRoomCode = String(session.roomCode || '').replace(/-/g, '');
+                const cleanCurrentRoomCode = String(currentRoomCode || '').replace(/-/g, '');
+                const isCurrent = cleanRoomCode === cleanCurrentRoomCode;
                 const dateText = formatDate(session.createdAt || session.created_at);
                 const isEnded = session.phase === 'ended' || session.isActive === false || session.is_active === false;
 
@@ -316,7 +307,7 @@ export const TeacherSessionsModal: React.FC<TeacherSessionsModalProps> = ({
                     key={session.id || session.roomCode || idx}
                     onClick={() => {
                       if (!isCurrent) {
-                        onSelectSession(session);
+                        onSelectSession({ ...session, roomCode: cleanRoomCode });
                       }
                     }}
                     className={`p-4 rounded-2xl border transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 ${
@@ -373,16 +364,16 @@ export const TeacherSessionsModal: React.FC<TeacherSessionsModalProps> = ({
                       </div>
                     </div>
 
-                    {/* KODE RUANG & AKSI BERALIH */}
+                    {/* KODE RUANG (FORMAT TANPA TANDA HUBUNG: ECO897) & AKSI BERALIH */}
                     <div className="flex items-center gap-2.5 w-full sm:w-auto justify-between sm:justify-end pt-2 sm:pt-0 border-t sm:border-t-0 border-stone-100">
                       {/* Code Badge with Copy */}
                       <button
-                        onClick={(e) => handleCopy(session.roomCode, e)}
-                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-slate-800 font-mono text-xs font-bold transition active:scale-95"
+                        onClick={(e) => handleCopy(cleanRoomCode, e)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-slate-800 font-mono text-xs font-bold transition active:scale-95"
                         title="Salin Kode Kelas"
                       >
-                        <span>{session.roomCode}</span>
-                        {copiedCode === session.roomCode ? (
+                        <span>{cleanRoomCode}</span>
+                        {copiedCode === cleanRoomCode ? (
                           <Check className="w-3.5 h-3.5 text-emerald-600" />
                         ) : (
                           <Copy className="w-3.5 h-3.5 text-stone-400" />
@@ -399,7 +390,7 @@ export const TeacherSessionsModal: React.FC<TeacherSessionsModalProps> = ({
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            onSelectSession(session);
+                            onSelectSession({ ...session, roomCode: cleanRoomCode });
                           }}
                           className="px-3 py-1.5 rounded-xl bg-white group-hover:bg-emerald-700 group-hover:text-white border border-stone-300 group-hover:border-emerald-700 text-slate-700 text-xs font-bold flex items-center gap-1 transition shadow-xs active:scale-95"
                         >

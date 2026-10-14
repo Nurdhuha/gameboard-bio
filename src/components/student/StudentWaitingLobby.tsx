@@ -23,7 +23,7 @@ interface StudentWaitingLobbyProps {
 
 export const StudentWaitingLobby: React.FC<StudentWaitingLobbyProps> = ({
   team,
-  roomCode = 'ECO-CLASS',
+  roomCode = 'ECOCLASS',
   className = 'Kelas Biologi',
   onChangeTeam,
 }) => {
