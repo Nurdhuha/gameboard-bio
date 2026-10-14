@@ -13,6 +13,7 @@ import {
   AlertCircle,
   FolderOpen,
   LogIn,
+  Trash2,
 } from 'lucide-react';
 import { getBackendUrl } from '../../config/api';
 
@@ -37,6 +38,7 @@ interface TeacherSessionsModalProps {
   onSelectSession: (session: SessionItem) => void;
   onNewSession: () => void;
   onReLogin?: () => void;
+  onDeleteActiveSession?: () => void;
   teacherName?: string;
   isDemoMode?: boolean;
 }
@@ -48,6 +50,7 @@ export const TeacherSessionsModal: React.FC<TeacherSessionsModalProps> = ({
   onSelectSession,
   onNewSession,
   onReLogin,
+  onDeleteActiveSession,
   teacherName,
   isDemoMode = false,
 }) => {
@@ -56,6 +59,10 @@ export const TeacherSessionsModal: React.FC<TeacherSessionsModalProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+
+  // State untuk konfirmasi hapus sesi
+  const [sessionToDelete, setSessionToDelete] = useState<SessionItem | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchSessions = async () => {
     setIsLoading(true);
@@ -102,7 +109,6 @@ export const TeacherSessionsModal: React.FC<TeacherSessionsModalProps> = ({
 
     const token = localStorage.getItem('ecoplay_teacher_token');
     if (!token) {
-      // Tidak ada token JWT, tampilkan sesi lokal
       setSessions(getLocalFallback());
       setIsLoading(false);
       return;
@@ -124,7 +130,6 @@ export const TeacherSessionsModal: React.FC<TeacherSessionsModalProps> = ({
         } else {
           setError(data.message || 'Gagal mengambil riwayat sesi kelas.');
         }
-        // Tetap tampilkan sesi aktif lokal agar guru tidak terhalang
         setSessions(getLocalFallback());
       }
     } catch (err: any) {
@@ -150,6 +155,55 @@ export const TeacherSessionsModal: React.FC<TeacherSessionsModalProps> = ({
     navigator.clipboard.writeText(cleanCode);
     setCopiedCode(cleanCode);
     setTimeout(() => setCopiedCode(null), 1500);
+  };
+
+  const handleDeleteSession = async (session: SessionItem) => {
+    setIsDeleting(true);
+    const cleanCode = String(session.roomCode).replace(/-/g, '');
+    const token = localStorage.getItem('ecoplay_teacher_token');
+
+    try {
+      if (token && !isDemoMode) {
+        const backendUrl = getBackendUrl();
+        await fetch(`${backendUrl}/api/sessions/${encodeURIComponent(cleanCode)}`, {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+      }
+
+      // Hapus dari state daftar sesi
+      const remainingSessions = sessions.filter((s) => String(s.roomCode).replace(/-/g, '') !== cleanCode);
+      setSessions(remainingSessions);
+
+      // Jika menghapus sesi maka akan otomatis membuka sesi yang terakhir dibuat
+      if (remainingSessions.length > 0) {
+        // Urutkan untuk memastikan sesi dengan waktu pembuatan terbaru berada di posisi pertama
+        const sortedRemaining = [...remainingSessions].sort((a, b) => {
+          const timeA = new Date(a.createdAt || a.created_at || 0).getTime();
+          const timeB = new Date(b.createdAt || b.created_at || 0).getTime();
+          return timeB - timeA;
+        });
+
+        const latestSession = sortedRemaining[0];
+        onSelectSession({
+          ...latestSession,
+          roomCode: String(latestSession.roomCode).replace(/-/g, ''),
+        });
+      } else {
+        // Jika seluruh sesi telah dihapus dan tidak ada sesi tersisa
+        if (onDeleteActiveSession) {
+          onDeleteActiveSession();
+        }
+      }
+
+      setSessionToDelete(null);
+    } catch (err) {
+      console.warn('Gagal menghapus sesi:', err);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const formatDate = (dateStr?: string) => {
@@ -181,7 +235,7 @@ export const TeacherSessionsModal: React.FC<TeacherSessionsModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/65 backdrop-blur-sm animate-fade-in font-sans">
-      <div className="bg-white border border-stone-200/90 rounded-3xl w-full max-w-3xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative bg-white border border-stone-200/90 rounded-3xl w-full max-w-3xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         {/* MODAL HEADER */}
         <div className="px-5 py-4 bg-slate-900 text-white flex items-center justify-between flex-shrink-0 gap-3">
           <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -198,7 +252,7 @@ export const TeacherSessionsModal: React.FC<TeacherSessionsModalProps> = ({
                 </span>
               </div>
               <p className="text-xs text-slate-400 mt-0.5 truncate">
-                {teacherName ? `Akun: ${teacherName} • ` : ''}Pilih sesi untuk beralih atau lihat kode kelas
+                {teacherName ? `Akun: ${teacherName} • ` : ''}Kelola, beralih, atau hapus sesi kelas Anda
               </p>
             </div>
           </div>
@@ -364,8 +418,8 @@ export const TeacherSessionsModal: React.FC<TeacherSessionsModalProps> = ({
                       </div>
                     </div>
 
-                    {/* KODE RUANG (FORMAT TANPA TANDA HUBUNG: ECO897) & AKSI BERALIH */}
-                    <div className="flex items-center gap-2.5 w-full sm:w-auto justify-between sm:justify-end pt-2 sm:pt-0 border-t sm:border-t-0 border-stone-100">
+                    {/* KODE RUANG, AKSI BERALIH, & TOMBOL HAPUS */}
+                    <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end pt-2 sm:pt-0 border-t sm:border-t-0 border-stone-100">
                       {/* Code Badge with Copy */}
                       <button
                         onClick={(e) => handleCopy(cleanRoomCode, e)}
@@ -398,6 +452,19 @@ export const TeacherSessionsModal: React.FC<TeacherSessionsModalProps> = ({
                           <ChevronRight className="w-3.5 h-3.5" />
                         </button>
                       )}
+
+                      {/* Tombol Hapus Sesi */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSessionToDelete(session);
+                        }}
+                        className="p-1.5 sm:p-2 rounded-xl text-stone-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition"
+                        title="Hapus sesi kelas ini"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
                 );
@@ -409,7 +476,7 @@ export const TeacherSessionsModal: React.FC<TeacherSessionsModalProps> = ({
         {/* MODAL FOOTER */}
         <div className="px-5 py-3 bg-stone-50 border-t border-stone-200 flex items-center justify-between text-[11px] text-stone-500 flex-shrink-0">
           <span>
-            Klik <strong>"Buka Sesi"</strong> untuk berpindah mengajar ke rombongan belajar lain.
+            Klik <strong>"Buka Sesi"</strong> untuk berpindah mengajar, atau ikon tempat sampah untuk menghapus sesi.
           </span>
           <button
             onClick={onClose}
@@ -418,6 +485,57 @@ export const TeacherSessionsModal: React.FC<TeacherSessionsModalProps> = ({
             Tutup
           </button>
         </div>
+
+        {/* DIALOG KONFIRMASI HAPUS SESI KELAS */}
+        {sessionToDelete && (
+          <div className="absolute inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
+            <div className="bg-white border border-stone-200 rounded-3xl p-6 max-w-sm sm:max-w-md w-full shadow-2xl space-y-4 text-center animate-in zoom-in-95 duration-150">
+              <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto border border-rose-100">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-base font-bold text-slate-900">
+                  Hapus Kode Sesi Kelas?
+                </h3>
+                <p className="text-xs text-stone-500 leading-relaxed">
+                  Apakah Anda yakin ingin menghapus sesi <strong>{sessionToDelete.className}</strong> dengan kode <code className="font-mono font-bold text-slate-800 bg-stone-100 px-1.5 py-0.5 rounded">{String(sessionToDelete.roomCode).replace(/-/g, '')}</code>?
+                </p>
+                <p className="text-[11px] text-rose-600 font-medium pt-1">
+                  Seluruh data kelompok, skor, dan jawaban LKPD pada sesi ini akan dihapus permanen.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 pt-2">
+                <button
+                  type="button"
+                  disabled={isDeleting}
+                  onClick={() => setSessionToDelete(null)}
+                  className="flex-1 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs transition"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  disabled={isDeleting}
+                  onClick={() => handleDeleteSession(sessionToDelete)}
+                  className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs transition flex items-center justify-center gap-1.5 shadow-sm disabled:opacity-50"
+                >
+                  {isDeleting ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>Menghapus...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Ya, Hapus Sesi</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

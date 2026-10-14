@@ -278,6 +278,23 @@ export const App: React.FC = () => {
     } catch {}
   };
 
+  // Reset otomatis tampilan siswa kembali ke pemilihan kelompok saat kelas diakhiri oleh guru
+  const resetStudentToTeamSelection = () => {
+    updateStudentHasSelectedTeam(false);
+    updateStudentGamePhase('lobby');
+    setCompletedActivities([]);
+    setTeamAnswers({});
+    setSelectedTeamId(1);
+    try {
+      localStorage.removeItem('ecoplay_student_has_selected_team');
+      localStorage.removeItem('ecoplay_student_game_phase');
+      localStorage.removeItem('ecoplay_student_completed_activities');
+      localStorage.removeItem('ecoplay_student_team_answers');
+      localStorage.removeItem('ecoplay_student_teams');
+      localStorage.removeItem('ecoplay_student_team_id');
+    } catch {}
+  };
+
   const [completedActivities, setCompletedActivities] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem('ecoplay_student_completed_activities');
@@ -487,16 +504,10 @@ export const App: React.FC = () => {
       }
     });
 
-    socket.on('class:ended', ({ message }) => {
-      alert(message || 'Sesi kelas telah diakhiri oleh Bapak/Ibu Guru.');
-      updateStudentGamePhase('lobby');
-      updateTeacherPhase('lobby');
-      updateStudentHasSelectedTeam(false);
-      try {
-        localStorage.removeItem('ecoplay_student_completed_activities');
-        localStorage.removeItem('ecoplay_student_team_answers');
-        localStorage.removeItem('ecoplay_student_teams');
-      } catch {}
+    socket.on('class:ended', () => {
+      if (!isTeacherRoute) {
+        resetStudentToTeamSelection();
+      }
     });
 
     return () => {
@@ -523,7 +534,7 @@ export const App: React.FC = () => {
 
         applyServerTeams(data.teams);
 
-        // Siswa otomatis masuk papan begitu guru menyelesaikan spin dan membuka papan
+        // Siswa otomatis masuk papan begitu guru menyelesaikan spin, dan otomatis kembali ke pemilihan kelompok saat kelas diakhiri
         if (!isTeacherRoute && data.session?.phase) {
           if (data.session.phase === 'board') {
             if (studentPhaseRef.current === 'lobby') {
@@ -531,8 +542,9 @@ export const App: React.FC = () => {
               confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
             }
           } else if (data.session.phase === 'lobby' || data.session.phase === 'ended') {
-            if (studentPhaseRef.current === 'board') {
-              updateStudentGamePhase('lobby');
+            // Jika guru mengakhiri sesi kelas atau mereset ke lobby, otomatis kembalikan siswa ke pemilihan kelompok
+            if (studentPhaseRef.current === 'board' || data.session.phase === 'ended') {
+              resetStudentToTeamSelection();
             }
           }
         }
@@ -591,6 +603,23 @@ export const App: React.FC = () => {
       clearInterval(interval);
     };
   }, [isTeacherRoute, isTeacherDemoMode, teacherAuth?.id, activeSession?.roomCode, selectedTeamId]);
+
+  // Sinkronisasi otomatis antar-tab peramban saat guru mengakhiri kelas
+  useEffect(() => {
+    if (isTeacherRoute) return;
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (
+        e.key === 'ecoplay_student_has_selected_team' &&
+        (e.newValue === null || e.newValue === 'false')
+      ) {
+        resetStudentToTeamSelection();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [isTeacherRoute]);
 
   // Heartbeat status "Siap" kelompok siswa ke server, agar terlihat real-time di layar guru
   useEffect(() => {
@@ -959,10 +988,19 @@ export const App: React.FC = () => {
     }
 
     // Tentukan fase guru sesuai status sesi
-    const targetPhase: 'lobby' | 'spin' | 'board' =
+    const targetPhase =
       session.phase === 'board' ? 'board' : session.phase === 'spin' ? 'spin' : 'lobby';
     updateTeacherPhase(targetPhase);
     setShowSessionHistory(false);
+  };
+
+  // Jika guru menghapus sesi kelas yang sedang aktif dibuka
+  const handleDeleteActiveSession = () => {
+    localStorage.removeItem('ecoplay_teacher_active_session');
+    setActiveSession(null);
+    setShowSessionHistory(false);
+    setShowSessionCreator(true);
+    updateTeacherPhase('lobby');
   };
 
   // Guru keluar dari akun / sesi kelas
@@ -1246,13 +1284,7 @@ export const App: React.FC = () => {
     setTeamAnswers({});
     setCompletedActivities([]);
     updateTeacherPhase('lobby');
-    updateStudentGamePhase('lobby');
-    updateStudentHasSelectedTeam(false);
-    try {
-      localStorage.removeItem('ecoplay_student_completed_activities');
-      localStorage.removeItem('ecoplay_student_team_answers');
-      localStorage.removeItem('ecoplay_student_teams');
-    } catch {}
+    resetStudentToTeamSelection();
     setShowTeacherDashboard(false);
     setIsEndingClass(false);
     setShowEndClassModal(false);
@@ -2241,6 +2273,7 @@ export const App: React.FC = () => {
               setShowSessionCreator(true);
             }}
             onReLogin={handleTeacherLogout}
+            onDeleteActiveSession={handleDeleteActiveSession}
             teacherName={teacherAuth?.name}
             isDemoMode={isTeacherDemoMode}
           />

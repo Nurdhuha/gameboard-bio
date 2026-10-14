@@ -7,6 +7,7 @@ import {
   resetSession,
   endSession,
   getTeacherSessions,
+  deleteSession,
 } from '../controllers/sessionController';
 import { getTeams, addTeam, updatePawn, updateTeamPresence, removeTeam } from '../controllers/teamController';
 import {
@@ -30,6 +31,7 @@ router.post('/:roomCode/start', startSession);
 router.patch('/:roomCode/phase', updatePhase);
 router.post('/:roomCode/reset', resetSession);
 router.post('/:roomCode/end', endSession);
+router.delete('/:roomCode', authMiddleware as any, deleteSession as any);
 
 // Tim & Pion
 router.get('/:roomCode/teams', getTeams);

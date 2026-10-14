@@ -304,3 +304,44 @@ export async function getTeacherSessions(req: AuthRequest, res: Response): Promi
     res.status(500).json({ success: false, message: error.message || 'Gagal mengambil riwayat sesi kelas.' });
   }
 }
+
+export async function deleteSession(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const rawCode = String(req.params.roomCode || '').toUpperCase().trim();
+    const strippedCode = rawCode.replace(/[^A-Z0-9]/g, '');
+
+    const session = await db('game_sessions')
+      .where({ room_code: rawCode })
+      .orWhereRaw("UPPER(REPLACE(room_code, '-', '')) = ?", [strippedCode])
+      .first();
+
+    if (!session) {
+      res.status(404).json({ success: false, message: 'Sesi kelas tidak ditemukan.' });
+      return;
+    }
+
+    // Pastikan jika ada autentikasi guru, sesi milik guru tersebut
+    if (req.teacher?.id && session.teacher_id && session.teacher_id !== req.teacher.id) {
+      res.status(403).json({ success: false, message: 'Anda tidak memiliki izin untuk menghapus sesi ini.' });
+      return;
+    }
+
+    await db.transaction(async (trx) => {
+      // 1. Hapus klaim lencana
+      await trx('badge_claims').where({ session_id: session.id }).delete();
+      // 2. Hapus jawaban LKPD
+      await trx('lkpd_submissions').where({ session_id: session.id }).delete();
+      // 3. Hapus kelompok
+      await trx('teams').where({ session_id: session.id }).delete();
+      // 4. Hapus sesi kelas
+      await trx('game_sessions').where({ id: session.id }).delete();
+    });
+
+    res.json({
+      success: true,
+      message: `Sesi kelas ${session.room_code} berhasil dihapus permanen.`,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message || 'Gagal menghapus sesi kelas.' });
+  }
+}
