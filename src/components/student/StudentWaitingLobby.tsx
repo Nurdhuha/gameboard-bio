@@ -8,6 +8,7 @@ import {
   Award,
   Compass,
   CheckCircle2,
+  KeyRound,
 } from 'lucide-react';
 
 const GameRulesModal = lazy(() =>
@@ -19,6 +20,7 @@ interface StudentWaitingLobbyProps {
   roomCode?: string;
   className?: string;
   onChangeTeam: () => void;
+  onChangeRoomCode?: () => void;
 }
 
 export const StudentWaitingLobby: React.FC<StudentWaitingLobbyProps> = ({
@@ -26,25 +28,40 @@ export const StudentWaitingLobby: React.FC<StudentWaitingLobbyProps> = ({
   roomCode = 'ECOCLASS',
   className = 'Kelas Biologi',
   onChangeTeam,
+  onChangeRoomCode,
 }) => {
   const [showRulesModal, setShowRulesModal] = useState(false);
 
   return (
     <div className="min-h-full w-full flex-1 flex flex-col items-center justify-between p-4 sm:p-6 bg-biology-pattern text-slate-800 select-none">
       {/* Top Header Badge */}
-      <div className="w-full max-w-md flex items-center justify-between pt-2">
+      <div className="w-full max-w-md flex items-center justify-between pt-2 gap-2">
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-900 font-semibold text-xs">
-          <span>Kode Kelas:</span>
+          <span>Kode:</span>
           <span className="font-mono font-bold tracking-wider">{roomCode}</span>
         </div>
 
-        <button
-          onClick={onChangeTeam}
-          className="text-xs text-stone-500 hover:text-slate-800 font-bold flex items-center gap-1 p-1.5 rounded-lg hover:bg-stone-100 transition"
-        >
-          <RefreshCw className="w-3.5 h-3.5 text-stone-400" />
-          <span>Ganti Tim</span>
-        </button>
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={onChangeTeam}
+            className="text-xs text-stone-600 hover:text-slate-900 font-bold flex items-center gap-1 px-2.5 py-1 rounded-xl bg-white border border-stone-200 hover:bg-stone-50 transition shadow-2xs"
+            title="Ganti kelompok siswa"
+          >
+            <RefreshCw className="w-3.5 h-3.5 text-stone-500" />
+            <span>Ganti Tim</span>
+          </button>
+
+          {onChangeRoomCode && (
+            <button
+              onClick={onChangeRoomCode}
+              className="text-xs text-stone-600 hover:text-rose-700 font-bold flex items-center gap-1 px-2.5 py-1 rounded-xl bg-white border border-stone-200 hover:bg-rose-50 hover:border-rose-200 transition shadow-2xs"
+              title="Keluar dari ruang kelas ini dan ganti kode kelas"
+            >
+              <KeyRound className="w-3.5 h-3.5 text-stone-500" />
+              <span>Ganti Kode</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Main Content Card */}

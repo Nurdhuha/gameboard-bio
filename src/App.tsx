@@ -61,6 +61,7 @@ import {
   Home,
   GraduationCap,
   Layers,
+  KeyRound,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -1502,12 +1503,22 @@ export const App: React.FC = () => {
                   {/* Tombol Ganti Kelompok */}
                   <button
                     onClick={() => updateStudentHasSelectedTeam(false)}
-                    className="flex items-center gap-1.5 bg-stone-100/90 hover:bg-stone-200/80 border border-stone-200 px-2.5 py-1 rounded-xl text-xs font-bold text-slate-800 transition"
+                    className="flex items-center gap-1.5 bg-stone-100/90 hover:bg-stone-200/80 border border-stone-200 px-2.5 py-1 rounded-xl text-xs font-bold text-slate-800 transition shadow-2xs active:scale-95"
                     title="Ganti Kelompok"
                   >
                     <span>{selectedTeam.avatarIcon}</span>
                     <span className="hidden lg:inline">{selectedTeam.name}</span>
                     <RefreshCw className="w-3 h-3 text-stone-400 ml-0.5" />
+                  </button>
+
+                  {/* Tombol Ganti Kode Kelas */}
+                  <button
+                    onClick={handleChangeRoomCode}
+                    className="flex items-center gap-1 bg-stone-100 hover:bg-rose-50 text-stone-600 hover:text-rose-700 border border-stone-200 hover:border-rose-200 px-2.5 py-1 rounded-xl text-xs font-bold transition active:scale-95 shadow-2xs"
+                    title="Ganti Kode Kelas (Keluar ke Layar Kode)"
+                  >
+                    <KeyRound className="w-3.5 h-3.5 text-stone-500" />
+                    <span className="hidden sm:inline">Ganti Kode</span>
                   </button>
                 </>
               )}
@@ -1816,7 +1827,7 @@ export const App: React.FC = () => {
                 updateStudentTeamId(teamId);
                 updateStudentHasSelectedTeam(true);
               }}
-              onChangeRoomCode={activeSession?.roomCode === 'ECO-DEMO' ? handleChangeRoomCode : undefined}
+              onChangeRoomCode={handleChangeRoomCode}
               onUseDemoMode={handleStudentDemoMode}
               isLoading={isJoiningRoom}
               error={joinRoomError}
@@ -1830,6 +1841,7 @@ export const App: React.FC = () => {
               roomCode={activeSession?.roomCode || 'ECO729'}
               className={activeSession?.className || 'Kelas Biologi'}
               onChangeTeam={() => updateStudentHasSelectedTeam(false)}
+              onChangeRoomCode={handleChangeRoomCode}
             />
           </main>
         ) : (

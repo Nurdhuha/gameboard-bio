@@ -143,15 +143,15 @@ export const TeamSelectionScreen: React.FC<TeamSelectionScreenProps> = ({
               <span className="font-mono text-emerald-800 tracking-wider font-black">{roomCode}</span>
             </div>
 
-            {roomCode === 'ECO-DEMO' && onChangeRoomCode && (
+            {onChangeRoomCode && (
               <button
                 type="button"
                 onClick={onChangeRoomCode}
-                className="px-3 py-1.5 rounded-2xl bg-stone-100 hover:bg-stone-200 text-stone-600 hover:text-slate-900 text-xs font-bold transition shadow-2xs flex items-center gap-1"
-                title="Kembali ke halaman awal"
+                className="px-3 py-1.5 rounded-2xl bg-stone-100 hover:bg-stone-200 text-stone-700 hover:text-slate-900 text-xs font-bold transition shadow-2xs flex items-center gap-1.5 active:scale-95"
+                title="Ganti kode kelas lain"
               >
-                <ArrowLeft className="w-3 h-3" />
-                <span>Halaman Awal</span>
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Ganti Kode Kelas</span>
               </button>
             )}
           </div>
