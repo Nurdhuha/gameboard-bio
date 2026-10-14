@@ -9,6 +9,7 @@ import {
   Trash2,
   LogOut,
   Monitor,
+  Layers,
 } from 'lucide-react';
 
 interface TeacherLobbyScreenProps {
@@ -22,6 +23,7 @@ interface TeacherLobbyScreenProps {
   onRemoveTeam: (id: number) => void;
   onLogout: () => void;
   onNewSession?: () => void;
+  onOpenSessionsList?: () => void;
 }
 
 export const TeacherLobbyScreen: React.FC<TeacherLobbyScreenProps> = ({
@@ -33,6 +35,7 @@ export const TeacherLobbyScreen: React.FC<TeacherLobbyScreenProps> = ({
   onRemoveTeam,
   onLogout,
   onNewSession,
+  onOpenSessionsList,
 }) => {
   const [copied, setCopied] = useState(false);
 
@@ -57,6 +60,17 @@ export const TeacherLobbyScreen: React.FC<TeacherLobbyScreenProps> = ({
 
         {/* Action Buttons Cepat */}
         <div className="flex items-center gap-2 flex-shrink-0">
+          {onOpenSessionsList && (
+            <button
+              onClick={onOpenSessionsList}
+              className="px-2.5 sm:px-3 py-1.5 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition shadow-xs"
+              title="Lihat semua riwayat sesi kelas Anda"
+            >
+              <Layers className="w-3.5 h-3.5 text-stone-500" />
+              <span className="hidden sm:inline">Semua Sesi</span>
+            </button>
+          )}
+
           {onNewSession && (
             <button
               onClick={onNewSession}

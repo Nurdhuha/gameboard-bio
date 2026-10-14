@@ -25,9 +25,13 @@ const TeacherDashboardModal = lazy(() =>
 const EndClassConfirmationModal = lazy(() =>
   import('./components/modals/EndClassConfirmationModal').then((m) => ({ default: m.EndClassConfirmationModal }))
 );
+const TeacherSessionsModal = lazy(() =>
+  import('./components/dashboard/TeacherSessionsModal').then((m) => ({ default: m.TeacherSessionsModal }))
+);
 const EcosystemMaterialPage = lazy(() =>
   import('./components/materi/EcosystemMaterialPage').then((m) => ({ default: m.EcosystemMaterialPage }))
 );
+import type { SessionItem } from './components/dashboard/TeacherSessionsModal';
 import { TeacherLoginScreen } from './components/auth/TeacherLoginScreen';
 import { TeacherLobbyScreen } from './components/dashboard/TeacherLobbyScreen';
 import { TeacherSessionCreator } from './components/dashboard/TeacherSessionCreator';
@@ -56,6 +60,7 @@ import {
   CheckCircle2,
   Home,
   GraduationCap,
+  Layers,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -286,6 +291,7 @@ export const App: React.FC = () => {
   const [showTeacherDashboard, setShowTeacherDashboard] = useState<boolean>(false);
   const [showEndClassModal, setShowEndClassModal] = useState<boolean>(false);
   const [isEndingClass, setIsEndingClass] = useState<boolean>(false);
+  const [showSessionHistory, setShowSessionHistory] = useState<boolean>(false);
 
   const selectedTeam = teams.find((t) => t.id === selectedTeamId) || teams[0];
   const inspectedTile = BOARD_TILES.find((t) => t.id === inspectedTileId) || BOARD_TILES[0];
@@ -898,6 +904,45 @@ export const App: React.FC = () => {
     updateTeacherPhase('lobby');
   };
 
+  // Guru beralih ke sesi kelas tertentu dari daftar semua sesi
+  const handleSwitchSession = async (session: SessionItem) => {
+    const formatted = {
+      roomCode: session.roomCode,
+      className: session.className || 'Kelas Biologi',
+      academicYear: session.academicYear || '',
+    };
+    setActiveSession(formatted);
+    localStorage.setItem('ecoplay_teacher_active_session', JSON.stringify(formatted));
+
+    // Sinkronisasi data kelompok dari server untuk sesi yang dipilih
+    if (isServerSession(session.roomCode)) {
+      try {
+        const backendUrl = getBackendUrl();
+        const teamsRes = await fetch(`${backendUrl}/api/sessions/${encodeURIComponent(session.roomCode)}/teams`);
+        const teamsData = await teamsRes.json();
+        if (teamsRes.ok && teamsData.success && Array.isArray(teamsData.teams)) {
+          setTeams(mergeServerTeams(teamsData.teams, []));
+        }
+      } catch (err) {
+        console.warn('Gagal memuat tim untuk sesi yang dipilih:', err);
+      }
+    }
+
+    // Join room di socket jika socket aktif
+    if (socketRef.current && session.roomCode) {
+      socketRef.current.emit('room:join', {
+        roomCode: session.roomCode,
+        role: 'teacher',
+      });
+    }
+
+    // Tentukan fase guru sesuai status sesi
+    const targetPhase: 'lobby' | 'spin' | 'board' =
+      session.phase === 'board' ? 'board' : session.phase === 'spin' ? 'spin' : 'lobby';
+    updateTeacherPhase(targetPhase);
+    setShowSessionHistory(false);
+  };
+
   // Guru keluar dari akun / sesi kelas
   const handleTeacherLogout = () => {
     try {
@@ -1371,11 +1416,19 @@ export const App: React.FC = () => {
               {(!teacherAuth && !isTeacherDemoMode) || !activeSession ? (
                 /* Di Layar Login / Buat Sesi: navbar minimalis */
                 null
-              ) : teacherGamePhase === 'lobby' ? (
-                /* Di Layar Lobby Guru (Langkah 1) */
-                null
-              ) : teacherGamePhase === 'spin' ? (
-                /* Di Sesi Spin Guru (Langkah 2): Hanya indikator langkah & tombol Akhiri Kelas */
+              ) : (
+                <>
+                  <button
+                    onClick={() => setShowSessionHistory(true)}
+                    className="p-1.5 lg:px-2.5 lg:py-1.5 rounded-xl bg-white hover:bg-stone-50 border border-stone-200 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition active:scale-95 shadow-xs"
+                    title="Lihat Semua Sesi Kelas Guru"
+                  >
+                    <Layers className="w-3.5 h-3.5 text-stone-500" />
+                    <span className="hidden lg:inline">Semua Sesi</span>
+                  </button>
+
+                  {teacherGamePhase === 'lobby' ? null : teacherGamePhase === 'spin' ? (
+                    /* Di Sesi Spin Guru (Langkah 2): Hanya indikator langkah & tombol Akhiri Kelas */
                 <div className="flex items-center gap-1.5 sm:gap-2">
                   <div className="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold shadow-xs">
                     <Sparkles className="w-3.5 h-3.5 text-amber-600" />
@@ -1418,7 +1471,9 @@ export const App: React.FC = () => {
                 </div>
               )}
             </>
-          ) : (
+          )}
+        </>
+      ) : (
             /* --- KONTROL NAVIGASI MURID (/) --- */
             <>
               {hasStudentSelectedTeam && (
@@ -1521,6 +1576,7 @@ export const App: React.FC = () => {
               onCreateSession={handleCreateSession}
               onLogout={handleTeacherLogout}
               onCancel={activeSession ? () => setShowSessionCreator(false) : undefined}
+              onOpenSessionsList={() => setShowSessionHistory(true)}
             />
           </main>
         ) : activeSession && teacherGamePhase === 'lobby' ? (
@@ -1537,6 +1593,7 @@ export const App: React.FC = () => {
               onRemoveTeam={handleRemoveTeam}
               onLogout={handleTeacherLogout}
               onNewSession={() => setShowSessionCreator(true)}
+              onOpenSessionsList={() => setShowSessionHistory(true)}
             />
           </main>
         ) : !activeSession ? (
@@ -1546,6 +1603,7 @@ export const App: React.FC = () => {
               teacherName={teacherAuth?.name}
               onCreateSession={handleCreateSession}
               onLogout={handleTeacherLogout}
+              onOpenSessionsList={() => setShowSessionHistory(true)}
             />
           </main>
         ) : teacherGamePhase === 'spin' ? (
@@ -2135,6 +2193,22 @@ export const App: React.FC = () => {
             onConfirm={handleConfirmEndClass}
             roomCode={activeSession?.roomCode}
             isProcessing={isEndingClass}
+          />
+        )}
+
+        {/* 6. Modal Daftar & Riwayat Sesi Kelas Guru */}
+        {showSessionHistory && (
+          <TeacherSessionsModal
+            isOpen={showSessionHistory}
+            onClose={() => setShowSessionHistory(false)}
+            currentRoomCode={activeSession?.roomCode}
+            onSelectSession={handleSwitchSession}
+            onNewSession={() => {
+              setShowSessionHistory(false);
+              setShowSessionCreator(true);
+            }}
+            teacherName={teacherAuth?.name}
+            isDemoMode={isTeacherDemoMode}
           />
         )}
       </Suspense>

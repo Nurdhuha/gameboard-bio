@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Play, LogOut, GraduationCap } from 'lucide-react';
+import { Play, LogOut, GraduationCap, Layers } from 'lucide-react';
 
 interface TeacherSessionCreatorProps {
   teacherName?: string;
   onCreateSession: (className: string, academicYear: string) => void;
   onLogout: () => void;
   onCancel?: () => void;
+  onOpenSessionsList?: () => void;
 }
 
 export const TeacherSessionCreator: React.FC<TeacherSessionCreatorProps> = ({
@@ -13,6 +14,7 @@ export const TeacherSessionCreator: React.FC<TeacherSessionCreatorProps> = ({
   onCreateSession,
   onLogout,
   onCancel,
+  onOpenSessionsList,
 }) => {
   const [className, setClassName] = useState('Kelas Biologi');
   const [academicYear, setAcademicYear] = useState('2026/2027');
@@ -107,6 +109,19 @@ export const TeacherSessionCreator: React.FC<TeacherSessionCreatorProps> = ({
               <span>Buat Ruang Kelas</span>
             </button>
           </div>
+
+          {onOpenSessionsList && (
+            <div className="pt-2 text-center">
+              <button
+                type="button"
+                onClick={onOpenSessionsList}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 hover:text-emerald-800 hover:underline transition"
+              >
+                <Layers className="w-3.5 h-3.5" />
+                <span>Atau buka dari semua sesi kelas yang sudah ada</span>
+              </button>
+            </div>
+          )}
         </form>
 
         <p className="text-[11px] text-stone-400 text-center pt-2">
