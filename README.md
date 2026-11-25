@@ -66,25 +66,36 @@ Output hasil *build* akan tersimpan di direktori `dist/`.
 ## 📁 Struktur Direktori
 
 ```text
-├── public/                 # Aset statis & mockup papan
+├── api/                    # Entrypoint Serverless API untuk deployment Vercel
+├── backend/                # Server Express, WebSocket (Socket.io), & skema database
+│   ├── src/                # Controller, route, service, middleware, & socket handler
+│   ├── uploads/            # Penyimpanan lokal unggahan foto siswa
+│   └── schema.sql          # Skema DDL database PostgreSQL / Supabase
+├── docs/                   # Dokumentasi proyek, kisi-kisi, materi, & aset desain sumber
+│   └── design/             # File sumber desain papan (SVG/PNG)
+├── public/                 # Aset statis web produksi (board-bg.webp, biology-pattern.jpg, materi/)
 ├── src/
 │   ├── components/
-│   │   ├── board/         # GameBoard, PawnMarker, TileMarker, MobileBoard
-│   │   ├── dashboard/     # TeacherDashboardModal (Rubrik LKPD & Lencana)
-│   │   ├── modals/        # ActivityModal (LKPD), PrePostTestModal, LeaderboardModal
-│   │   ├── spin/          # SpinWheel (Roda putar penentuan giliran)
-│   │   └── student/       # TeamSelectionScreen (Menu pilih kelompok siswa)
-│   ├── data/
-│   │   └── boardData.ts   # 50 petak, 24 aktivitas verbatim, rubrik, preset tim
-│   ├── types/
-│   │   └── index.ts       # Definisi TypeScript interface
-│   ├── App.tsx            # Komponen root & pengatur alur
-│   ├── main.tsx           # Entry point dengan BrowserRouter
-│   └── index.css          # Tailwind CSS & konfigurasi font
-├── .gitignore             # Pengabaian file build, modul, dan sistem
-├── index.html             # HTML template
-├── package.json           # Dependensi & script proyek
-├── tailwind.config.js     # Konfigurasi Tailwind CSS
-├── tsconfig.json          # Konfigurasi TypeScript
-└── vite.config.ts         # Konfigurasi bundler Vite
+│   │   ├── auth/           # TeacherLoginScreen
+│   │   ├── board/          # GameBoard, PawnMarker, TileMarker, MobileBoard
+│   │   ├── dashboard/      # TeacherDashboardModal, Lobby, SessionCreator, SessionsModal, Toolbar
+│   │   ├── materi/         # EcosystemMaterialPage
+│   │   ├── modals/         # ActivityModal, CustomAlertModal, EndClassConfirmationModal, GameRulesModal, LeaderboardModal, PrePostTestModal
+│   │   ├── spin/           # SpinWheel (Roda putar penentuan giliran)
+│   │   └── student/        # TeamSelectionScreen, StudentWaitingLobby
+│   ├── config/             # Konfigurasi URL API & dukungan Socket
+│   ├── data/               # boardData.ts & ecosystemMaterialData.ts
+│   ├── types/              # Definisi TypeScript interface
+│   ├── App.tsx             # Komponen root & pengatur alur
+│   ├── main.tsx            # Entry point dengan BrowserRouter
+│   └── index.css           # Tailwind CSS & konfigurasi font
+├── tests/                  # Skrip pengujian end-to-end
+├── .gitignore              # Pengabaian file build, modul, dan sistem
+├── index.html              # HTML template
+├── package.json            # Dependensi & script proyek
+├── postcss.config.js       # Konfigurasi PostCSS
+├── tailwind.config.js      # Konfigurasi Tailwind CSS
+├── tsconfig.json           # Konfigurasi TypeScript
+├── vercel.json             # Konfigurasi rewrite & deployment Vercel
+└── vite.config.ts          # Konfigurasi bundler Vite
 ```

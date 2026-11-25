@@ -105,27 +105,26 @@ export async function getSession(req: Request, res: Response): Promise<void> {
     const rawCode = String(req.params.roomCode || '').toUpperCase().trim();
     const strippedCode = rawCode.replace(/[^A-Z0-9]/g, '');
 
-    const session = await db('game_sessions')
-      .where({ room_code: rawCode })
-      .orWhereRaw("UPPER(REPLACE(room_code, '-', '')) = ?", [strippedCode])
-      .first();
+    let session = await db('game_sessions').where({ room_code: rawCode }).first();
+    if (!session && strippedCode && strippedCode !== rawCode) {
+      session = await db('game_sessions').where({ room_code: strippedCode }).first();
+    }
+    if (!session && strippedCode) {
+      session = await db('game_sessions')
+        .whereRaw("UPPER(REPLACE(room_code, '-', '')) = ?", [strippedCode])
+        .first();
+    }
 
     if (!session) {
       res.status(404).json({ success: false, message: `Sesi kelas dengan kode ${rawCode} tidak ditemukan.` });
       return;
     }
 
-    const teams = await db('teams')
-      .where({ session_id: session.id })
-      .orderBy('team_number', 'asc');
-
-    const submissions = await db('lkpd_submissions')
-      .where({ session_id: session.id })
-      .orderBy('submitted_at', 'desc');
-
-    const badgeClaims = await db('badge_claims')
-      .where({ session_id: session.id })
-      .orderBy('claimed_at', 'asc');
+    const [teams, submissions, badgeClaims] = await Promise.all([
+      db('teams').where({ session_id: session.id }).orderBy('team_number', 'asc'),
+      db('lkpd_submissions').where({ session_id: session.id }).orderBy('submitted_at', 'desc'),
+      db('badge_claims').where({ session_id: session.id }).orderBy('claimed_at', 'asc'),
+    ]);
 
     res.json({
       success: true,

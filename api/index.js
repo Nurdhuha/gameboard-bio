@@ -31,7 +31,7 @@ var knexConfig = {
   },
   pool: {
     min: 0,
-    max: process.env.VERCEL ? 3 : 10,
+    max: process.env.VERCEL ? 8 : 15,
     idleTimeoutMillis: 3e4
   }
 };
@@ -205,25 +205,65 @@ function ensureTeamPresenceColumns() {
   }
   return presenceColumnsPromise;
 }
+var sessionIdCache = /* @__PURE__ */ new Map();
+var sessionSnapshotCache = /* @__PURE__ */ new Map();
+var SESSION_SNAPSHOT_TTL_MS = 1e3;
+
+function normalizeCodeKey(roomCode) {
+  return String(roomCode || "").toUpperCase().trim().replace(/[^A-Z0-9]/g, "");
+}
+
+function invalidateSessionCache(roomCode, alsoClearId = false) {
+  const key = normalizeCodeKey(roomCode);
+  if (!key) return;
+  sessionSnapshotCache.delete(key);
+  if (alsoClearId) {
+    sessionIdCache.delete(key);
+  }
+}
+
 async function findSessionByCode(roomCode) {
   const rawCode = String(roomCode || "").toUpperCase().trim();
   const strippedCode = rawCode.replace(/[^A-Z0-9]/g, "");
-  return db("game_sessions").where({ room_code: rawCode }).orWhereRaw("UPPER(REPLACE(room_code, '-', '')) = ?", [strippedCode]).first();
+  let session = await db("game_sessions").where({ room_code: rawCode }).first();
+  if (!session && strippedCode && strippedCode !== rawCode) {
+    session = await db("game_sessions").where({ room_code: strippedCode }).first();
+  }
+  if (!session && strippedCode) {
+    session = await db("game_sessions").whereRaw("UPPER(REPLACE(room_code, '-', '')) = ?", [strippedCode]).first();
+  }
+  if (session && strippedCode) {
+    if (sessionIdCache.size > 500) sessionIdCache.clear();
+    sessionIdCache.set(strippedCode, session.id);
+  }
+  return session;
 }
+
+async function getSessionIdByCode(roomCode) {
+  const key = normalizeCodeKey(roomCode);
+  if (!key) return null;
+  if (sessionIdCache.has(key)) {
+    return sessionIdCache.get(key);
+  }
+  const session = await findSessionByCode(roomCode);
+  return session ? session.id : null;
+}
+
 async function updateTeamPresence(req, res) {
   try {
     await ensureTeamPresenceColumns();
-    const session = await findSessionByCode(req.params.roomCode);
-    if (!session) {
+    const sessionId = await getSessionIdByCode(req.params.roomCode);
+    if (!sessionId) {
       res.status(404).json({ success: false, message: "Sesi kelas tidak ditemukan." });
       return;
     }
     const ready = req.body?.ready !== false;
-    const [team] = await db("teams").where({ session_id: session.id, team_number: Number(req.params.teamNumber) }).update({ is_ready: ready, last_seen_at: /* @__PURE__ */ new Date() }).returning("*");
+    const [team] = await db("teams").where({ session_id: sessionId, team_number: Number(req.params.teamNumber) }).update({ is_ready: ready, last_seen_at: /* @__PURE__ */ new Date() }).returning("*");
     if (!team) {
       res.status(404).json({ success: false, message: "Kelompok tidak ditemukan." });
       return;
     }
+    invalidateSessionCache(req.params.roomCode);
     res.json({ success: true, team: formatTeam(team) });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message || "Gagal memperbarui status kelompok." });
@@ -292,31 +332,39 @@ async function createSession(req, res) {
 async function getSession(req, res) {
   try {
     const rawCode = String(req.params.roomCode || "").toUpperCase().trim();
-    const strippedCode = rawCode.replace(/[^A-Z0-9]/g, "");
-    const session = await db("game_sessions").where({ room_code: rawCode }).orWhereRaw("UPPER(REPLACE(room_code, '-', '')) = ?", [strippedCode]).first();
+    const cacheKey = normalizeCodeKey(rawCode);
+    const cached = sessionSnapshotCache.get(cacheKey);
+    if (cached && Date.now() - cached.ts < SESSION_SNAPSHOT_TTL_MS) {
+      res.json(cached.payload);
+      return;
+    }
+    const session = await findSessionByCode(rawCode);
     if (!session) {
       res.status(404).json({ success: false, message: `Sesi kelas dengan kode ${rawCode} tidak ditemukan.` });
       return;
     }
-    const teams = await db("teams").where({ session_id: session.id }).orderBy("team_number", "asc");
-    const submissions = await db("lkpd_submissions").where({ session_id: session.id }).orderBy("submitted_at", "desc");
-    const badgeClaims = await db("badge_claims").where({ session_id: session.id }).orderBy("claimed_at", "asc");
-    res.json({
+    const [teams, submissions, badgeClaims] = await Promise.all([
+      db("teams").where({ session_id: session.id }).orderBy("team_number", "asc"),
+      db("lkpd_submissions").where({ session_id: session.id }).orderBy("submitted_at", "desc"),
+      db("badge_claims").where({ session_id: session.id }).orderBy("claimed_at", "asc")
+    ]);
+    const payload = {
       success: true,
       session: formatSession(session),
       teams: teams.map(formatTeam),
       submissions,
       badgeClaims
-    });
+    };
+    if (sessionSnapshotCache.size > 200) sessionSnapshotCache.clear();
+    sessionSnapshotCache.set(cacheKey, { ts: Date.now(), payload });
+    res.json(payload);
   } catch (error) {
     res.status(500).json({ success: false, message: error.message || "Gagal mengambil data sesi." });
   }
 }
 async function startSession(req, res) {
   try {
-    const rawCode = String(req.params.roomCode || "").toUpperCase().trim();
-    const strippedCode = rawCode.replace(/[^A-Z0-9]/g, "");
-    const session = await db("game_sessions").where({ room_code: rawCode }).orWhereRaw("UPPER(REPLACE(room_code, '-', '')) = ?", [strippedCode]).first();
+    const session = await findSessionByCode(req.params.roomCode);
     if (!session) {
       res.status(404).json({ success: false, message: "Sesi kelas tidak ditemukan." });
       return;
@@ -325,6 +373,7 @@ async function startSession(req, res) {
       phase: "spin",
       active_zone: 1
     }).returning("*");
+    invalidateSessionCache(req.params.roomCode);
     res.json({
       success: true,
       message: "Sesi kelas berhasil dimulai.",
@@ -336,10 +385,13 @@ async function startSession(req, res) {
 }
 async function updatePhase(req, res) {
   try {
-    const rawCode = String(req.params.roomCode || "").toUpperCase().trim();
-    const strippedCode = rawCode.replace(/[^A-Z0-9]/g, "");
+    const sessionId = await getSessionIdByCode(req.params.roomCode);
+    if (!sessionId) {
+      res.status(404).json({ success: false, message: "Sesi kelas tidak ditemukan." });
+      return;
+    }
     const { phase, activeZone } = req.body;
-    const [updated] = await db("game_sessions").where({ room_code: rawCode }).orWhereRaw("UPPER(REPLACE(room_code, '-', '')) = ?", [strippedCode]).update({
+    const [updated] = await db("game_sessions").where({ id: sessionId }).update({
       phase: phase || void 0,
       active_zone: activeZone || void 0
     }).returning("*");
@@ -347,6 +399,7 @@ async function updatePhase(req, res) {
       res.status(404).json({ success: false, message: "Sesi kelas tidak ditemukan." });
       return;
     }
+    invalidateSessionCache(req.params.roomCode);
     res.json({ success: true, session: formatSession(updated) });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message || "Gagal memperbarui fase sesi." });
@@ -371,6 +424,7 @@ async function resetSession(req, res) {
       await trx("badge_claims").where({ session_id: session.id }).delete();
       await trx("game_sessions").where({ id: session.id }).update({ phase: "lobby", active_zone: 1 });
     });
+    invalidateSessionCache(roomCode);
     res.json({ success: true, message: "Data permainan dan nilai sesi berhasil direset." });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message || "Gagal mereset data sesi." });
@@ -399,6 +453,7 @@ async function endSession(req, res) {
         ended_at: /* @__PURE__ */ new Date()
       });
     });
+    invalidateSessionCache(roomCode);
     res.json({
       success: true,
       message: "Sesi kelas berhasil diakhiri. Seluruh progres dan jawaban LKPD telah dibersihkan."
@@ -452,6 +507,7 @@ async function deleteSession(req, res) {
       await trx("game_sessions").where({ id: session.id }).delete();
     });
 
+    invalidateSessionCache(session.room_code, true);
     res.json({
       success: true,
       message: `Sesi kelas ${session.room_code} berhasil dihapus permanen.`
@@ -470,14 +526,12 @@ var EXTRA_PRESETS = [
 ];
 async function getTeams(req, res) {
   try {
-    const rawCode = String(req.params.roomCode || "").toUpperCase().trim();
-    const strippedCode = rawCode.replace(/[^A-Z0-9]/g, "");
-    const session = await db("game_sessions").where({ room_code: rawCode }).orWhereRaw("UPPER(REPLACE(room_code, '-', '')) = ?", [strippedCode]).first();
-    if (!session) {
+    const sessionId = await getSessionIdByCode(req.params.roomCode);
+    if (!sessionId) {
       res.status(404).json({ success: false, message: "Sesi kelas tidak ditemukan." });
       return;
     }
-    const teams = await db("teams").where({ session_id: session.id }).orderBy("team_number", "asc");
+    const teams = await db("teams").where({ session_id: sessionId }).orderBy("team_number", "asc");
     res.json({ success: true, teams: teams.map(formatTeam) });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message || "Gagal mengambil data tim." });
@@ -485,19 +539,17 @@ async function getTeams(req, res) {
 }
 async function addTeam(req, res) {
   try {
-    const rawCode = String(req.params.roomCode || "").toUpperCase().trim();
-    const strippedCode = rawCode.replace(/[^A-Z0-9]/g, "");
-    const session = await db("game_sessions").where({ room_code: rawCode }).orWhereRaw("UPPER(REPLACE(room_code, '-', '')) = ?", [strippedCode]).first();
-    if (!session) {
+    const sessionId = await getSessionIdByCode(req.params.roomCode);
+    if (!sessionId) {
       res.status(404).json({ success: false, message: "Sesi kelas tidak ditemukan." });
       return;
     }
-    const currentTeams = await db("teams").where({ session_id: session.id });
-    const nextNumber = currentTeams.reduce((max, t) => Math.max(max, Number(t.team_number) || 0), 0) + 1;
+    const maxRow = await db("teams").where({ session_id: sessionId }).max("team_number as maxNum").first();
+    const nextNumber = (Number(maxRow?.maxNum) || 0) + 1;
     const presetIdx = (nextNumber - 4) % EXTRA_PRESETS.length;
     const preset = nextNumber <= 3 ? { name: `Tim ${nextNumber}`, avatar_icon: "\u{1F43E}", color_hex: "#6366f1", badge_color: "bg-indigo-500" } : EXTRA_PRESETS[presetIdx >= 0 ? presetIdx : 0];
     const [newTeam] = await db("teams").insert({
-      session_id: session.id,
+      session_id: sessionId,
       team_number: nextNumber,
       name: `Kelompok ${nextNumber} (${preset.name})`,
       avatar_icon: preset.avatar_icon,
@@ -507,6 +559,7 @@ async function addTeam(req, res) {
       badge_points: 0,
       total_lkpd_score: 0
     }).returning("*");
+    invalidateSessionCache(req.params.roomCode);
     res.status(201).json({ success: true, message: "Kelompok baru berhasil ditambahkan.", team: formatTeam(newTeam) });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message || "Gagal menambahkan kelompok baru." });
@@ -524,14 +577,12 @@ async function updatePawn(req, res) {
     if (UUID_REGEX.test(String(teamId))) {
       teamQuery = teamQuery.where({ id: String(teamId) });
     } else if (roomCode) {
-      const rawCode = String(roomCode).toUpperCase().trim();
-      const strippedCode = rawCode.replace(/[^A-Z0-9]/g, "");
-      const session = await db("game_sessions").where({ room_code: rawCode }).orWhereRaw("UPPER(REPLACE(room_code, '-', '')) = ?", [strippedCode]).first();
-      if (!session) {
+      const sessionId = await getSessionIdByCode(roomCode);
+      if (!sessionId) {
         res.status(404).json({ success: false, message: "Sesi kelas tidak ditemukan." });
         return;
       }
-      teamQuery = teamQuery.where({ session_id: session.id, team_number: Number(teamId) });
+      teamQuery = teamQuery.where({ session_id: sessionId, team_number: Number(teamId) });
     } else {
       teamQuery = teamQuery.where({ team_number: Number(teamId) });
     }
@@ -543,6 +594,7 @@ async function updatePawn(req, res) {
       res.status(404).json({ success: false, message: "Data tim tidak ditemukan." });
       return;
     }
+    if (roomCode) invalidateSessionCache(roomCode);
     res.json({ success: true, message: "Posisi pion berhasil diperbarui.", team: formatTeam(updatedTeam) });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message || "Gagal memperbarui posisi pion." });
@@ -679,14 +731,12 @@ async function generateExcelReport(session, teams, submissions) {
 var UUID_REGEX2 = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 async function getSubmissions(req, res) {
   try {
-    const rawCode = String(req.params.roomCode || "").toUpperCase().trim();
-    const strippedCode = rawCode.replace(/[^A-Z0-9]/g, "");
-    const session = await db("game_sessions").where({ room_code: rawCode }).orWhereRaw("UPPER(REPLACE(room_code, '-', '')) = ?", [strippedCode]).first();
-    if (!session) {
+    const sessionId = await getSessionIdByCode(req.params.roomCode);
+    if (!sessionId) {
       res.status(404).json({ success: false, message: "Sesi kelas tidak ditemukan." });
       return;
     }
-    const submissions = await db("lkpd_submissions").where({ session_id: session.id }).orderBy("submitted_at", "desc");
+    const submissions = await db("lkpd_submissions").where({ session_id: sessionId }).orderBy("submitted_at", "desc");
     res.json({ success: true, submissions });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message || "Gagal mengambil jawaban LKPD." });
@@ -694,48 +744,52 @@ async function getSubmissions(req, res) {
 }
 async function submitLkpd(req, res) {
   try {
-    const rawCode = String(req.params.roomCode || "").toUpperCase().trim();
-    const strippedCode = rawCode.replace(/[^A-Z0-9]/g, "");
     const { teamId, activityCode, answerText, photoUrl, reflectionText } = req.body;
     if (!teamId || !activityCode || !answerText) {
       res.status(400).json({ success: false, message: "teamId, activityCode, dan answerText wajib diisi." });
       return;
     }
-    const session = await db("game_sessions").where({ room_code: rawCode }).orWhereRaw("UPPER(REPLACE(room_code, '-', '')) = ?", [strippedCode]).first();
-    if (!session) {
+    const sessionId = await getSessionIdByCode(req.params.roomCode);
+    if (!sessionId) {
       res.status(404).json({ success: false, message: "Sesi kelas tidak ditemukan." });
       return;
     }
-    const actualTeam = UUID_REGEX2.test(String(teamId)) ? await db("teams").where({ id: teamId, session_id: session.id }).first() : await db("teams").where({ session_id: session.id, team_number: Number(teamId) }).first();
-    if (!actualTeam) {
-      res.status(404).json({ success: false, message: "Kelompok tidak ditemukan di sesi ini." });
-      return;
-    }
-    const resolvedTeamId = actualTeam.id;
-    const existing = await db("lkpd_submissions").where({ session_id: session.id, team_id: resolvedTeamId, activity_code: activityCode }).first();
-    let submission;
-    if (existing) {
-      [submission] = await db("lkpd_submissions").where({ id: existing.id }).update({
-        answer_text: typeof answerText === "object" ? JSON.stringify(answerText) : String(answerText),
-        photo_url: photoUrl !== void 0 ? photoUrl : existing.photo_url,
-        reflection_text: reflectionText !== void 0 ? reflectionText : existing.reflection_text,
-        submitted_at: /* @__PURE__ */ new Date()
-      }).returning("*");
+    let resolvedTeamId;
+    if (UUID_REGEX2.test(String(teamId))) {
+      resolvedTeamId = String(teamId);
     } else {
-      [submission] = await db("lkpd_submissions").insert({
-        session_id: session.id,
-        team_id: resolvedTeamId,
-        activity_code: activityCode,
-        answer_text: typeof answerText === "object" ? JSON.stringify(answerText) : String(answerText),
-        photo_url: photoUrl || null,
-        reflection_text: reflectionText || null,
-        score: 3
-        // Skor awal default 3 (akan divalidasi oleh guru)
-      }).returning("*");
+      const actualTeam = await db("teams").where({ session_id: sessionId, team_number: Number(teamId) }).select("id").first();
+      if (!actualTeam) {
+        res.status(404).json({ success: false, message: "Kelompok tidak ditemukan di sesi ini." });
+        return;
+      }
+      resolvedTeamId = actualTeam.id;
     }
-    const totalScoreResult = await db("lkpd_submissions").where({ session_id: session.id, team_id: resolvedTeamId }).sum("score as total");
-    const totalLkpd = Number(totalScoreResult[0]?.total) || 0;
-    await db("teams").where({ id: resolvedTeamId }).update({ total_lkpd_score: totalLkpd, updated_at: /* @__PURE__ */ new Date() });
+    const serializedAnswer = typeof answerText === "object" ? JSON.stringify(answerText) : String(answerText);
+    const now = /* @__PURE__ */ new Date();
+    const mergeFields = {
+      answer_text: serializedAnswer,
+      submitted_at: now
+    };
+    if (photoUrl !== void 0) mergeFields.photo_url = photoUrl;
+    if (reflectionText !== void 0) mergeFields.reflection_text = reflectionText;
+
+    const [submission] = await db("lkpd_submissions").insert({
+      session_id: sessionId,
+      team_id: resolvedTeamId,
+      activity_code: activityCode,
+      answer_text: serializedAnswer,
+      photo_url: photoUrl || null,
+      reflection_text: reflectionText || null,
+      score: 3
+    }).onConflict(["session_id", "team_id", "activity_code"]).merge(mergeFields).returning("*");
+
+    const [updatedTeam] = await db("teams").where({ id: resolvedTeamId }).update({
+      total_lkpd_score: db.raw("(SELECT COALESCE(SUM(score), 0) FROM lkpd_submissions WHERE session_id = ? AND team_id = ?)", [sessionId, resolvedTeamId]),
+      updated_at: now
+    }).returning(["total_lkpd_score"]);
+    const totalLkpd = Number(updatedTeam?.total_lkpd_score) || 0;
+    invalidateSessionCache(req.params.roomCode);
     res.json({
       success: true,
       message: "Jawaban LKPD berhasil dikirimkan ke guru.",
@@ -754,18 +808,21 @@ async function gradeSubmission(req, res) {
       res.status(400).json({ success: false, message: "Skor rubrik harus bernilai antara 0 s.d. 3." });
       return;
     }
+    const now = /* @__PURE__ */ new Date();
     const [submission] = await db("lkpd_submissions").where({ id }).update({
       score,
       teacher_feedback: teacherFeedback !== void 0 ? teacherFeedback : null,
-      graded_at: /* @__PURE__ */ new Date()
+      graded_at: now
     }).returning("*");
     if (!submission) {
       res.status(404).json({ success: false, message: "Jawaban LKPD tidak ditemukan." });
       return;
     }
-    const totalScoreResult = await db("lkpd_submissions").where({ session_id: submission.session_id, team_id: submission.team_id }).sum("score as total");
-    const totalLkpd = Number(totalScoreResult[0]?.total) || 0;
-    const [updatedTeam] = await db("teams").where({ id: submission.team_id }).update({ total_lkpd_score: totalLkpd, updated_at: /* @__PURE__ */ new Date() }).returning("*");
+    const [updatedTeam] = await db("teams").where({ id: submission.team_id }).update({
+      total_lkpd_score: db.raw("(SELECT COALESCE(SUM(score), 0) FROM lkpd_submissions WHERE session_id = ? AND team_id = ?)", [submission.session_id, submission.team_id]),
+      updated_at: now
+    }).returning("*");
+    sessionSnapshotCache.clear();
     res.json({
       success: true,
       message: "Penilaian rubrik berhasil disimpan.",
@@ -798,14 +855,15 @@ async function uploadPhoto(req, res) {
 async function exportExcel(req, res) {
   try {
     const rawCode = String(req.params.roomCode || "").toUpperCase().trim();
-    const strippedCode = rawCode.replace(/[^A-Z0-9]/g, "");
-    const session = await db("game_sessions").where({ room_code: rawCode }).orWhereRaw("UPPER(REPLACE(room_code, '-', '')) = ?", [strippedCode]).first();
+    const session = await findSessionByCode(rawCode);
     if (!session) {
       res.status(404).json({ success: false, message: "Sesi kelas tidak ditemukan." });
       return;
     }
-    const teams = await db("teams").where({ session_id: session.id }).orderBy("team_number", "asc");
-    const submissions = await db("lkpd_submissions").where({ session_id: session.id }).orderBy("submitted_at", "asc");
+    const [teams, submissions] = await Promise.all([
+      db("teams").where({ session_id: session.id }).orderBy("team_number", "asc"),
+      db("lkpd_submissions").where({ session_id: session.id }).orderBy("submitted_at", "asc")
+    ]);
     const buffer = await generateExcelReport(session, teams, submissions);
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     res.setHeader("Content-Disposition", `attachment; filename="Ecoplay-Laporan-${rawCode}.xlsx"`);

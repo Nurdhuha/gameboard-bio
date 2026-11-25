@@ -49,3 +49,6 @@ exact_activities.json
 extracted_doc.txt
 verbatim_activities.json
 generated_activities.ts
+
+# Load Test Reports
+tests/load-test/reports/

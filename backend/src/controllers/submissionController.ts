@@ -40,10 +40,15 @@ export async function submitLkpd(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    const session = await db('game_sessions')
-      .where({ room_code: rawCode })
-      .orWhereRaw("UPPER(REPLACE(room_code, '-', '')) = ?", [strippedCode])
-      .first();
+    let session = await db('game_sessions').where({ room_code: rawCode }).first();
+    if (!session && strippedCode && strippedCode !== rawCode) {
+      session = await db('game_sessions').where({ room_code: strippedCode }).first();
+    }
+    if (!session && strippedCode) {
+      session = await db('game_sessions')
+        .whereRaw("UPPER(REPLACE(room_code, '-', '')) = ?", [strippedCode])
+        .first();
+    }
 
     if (!session) {
       res.status(404).json({ success: false, message: 'Sesi kelas tidak ditemukan.' });
@@ -51,58 +56,56 @@ export async function submitLkpd(req: Request, res: Response): Promise<void> {
     }
 
     // Resolusi teamId baik berupa UUID maupun nomor tim (1, 2, 3)
-    const actualTeam = UUID_REGEX.test(String(teamId))
-      ? await db('teams').where({ id: teamId, session_id: session.id }).first()
-      : await db('teams').where({ session_id: session.id, team_number: Number(teamId) }).first();
-
-    if (!actualTeam) {
-      res.status(404).json({ success: false, message: 'Kelompok tidak ditemukan di sesi ini.' });
-      return;
-    }
-    const resolvedTeamId = actualTeam.id;
-
-    // Cek apakah sudah pernah mengirimkan untuk aktivitas ini
-    const existing = await db('lkpd_submissions')
-      .where({ session_id: session.id, team_id: resolvedTeamId, activity_code: activityCode })
-      .first();
-
-    let submission;
-    if (existing) {
-      // Perbarui jawaban
-      [submission] = await db('lkpd_submissions')
-        .where({ id: existing.id })
-        .update({
-          answer_text: typeof answerText === 'object' ? JSON.stringify(answerText) : String(answerText),
-          photo_url: photoUrl !== undefined ? photoUrl : existing.photo_url,
-          reflection_text: reflectionText !== undefined ? reflectionText : existing.reflection_text,
-          submitted_at: new Date(),
-        })
-        .returning('*');
+    let resolvedTeamId: string;
+    if (UUID_REGEX.test(String(teamId))) {
+      resolvedTeamId = String(teamId);
     } else {
-      // Masukkan jawaban baru
-      [submission] = await db('lkpd_submissions')
-        .insert({
-          session_id: session.id,
-          team_id: resolvedTeamId,
-          activity_code: activityCode,
-          answer_text: typeof answerText === 'object' ? JSON.stringify(answerText) : String(answerText),
-          photo_url: photoUrl || null,
-          reflection_text: reflectionText || null,
-          score: 3, // Skor awal default 3 (akan divalidasi oleh guru)
-        })
-        .returning('*');
+      const actualTeam = await db('teams')
+        .where({ session_id: session.id, team_number: Number(teamId) })
+        .select('id')
+        .first();
+      if (!actualTeam) {
+        res.status(404).json({ success: false, message: 'Kelompok tidak ditemukan di sesi ini.' });
+        return;
+      }
+      resolvedTeamId = actualTeam.id;
     }
 
-    // Hitung ulang akumulasi skor LKPD tim
-    const totalScoreResult = await db('lkpd_submissions')
-      .where({ session_id: session.id, team_id: resolvedTeamId })
-      .sum('score as total');
+    const serializedAnswer = typeof answerText === 'object' ? JSON.stringify(answerText) : String(answerText);
+    const now = new Date();
+    const mergeFields: Record<string, any> = {
+      answer_text: serializedAnswer,
+      submitted_at: now,
+    };
+    if (photoUrl !== undefined) mergeFields.photo_url = photoUrl;
+    if (reflectionText !== undefined) mergeFields.reflection_text = reflectionText;
 
-    const totalLkpd = Number(totalScoreResult[0]?.total) || 0;
+    const [submission] = await db('lkpd_submissions')
+      .insert({
+        session_id: session.id,
+        team_id: resolvedTeamId,
+        activity_code: activityCode,
+        answer_text: serializedAnswer,
+        photo_url: photoUrl || null,
+        reflection_text: reflectionText || null,
+        score: 3, // Skor awal default 3 (akan divalidasi oleh guru)
+      })
+      .onConflict(['session_id', 'team_id', 'activity_code'])
+      .merge(mergeFields)
+      .returning('*');
 
-    await db('teams')
+    const [updatedTeam] = await db('teams')
       .where({ id: resolvedTeamId })
-      .update({ total_lkpd_score: totalLkpd, updated_at: new Date() });
+      .update({
+        total_lkpd_score: db.raw(
+          '(SELECT COALESCE(SUM(score), 0) FROM lkpd_submissions WHERE session_id = ? AND team_id = ?)',
+          [session.id, resolvedTeamId]
+        ),
+        updated_at: now,
+      })
+      .returning(['total_lkpd_score']);
+
+    const totalLkpd = Number(updatedTeam?.total_lkpd_score) || 0;
 
     res.json({
       success: true,
