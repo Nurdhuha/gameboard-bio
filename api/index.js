@@ -970,6 +970,23 @@ function createApp() {
       timestamp: (/* @__PURE__ */ new Date()).toISOString()
     });
   });
+  app.get(["/api/keepalive", "/keepalive"], async (_req, res) => {
+    try {
+      await db("game_sessions").select("id").limit(1);
+      res.status(200).json({
+        success: true,
+        status: "alive",
+        db: "connected",
+        timestamp: (/* @__PURE__ */ new Date()).toISOString()
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        status: "error",
+        message: error.message || "Gagal menghubungi database."
+      });
+    }
+  });
   app.use("/api/auth", authRoutes_default);
   app.use("/auth", authRoutes_default);
   app.use("/api/sessions", sessionRoutes_default);

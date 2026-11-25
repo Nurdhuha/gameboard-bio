@@ -4,6 +4,7 @@ import path from 'path';
 import authRoutes from './routes/authRoutes';
 import sessionRoutes from './routes/sessionRoutes';
 import { errorHandler } from './middlewares/errorHandler';
+import { db } from './config/database';
 
 export function createApp(): Application {
   const app = express();
@@ -47,6 +48,25 @@ export function createApp(): Application {
       uptime: process.uptime(),
       timestamp: new Date().toISOString(),
     });
+  });
+
+  // Endpoint Keep-Alive Database (mencegah Supabase Free Plan pause karena tidak aktif)
+  app.get(['/api/keepalive', '/keepalive'], async (_req: Request, res: Response) => {
+    try {
+      await db('game_sessions').select('id').limit(1);
+      res.status(200).json({
+        success: true,
+        status: 'alive',
+        db: 'connected',
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        status: 'error',
+        message: error?.message || 'Gagal menghubungi database.',
+      });
+    }
   });
 
   // Daftarkan Rute REST API (mendukung dengan dan tanpa prefiks /api)

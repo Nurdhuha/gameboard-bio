@@ -1,0 +1,15 @@
+name: Supabase Keep-Alive
+
+on:
+  schedule:
+    # Menjalankan ping ke database setiap 3 hari pukul 02:00 UTC (09:00 WIB)
+    - cron: '0 2 */3 * *'
+  workflow_dispatch:
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Ecoplay Keep-Alive Endpoint
+        run: |
+          curl -fsSL "https://ecoplay-web.vercel.app/api/keepalive"
